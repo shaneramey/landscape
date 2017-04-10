@@ -38,16 +38,31 @@ Hashicorp Vault keys are prefixed with the path:
 
 To test this, run:
 ```
+GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | awk -F ': ' '{ print $2 }'`
 export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
-vault write /secret/landscape/downup/kube-system/nginx username=foo password=bar
-envconsul -config="./config.hcl" -secret="secret/landscape/downup/kube-system/nginx" -upcase env
+vault write /secret/landscape/$(GIT_BRANCH)/$(NAMESPACE)/$CHART_NAME) username=foobar password=barbaz
+cat <<EOF > configtest.hcl
+vault {
+  address = "http://127.0.0.1:8200"
+  renew  = false
+}
+
+secret {
+  no_prefix = true
+  path   = "/secret/$(GIT_BRANCH)/$(NAMESPACE)/$CHART_NAME)"
+  format = "SECRET_{{ key }}"
+
+}
+EOF
+
+envconsul -config="./configtest.hcl" -secret="secret/landscape/$(GIT_BRANCH)/$(NAMESPACE)/$CHART_NAME)" -upcase env
 ```
 
-You will see output like:
+You should see output like:
 ```
-SECRET_USERNAME=foo
-SECRET_PASSWORD=bar
+SECRET_USERNAME=foobar
+SECRET_PASSWORD=barbaz
 ```
 
 ### Example walk-through
