@@ -1,0 +1,4 @@
+name: jenkins
+release:
+  chart: stable/jenkins
+  version: 0.3.1

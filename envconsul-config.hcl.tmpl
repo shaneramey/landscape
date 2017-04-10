@@ -1,0 +1,10 @@
+vault {
+  address = "http://127.0.0.1:8200"
+  renew  = false
+}
+
+secret {
+  no_prefix = true
+  path   = "/secret/landscape/__GIT_BRANCH__/__K8S_NAMESPACE__/__HELM_CHART__"
+  format = "SECRET_{{ key }}"
+}
