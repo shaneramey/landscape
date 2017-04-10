@@ -56,7 +56,7 @@ secret {
 }
 EOF
 
-envconsul -config="./configtest.hcl" -secret="secret/landscape/$(GIT_BRANCH)/$(NAMESPACE)/$CHART_NAME)" -pristine -upcase env
+envconsul -config="./configtest.hcl" -secret="/secret/landscape/$(GIT_BRANCH)/$(NAMESPACE)/$CHART_NAME)" -pristine -upcase env
 ```
 
 You should see output like:
