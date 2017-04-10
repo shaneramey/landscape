@@ -1,0 +1,136 @@
+# Landscape
+Desired-State configuration for a deployed Kubernetes Stack
+https://github.com/shaneramey/landscape
+
+## How to use
+Environment deployments (master branch is customer-facing, by convention)
+ - fork the 'base' branch from https://github.com/shaneramey/landscape
+ - updates to 'base' branch can be merged into feature branches
+
+## Base branch
+ - Contains base charts
+ - Deployed from  "base" branch:
+    - charts.downup.us/nfs-provisioner: AutoProvision "nfs" and "default" StorageClasses
+    - charts.downup.us/helm-chart-publisher
+    - charts.downup.us/openvpn
+    - stable/jenkins: Used to deploy Helm Landscape
+
+## Secrets
+Secrets are passed into `landscaper apply` via envconsul. 
+To prevent overriding root user environment variables, environment variables pulled from Vault are prefixed with the string "SECRET_".
+
+### Secrets passage from Vault to Kubernetes
+The path from Vault to Kubernetes configuration files is:
+vault secrets
+    -> envconsul
+        -> environment variables
+            -> landscape
+                -> helm
+		            -> init-container w/ configmap template
+		                -> template replacement with env variables
+		                    -> configuration file with secrets populated
+
+### Vault component of secrets
+Hashicorp Vault keys are prefixed with the path:
+```
+/secret/landscape/$(KUBERNETES_CONTEXT)/$(KUBERNETES_NAMESPACE)/$(HELM_CHARTNAME)/
+```
+
+To test this, run:
+```
+vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | awk -F ': ' '{ print $2 }'`
+export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
+vault write /secret/landscape/downup/kube-system/nginx username=foo password=bar
+envconsul -config="./config.hcl" -secret="secret/landscape/downup/kube-system/nginx" -upcase env
+```
+
+You will see output like:
+```
+SECRET_USERNAME=foo
+SECRET_PASSWORD=bar
+```
+
+### Example walk-through
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: secrets-inject
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+data:
+  init.sh:
+    #! /bin/sh
+    sed -e 's/__SECRET_HELLO_NAME__/$SECRET_HELLO_NAME/g' hello-secret.config.tmpl  > /post-secrets/hello-secret.config
+    sed -ie 's/__SECRET_HELLO_AGE__/$SECRET_HELLO_AGE/g' /post-secrets/hello-secret.config
+  hello-secret.config.tmpl:
+    hello:
+      age: "__SECRET_HELLO_AGE__"
+      name: "__SECRET_HELLO_NAME__"
+```
+
+The init-container looks like this:
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+            {
+                "name": "subst-config-secrets",
+                "image": "busybox:latest",
+                "command": ["/secrets-conversion/init.sh"],
+                "workingDir": "/initial-certificate-store",
+                "volumeMounts": [
+                  {
+                    "name": "replace-secrets",
+                    "mountPath": "/pre-secrets"
+                  },
+                  {
+                    "name": "workdir",
+                    "mountPath": "/post-secrets"
+                  }
+                ]
+            }
+        ]'
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:1.0
+        command: ["/bin/myapp", "-c", "/config/hello-secret.config"]
+        volumeMounts:
+        - name: workdir
+          mountPath: /config
+      volumes:
+        - name: workdir
+          emptyDir: {}
+        - name: replace-secrets
+          configMap:
+            name: secrets-inject
+            defaultMode: 0755
+            items:
+            - key: init.sh
+              path: init.sh
+            - key: hello-secret.config.tmpl
+              path: hello-secret.config.tmpl
+```
+
+### Secrets naming convention
+Landscape `secrets` must use a 'secret-' prefix in their names. Example:
+```
+name: secretive
+release:
+  chart: local/hello-secret:0.1.0
+  version: 0.1.0
+configuration:
+  message: Hello, Landscaped world!
+secrets:
+  - secret-hello-name
+  - secret-hello-age
+```
+
+These environment-variable values (from Vault) are pulled into Kubernetes Secrets by way of Helm via a ConfigMap attached to an init-container:
