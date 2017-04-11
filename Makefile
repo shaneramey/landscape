@@ -30,20 +30,20 @@ deploy:
 					for missing_secret in "$${missing_secret_list[@]}" ; do \
 						@echo "ERROR Vault missing Secret /secret/landscape/$(GIT_BRANCH)/$$NAMESPACE/$$CHART/$$missing_secret" ; \
 						POPULATE_VAULT_STRING="$$POPULATE_VAULT_STRING $$missing_secret=$${missing_secret}-value" ; \
-					if [ $${missing_secret_list[@]} -ne 0 ]; then
-						done ; \
-						@echo ; \
-						@echo '### WARNING WARNING WARNING' ; \
-						@echo "It looks like you haven't set the secrets to provision this deployment." ; \
-						@echo "The below commands will remove any pre-existing secrets in Vault" ; \
-						@echo "They are to be used as a guide for initial provisioning of a deployment" ; \
-						@echo "Other tools will leave pre-existing secret keys in Vault without wiping them. Use those tools for merges" ; \
-						@echo ; \
-						@echo vault delete /secret/landscape/$(GIT_BRANCH)/$$NAMESPACE/$$CHART ; \
-						@echo vault write /secret/landscape/$(GIT_BRANCH)/$$NAMESPACE/$$CHART $$POPULATE_VAULT_STRING ; \
-						@echo ; \
-						@echo '### WARNING WARNING WARNING' ; \
-					fi ; \
+						if [ $${missing_secret_list[@]} -ne 0 ]; then
+							@echo ; \
+							@echo '### WARNING WARNING WARNING' ; \
+							@echo "It looks like you haven't set the secrets to provision this deployment." ; \
+							@echo "The below commands will remove any pre-existing secrets in Vault" ; \
+							@echo "They are to be used as a guide for initial provisioning of a deployment" ; \
+							@echo "Other tools will leave pre-existing secret keys in Vault without wiping them. Use those tools for merges" ; \
+							@echo ; \
+							@echo vault delete /secret/landscape/$(GIT_BRANCH)/$$NAMESPACE/$$CHART ; \
+							@echo vault write /secret/landscape/$(GIT_BRANCH)/$$NAMESPACE/$$CHART $$POPULATE_VAULT_STRING ; \
+							@echo ; \
+							@echo '### WARNING WARNING WARNING' ; \
+						fi ; \
+					done ; \
 				fi ; \
 			done ; \
 		fi ; \
