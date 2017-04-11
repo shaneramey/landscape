@@ -2,6 +2,21 @@
 Desired-State configuration for a deployed Kubernetes Stack
 https://github.com/shaneramey/landscape
 
+## Requirements
+- helm
+- landscaper
+- envconsul
+- Hashicorp Vault
+
+## Setup
+```
+docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault
+vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | awk -F ': ' '{ print $2 }'`
+export VAULT_ADDR=http://127.0.0.1:8200
+export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
+helm repo add charts.downup.us http://charts.downup.us
+```
+
 ## How to use
 Environment deployments (master branch is customer-facing, by convention)
  - fork the 'base' branch from https://github.com/shaneramey/landscape
