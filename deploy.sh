@@ -5,7 +5,18 @@
 
 set -u
 
+if [ -z ${VAULT_ADDR+x} ]; then
+	echo "Configuration error. Set VAULT_ADDR (and other VAULT_ variables, if needed)"
+	exit 2;
+fi
+
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
+
+darwin=false; # MacOSX compatibility
+case "`uname`" in
+  Darwin*) export sed_cmd=`which gsed` ;;
+  *) export sed_cmd=`which sed` ;;
+esac
 
 function join_by { local IFS="$1"; shift; echo "$*"; }
 
@@ -19,9 +30,9 @@ for NAMESPACE in *; do
 				missing_secret_list=() # in case any secrets are missing
 				echo "    - Using Vault prefix /secret/landscape/$GIT_BRANCH/$NAMESPACE/$CHART"
 				echo "    - Writing envconsul-config.hcl (.gitignored)"
-				sed "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl > envconsul-config.hcl
-				sed -i "s/__K8S_NAMESPACE__/$NAMESPACE/g" envconsul-config.hcl
-				sed -i "s/__HELM_CHART__/$CHART/g" envconsul-config.hcl
+				$sed_cmd "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl > envconsul-config.hcl
+				$sed_cmd -i "s/__K8S_NAMESPACE__/$NAMESPACE/g" envconsul-config.hcl
+				$sed_cmd -i "s/__HELM_CHART__/$CHART/g" envconsul-config.hcl
 
 				ENVCONSUL_COMMAND="envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANCH/$NAMESPACE/$CHART" -once -retry=1s -pristine -upcase env"
 				echo "    - Running '$ENVCONSUL_COMMAND'"
