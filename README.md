@@ -22,6 +22,10 @@ Environment deployments (master branch is customer-facing, by convention)
  - fork the 'base' branch from https://github.com/shaneramey/landscape
  - updates to 'base' branch can be merged into feature branches
 
+then, compare branches to compare environments!
+Use GitHub workflow to approve environment changes
+fork off branches of current environments and go wild!
+
 ## Base branch
  - Contains base charts
  - Deployed from  "base" branch:
