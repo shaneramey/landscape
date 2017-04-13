@@ -26,6 +26,19 @@ then, compare branches to compare environments!
 Use GitHub workflow to approve environment changes
 fork off branches of current environments and go wild!
 
+reusing and retooling config files is where Helm's real strength is
+https://news.ycombinator.com/item?id=14078838
+
+## MiniKube Setup
+```
+# start minikube
+minikube start --kubernetes-version=v1.6.0 --extra-config=kubelet.ClusterDomain=downup.local
+# gcr credentials
+kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
+kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
+helm init
+```
+
 ## Base branch
  - Contains base charts
  - Deployed from  "base" branch:
@@ -173,9 +186,7 @@ These environment-variable values (from Vault) are pulled into Kubernetes Secret
 Download service account JSON from GCR and run:
 ```
 kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
-secret "gcr-json-key" created
 kubectl --namespace=helm-chart-publisher patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
-serviceaccount "default" patched
 ```
 ### Open questions
 - How can we generate a helm starter chart by prompting the user, such as:
