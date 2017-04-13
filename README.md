@@ -165,6 +165,14 @@ secrets:
 
 These environment-variable values (from Vault) are pulled into Kubernetes Secrets by way of Helm via a ConfigMap attached to an init-container:
 
+### ImagePullSecrets (Kubernetes Cluster Setup)
+Download service account JSON from GCR and run:
+```
+kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
+secret "gcr-json-key" created
+kubectl --namespace=helm-chart-publisher patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
+serviceaccount "default" patched
+```
 ### Open questions
 - How can we generate a helm starter chart by prompting the user, such as:
 ```
@@ -175,3 +183,12 @@ Number of containers? [1] 3
 
 If this were possible, it might allow dynamically generated helm charts (just plug in your app)
 
+### Troubleshooting
+If values aren't updating with a script like:
+```
+kubectl delete secret helm-chart-publisher-helm-chart-publisher ; make -C ../apps/helm-chart-publisher publish_helm && helm repo update && helm local_bump -f helm-chart-publisher/helm-chart-publisher/helm-chart-publisher.yaml --patch && make deploy
+```
+Try:
+```
+helm delete helm-chart-publisher-helm-chart-publisher  --purge
+```
