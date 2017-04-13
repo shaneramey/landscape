@@ -186,7 +186,7 @@ These environment-variable values (from Vault) are pulled into Kubernetes Secret
 Download service account JSON from GCR and run:
 ```
 kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
-kubectl --namespace=helm-chart-publisher patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
+kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
 ```
 ### Open questions
 - How can we generate a helm starter chart by prompting the user, such as:
