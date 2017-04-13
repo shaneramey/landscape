@@ -1,9 +1,11 @@
 name: helm-chart-publisher
 release:
-  chart: charts.downup.us/helm-chart-publisher:0.1.2
-  version: 0.1.2
+  chart: charts.downup.us/helm-chart-publisher:0.1.167
+  version: 0.1.167
+configuration:
+  replicaCount: 2
 secrets:
-  - secret-aws-accesskey
-  - secret-aws-secretkey
-  - secret-aws-region
-  - secret-s3-bucket
+- secret-aws-accesskey
+- secret-aws-secretkey
+- secret-aws-region
+- secret-s3-bucket
