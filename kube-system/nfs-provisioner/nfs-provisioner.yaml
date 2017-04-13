@@ -1,7 +1,7 @@
 name: nfs-provisioner
 release:
-  chart: charts.downup.us/nfs-provisioner:0.1.0
-  version: 0.1.0
+  chart: charts.downup.us/nfs-provisioner:0.1.14
+  version: 0.1.14
 configuration:
   defaultStorageClass: true
 
