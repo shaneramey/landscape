@@ -22,23 +22,7 @@ function join_by { local IFS="$1"; shift; echo "$*"; }
 
 function tell_to_populate_secrets {
 	MISSING_SECRET_LIST=("$@")
-	WRITE_STRING=$(join_by ' ' MISSING_SECRET_LIST)
-	echo
-	echo '### WARNING WARNING WARNING'
-	echo "It looks like you haven't set the secrets to provision this deployment."
-	echo "The below commands will remove any pre-existing secrets in Vault."
-	echo "They are to be used as a guide for initial provisioning of a deployment."
-	echo "Other tools will leave pre-existing secret keys in Vault without wiping them. Use those tools for merges."
-	echo
-	echo vault delete /secret/landscape/$GIT_BRANCH/$NAMESPACE/$CHART
-	echo vault write /secret/landscape/$GIT_BRANCH/$NAMESPACE/$CHART \\
-	for unset_secret in MISSING_SECRET_LIST; do
-		echo " " $unset_secret "\\"
-	done
-	echo
-	echo '### WARNING WARNING WARNING'
-	echo
-	exit 3
+	echo MISSING_SECRET_LIST $MISSING_SECRET_LIST 
 
 }
 function deploy_chart() {
@@ -65,18 +49,34 @@ function deploy_chart() {
 	LANDSCAPER_COMMAND="landscaper apply --dir $K8S_NAMESPACE/$CHART_NAME/ --namespace=$K8S_NAMESPACE"
 	echo "    - Running '$LANDSCAPER_COMMAND'"
 	LANDSCAPER_OUTPUT=`$LANDSCAPER_COMMAND 2>&1`
+	echo "$LANDSCAPER_OUTPUT"
 	while read -r line ; do
 		MISSING_SECRET=`echo $line | awk '{ print $NF }' | cut -d= -f2 | tr '-' '_'`
 		missing_secret_list+=("$MISSING_SECRET=${MISSING_SECRET}_value")
-	done < <(echo $LANDSCAPER_OUTPUT | grep 'Secret\ not\ found\ in\ environment')
+	done < <(echo "$LANDSCAPER_OUTPUT" | grep 'Secret\ not\ found\ in\ environment')
 
 	# Print error if one exists
-	while read -r line ; do
+	while read -r line; do
 		echo $line | grep -i error
-	done < <(echo $LANDSCAPER_OUTPUT)
+	done < <(echo "$LANDSCAPER_OUTPUT")
 
 	if [[ ${#missing_secret_list[@]} -ge 1 ]]; then
-		tell_to_populate_secrets
+		echo
+		echo '### WARNING WARNING WARNING'
+		echo "It looks like you haven't set the secrets to provision this deployment."
+		echo "The below commands will remove any pre-existing secrets in Vault."
+		echo "They are to be used as a guide for initial provisioning of a deployment."
+		echo "Other tools will leave pre-existing secret keys in Vault without wiping them. Use those tools for merges."
+		echo
+		echo vault delete /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME
+		echo vault write /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME \\
+		for unset_secret in "${missing_secret_list[@]}"; do
+			echo " " $unset_secret "\\"
+		done
+		echo
+		echo '### WARNING WARNING WARNING'
+		echo
+		exit 3
 	fi
 }
 
