@@ -10,9 +10,31 @@ https://github.com/shaneramey/landscape
 
 ## Setup
 ```
+# Install Landscaper
+brew install glide
+cd $GOPATH
+mkdir -p src/github.com/eneco/
+cd !$
+git clone git@github.com:shaneramey/apps.git
+mv apps/landscaper .
+cd landscaper
+make bootstrap build
+sudo mv build/landscaper /usr/local/bin
+
+# Install envconsul
+```
+wget https://releases.hashicorp.com/envconsul/0.6.2/envconsul_0.6.2_darwin_amd64.tgz
+tar zxvf envconsul_0.6.2_darwin_amd64.tgz
+sudo mv envconsul /usr/local/bin/
+```
+
+# Install Helm
+```
+Temporary k8s 1.6.1 workaround: https://github.com/kubernetes/helm/issues/2224
+```
 docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault
-vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | awk -F ': ' '{ print $2 }'`
 export VAULT_ADDR=http://127.0.0.1:8200
+vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | awk -F ': ' '{ print $2 }'`
 export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 helm repo add charts.downup.us http://charts.downup.us
 ```
@@ -29,10 +51,12 @@ fork off branches of current environments and go wild!
 reusing and retooling config files is where Helm's real strength is
 https://news.ycombinator.com/item?id=14078838
 
+separation of concerns
+
 ## MiniKube Setup
 ```
 # start minikube
-minikube start --kubernetes-version=v1.6.0 --extra-config=kubelet.ClusterDomain=downup.local
+minikube start --kubernetes-version=v1.6.0 --extra-config=kubelet.ClusterDomain=downup.local --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC
 # gcr credentials
 kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
 kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'

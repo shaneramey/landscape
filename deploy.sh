@@ -32,10 +32,19 @@ function deploy_chart() {
 	CHART_NAME=`echo -n $PATH_TO_CHART | awk -F/ '{ print $2 }'`
 	echo " - Deploying Chart $CHART_NAME"
 	missing_secret_list=() # in case any secrets are missing
+	chart_errors=()
 	echo "    - Using Vault prefix /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME"
 	echo "    - Writing envconsul-config.hcl (.gitignored)"
 
 	# Envconsul Vault setup
+	if [ ! -x $sed_cmd ]; then
+		echo "ERROR: sed command $sed_cmd not found (MacOS users: run brew install gnu-sed)"
+		exit 2
+	fi
+	if [ ! -f /usr/local/bin/envconsul ]; then
+		echo "envconsul not installed. aborting"
+		exit 2
+	fi
 	$sed_cmd "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl > envconsul-config.hcl
 	$sed_cmd -i "s/__K8S_NAMESPACE__/$K8S_NAMESPACE/g" envconsul-config.hcl
 	$sed_cmd -i "s/__HELM_CHART__/$CHART_NAME/g" envconsul-config.hcl
@@ -57,8 +66,8 @@ function deploy_chart() {
 
 	# Print error if one exists
 	while read -r line; do
-		echo $line | grep -i error
-	done < <(echo "$LANDSCAPER_OUTPUT")
+		chart_errors+=("$line")
+	done < <(echo "$LANDSCAPER_OUTPUT" | grep -i error)
 
 	if [[ ${#missing_secret_list[@]} -ge 1 ]]; then
 		echo
@@ -77,6 +86,13 @@ function deploy_chart() {
 		echo '### WARNING WARNING WARNING'
 		echo
 		exit 3
+	fi
+
+	if [[ ${#chart_errors[@]} -ge 1 ]]; then
+		for chart_error in "${chart_errors[@]}"; do
+			echo $chart_error
+		done
+		exit 2
 	fi
 }
 
