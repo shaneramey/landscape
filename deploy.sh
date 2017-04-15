@@ -9,6 +9,7 @@ if [ -z ${VAULT_ADDR+x} ]; then
 	echo "Configuration error. Set VAULT_ADDR (and other VAULT_ variables, if needed)"
 	exit 2;
 fi
+VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 
