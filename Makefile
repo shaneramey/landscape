@@ -7,3 +7,6 @@ bootstrap:
 
 deploy:
 	./deploy.sh
+
+developer_min_resources:
+	landscaper apply --dir kube-system/influxdb/ --namespace=kube-system
