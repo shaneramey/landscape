@@ -73,6 +73,13 @@ vault auth `docker logs dev-vault 2>&1 | \
   grep '^Root\ Token' | awk -F ': ' '{ print $2 }' | tail -n 1`
 export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
+# Authenticate to Google Container Registry
+```
+gcloud auth login
+gcloud docker -- login us.gcr.io
+docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us.gcr.io
+```
+
 # Add Helm Chart Repo
 helm repo add charts.downup.us http://charts.downup.us
 
@@ -158,6 +165,11 @@ master branch is customer-facing, by convention
 # start minikube
 minikube start --kubernetes-version=v1.6.0 --extra-config=kubelet.ClusterDomain=downup.local --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC
 # gcr credentials
+gcloud docker -- login us.gcr.io
+docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us.gcr.io
+
+minikube addons enable registry-creds
+
 kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
 kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
 helm init
