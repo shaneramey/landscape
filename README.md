@@ -138,7 +138,7 @@ sudo mv envconsul /usr/local/bin/
 
 docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault
 export VAULT_ADDR=http://127.0.0.1:8200
-vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | awk -F ': ' '{ print $2 }'`
+vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | tail -n 1 | awk -F ': ' '{ print $2 }'`
 export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 helm repo add charts.downup.us http://charts.downup.us
 ```

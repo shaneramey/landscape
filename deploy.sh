@@ -9,7 +9,8 @@ if [ -z ${VAULT_ADDR+x} ]; then
 	echo "Configuration error. Set VAULT_ADDR (and other VAULT_ variables, if needed)"
 	exit 2;
 fi
-VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
+vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | tail -n 1 | awk -F ': ' '{ print \$2 }'`
+export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 
@@ -98,6 +99,7 @@ function deploy_chart() {
 }
 
 # Main purpose here
+helm repo update
 for NAMESPACE in *; do
 	if [ -d $NAMESPACE ]; then
 		echo "Deploying Charts in namespace $NAMESPACE"
