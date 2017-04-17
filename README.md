@@ -83,6 +83,11 @@ docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth pri
 # Add Helm Chart Repo
 helm repo add charts.downup.us http://charts.downup.us
 
+# Install helm local_bump plugin
+```
+helm plugin install https://github.com/shaneramey/helm-local-bump
+```
+
 # Choose which branch you want to deploy
 # the master branch represents the customer-facing env, by convention
 git checkout branch_i_want_to_deploy
@@ -115,7 +120,7 @@ landscaper apply --dir $K8S_NAMESPACE/$CHART_NAME/ --namespace=$K8S_NAMESPACE
 ```
 
 ### minikube-only: cluster ip routing
-sudo route add 10.0.0.0/20 `minikube ip`
+sudo route add 10.0.0.0/24 `minikube ip`
 
 ## Secrets
 Secrets are pulled from Vault via [envconsul](envconsul.io) via `landscaper apply`.
@@ -123,17 +128,11 @@ Environment variables pulled from Vault are prefixed with the string "SECRET_".
 This is to prevent overriding root user environment variables, for security reasons.
 
 ## Prerequisite install steps
+### Landscaper
 ```
-# Install Landscaper
-brew install glide
-cd $GOPATH
-mkdir -p src/github.com/eneco/
-cd !$
-git clone git@github.com:shaneramey/apps.git
-mv apps/landscaper .
-cd landscaper
-make bootstrap build
-sudo mv build/landscaper /usr/local/bin
+wget https://github.com/Eneco/landscaper/releases/download/1.0.1/landscaper-v1.0.1-linux-amd64
+sudo mv landscaper-v1.0.1-linux-amd64 /usr/local/bin/landscaper
+```
 
 ### Envconsul
 wget https://releases.hashicorp.com/envconsul/0.6.2/envconsul_0.6.2_darwin_amd64.tgz
