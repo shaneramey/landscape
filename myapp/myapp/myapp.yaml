@@ -1,0 +1,6 @@
+name: myapp
+release:
+  chart: charts.downup.us/django-nginx:0.1.16
+  version: 0.1.16
+configurations:
+secrets:
