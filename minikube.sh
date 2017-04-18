@@ -8,9 +8,9 @@
 # start minikube
 minikube start --kubernetes-version=v1.6.0 \
   --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
-  --cpus 4 \
-  --disk-size 20g \
-  --memory 4096
+  --cpus=4 \
+  --disk-size=20g \
+  --memory=4096
 
 # log in to your private registries
 minikube addons enable registry-creds
@@ -27,6 +27,11 @@ export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 gcloud auth login
 gcloud docker -- login us.gcr.io
 docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us.gcr.io
+
+# ImagePullSecrets (docker registry logins)
+#  Download service account JSON from GCR and run:
+kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
+kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
 
 # Add Helm Chart Repo
 helm repo add charts.downup.us http://charts.downup.us

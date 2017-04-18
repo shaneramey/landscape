@@ -27,14 +27,11 @@ function tell_to_populate_secrets {
 	echo MISSING_SECRET_LIST $MISSING_SECRET_LIST 
 
 }
-function deploy_chart() {
-	PATH_TO_CHART=$1
+
+function vault_to_env() {
+	CHART=$1
 	K8S_NAMESPACE=$2
 
-	CHART_NAME=`echo -n $PATH_TO_CHART | awk -F/ '{ print $2 }'`
-	echo " - Deploying Chart $CHART_NAME"
-	missing_secret_list=() # in case any secrets are missing
-	chart_errors=()
 	echo "    - Using Vault prefix /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME"
 	echo "    - Writing envconsul-config.hcl (.gitignored)"
 
@@ -55,9 +52,16 @@ function deploy_chart() {
 	ENVCONSUL_COMMAND="envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME" -once -retry=1s -pristine -upcase env"
 	echo "    - Running '$ENVCONSUL_COMMAND'"
 	export $($ENVCONSUL_COMMAND 2> /dev/null) > /dev/null
+}
+
+function deploy_namespace() {
+	K8S_NAMESPACE=$1
+
+	missing_secret_list=() # in case any secrets are missing
+	chart_errors=()
 
 	# Apply landscape
-	LANDSCAPER_COMMAND="landscaper apply --dir $K8S_NAMESPACE/$CHART_NAME/ --namespace=$K8S_NAMESPACE"
+	LANDSCAPER_COMMAND="landscaper apply --dir $K8S_NAMESPACE/ --namespace=$K8S_NAMESPACE"
 	echo "    - Running '$LANDSCAPER_COMMAND'"
 	LANDSCAPER_OUTPUT=`$LANDSCAPER_COMMAND 2>&1`
 	echo "$LANDSCAPER_OUTPUT"
@@ -103,10 +107,11 @@ helm repo update
 for NAMESPACE in *; do
 	if [ -d $NAMESPACE ]; then
 		echo "Deploying Charts in namespace $NAMESPACE"
-		for CHART_PATH in $NAMESPACE/*; do
-			if [ -d $CHART_PATH ]; then
-				deploy_chart $CHART_PATH $NAMESPACE
-			fi
+		for CHART_YAML in $NAMESPACE/*.yaml; do
+			CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
+			echo "Reading secrets from Vault for $CHART_NAME in namespace $NAMESPACE"
+			vault_to_env $CHART_NAME $NAMESPACE
 		done
+		deploy_namespace $NAMESPACE
 	fi
 done

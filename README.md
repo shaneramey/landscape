@@ -21,6 +21,17 @@ Helm is [an official Kubernetes](https://github.com/kubernetes/helm) package man
 Its strength is reusing and retooling config files
 It promotes separation of concerns (secrets are external from Helm configs)
 
+# Rapid iteration of Chart development
+preferred method is CI system (Jenkins), for version-control/GitHub approval
+this works great for local development of Charts
+```
+git clone https://github.com/shaneramey/helm-charts
+cd helm-charts
+helm upgrade nginx --namespace=jenkins nginx # near-instantaneous
+```
+
+# More about Helm
+
 Helm claims to be "the best way to find, share, and use software built for Kubernetes".
 A quote from the Helm README:
 > Use Helm to...
@@ -124,11 +135,6 @@ master branch is customer-facing, by convention
 # start minikube
 minikube start --kubernetes-version=v1.6.0 --extra-config=kubelet.ClusterDomain=downup.local --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC
 minikube addons enable registry-creds
-```
-# gcr credentials
-```
-gcloud docker -- login us.gcr.io
-docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us.gcr.io
 ```
 
 ### ImagePullSecrets (Kubernetes Cluster Setup)
