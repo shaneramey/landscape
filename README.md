@@ -163,16 +163,35 @@ master branch is customer-facing, by convention
 ```
 # start minikube
 minikube start --kubernetes-version=v1.6.0 --extra-config=kubelet.ClusterDomain=downup.local --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC
+minikube addons enable registry-creds
+```
 # gcr credentials
+```
 gcloud docker -- login us.gcr.io
 docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us.gcr.io
+```
 
-minikube addons enable registry-creds
-
+### ImagePullSecrets (Kubernetes Cluster Setup)
+Download service account JSON from GCR and run:
+```
 kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
 kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
+```
+
+# Install Helm Tiller into Kubernetes cluster
+```
 helm init
 ```
+
+## Deployment pipeline
+via Jenkinsfile
+- Checkout
+- Environment (Secrets)
+- Build
+- Test
+- Tag
+- Publish
+- Deploy
 
 ## Base branch
  - Contains base charts
@@ -314,27 +333,12 @@ spec:
 Landscape `secrets` must use a 'secret-' prefix in their names.
 This is to prevent overrides of the root user's environment variables, a practice to promote stability
 
-Example:
-```
-name: secretive
-release:
-  chart: local/hello-secret:0.1.0
-  version: 0.1.0
-configuration:
-  message: Hello, Landscaped world!
-secrets:
-  - secret-hello-name
-  - secret-hello-age
-```
+## Secrets usage
+Environment-variable values (from Vault) are pulled into Kubernetes Secrets
 
-These environment-variable values (from Vault) are pulled into Kubernetes Secrets by way of Helm via a ConfigMap attached to an init-container:
-
-### ImagePullSecrets (Kubernetes Cluster Setup)
-Download service account JSON from GCR and run:
-```
-kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
-kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
-```
+Ways this occurs:
+ - by way of Helm via a ConfigMap attached to an init-container named `init-setup`
+ - using secretKeyRef: in a k8s definition yaml file
 
 ### Open questions
 - How can we generate a helm starter chart by prompting the user, such as:
