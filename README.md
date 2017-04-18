@@ -9,6 +9,12 @@ fork off branches of current environments for testing or staging upgrades
 Principles:
 - Single point of control (branches of this repo) as Kubernetes deployments.
 
+Limitations:
+- Chart names can only be deployed once per namespace
+   to conform to the structure of vault and landscaper
+   charts must be deployed once per namespace.
+   Example: there must only be one `nginx` chart in namespace `app_name`
+
 ## Why use Helm?
 Helm is [an official Kubernetes](https://github.com/kubernetes/helm) package manager
 
@@ -53,56 +59,12 @@ Some or all of its functionality may be pulled into Helm eventually.
 ## Quick Start
 Generate a minikube k8s/landscape/helm/vault environment
 
-Just copy and paste this into a terminal (tested on MacOS)
-```
-# Start local Kubernetes environment w/ Helm
-minikube start --kubernetes-version=v1.6.0 \
-  --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
-  --cpus 4 \
-  --disk-size 20g \
-  --memory 4096
-  # set --docker-env to run minikube on a remote docker host
-minikube addons enable registry-creds # log in to your private registries
-helm init
+see [minikube.sh](minikube.sh)
 
-# Set up local Vault backend
-docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault
-export VAULT_ADDR=http://127.0.0.1:8200
-unset VAULT_TOKEN # auth doesnt work unless this is unset
-vault auth `docker logs dev-vault 2>&1 | \
-  grep '^Root\ Token' | awk -F ': ' '{ print $2 }' | tail -n 1`
-export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
+# minikube: selective deployment
 
-# Authenticate to Google Container Registry
-```
-gcloud auth login
-gcloud docker -- login us.gcr.io
-docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us.gcr.io
-```
-
-# Add Helm Chart Repo
-helm repo add charts.downup.us http://charts.downup.us
-
-# Install helm local_bump plugin
-```
-helm plugin install https://github.com/shaneramey/helm-local-bump
-```
-
-# Choose which branch you want to deploy
-# the master branch represents the customer-facing env, by convention
-git checkout branch_i_want_to_deploy
-
-# First time only: Populate secrets
-make setsecrets # you'll be guided through adding/editing secrets
-## TIP: copy the produced `vault write` statements to a LastPass Secure Note
-
-# Set Kubernetes context
-kubectl config use-context minikube # or cluster1, cluster2, etc.
-
-# Deploy environment
-make deploy # deploy current branch to $KUBERNETES_CONTEXT
-
-# Don't want to deploy everything in the full branch? run:
+If you don't want to deploy all namespaces/charts in the current branch
+Here's the interesting part of how it works. You can pull this into a shell script
 ```
 # Deploy Jenkins chart into Jenkins namespace into Kubernetes
 CHART_NAME=jenkins
@@ -119,13 +81,11 @@ envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANC
 landscaper apply --dir $K8S_NAMESPACE/$CHART_NAME/ --namespace=$K8S_NAMESPACE
 ```
 
-### minikube-only: cluster ip routing
-sudo route add 10.0.0.0/24 `minikube ip`
-
 ## Secrets
 Secrets are pulled from Vault via [envconsul](envconsul.io) via `landscaper apply`.
 Environment variables pulled from Vault are prefixed with the string "SECRET_".
 This is to prevent overriding root user environment variables, for security reasons.
+Landscape `secrets` must use a 'secret-' prefix in their names.
 
 ## Prerequisite install steps
 ### Landscaper
@@ -330,13 +290,9 @@ spec:
 ```
 
 ### Secrets naming convention
-Landscape `secrets` must use a 'secret-' prefix in their names.
 This is to prevent overrides of the root user's environment variables, a practice to promote stability
 
-## Secrets usage
-Environment-variable values (from Vault) are pulled into Kubernetes Secrets
-
-Ways this occurs:
+# Secrets usage
  - by way of Helm via a ConfigMap attached to an init-container named `init-setup`
  - using secretKeyRef: in a k8s definition yaml file
 
