@@ -295,6 +295,9 @@ spec:
               path: hello-secret.config.tmpl
 ```
 
+### Secrets: certificate signing
+- pass `--cluster-signing-cert-file` and `--cluster-signing-key-file` to kube-controller-manager
+- run `kubectl certificate approve http.jenkins.svc.cluster.local`
 ### Secrets naming convention
 This is to prevent overrides of the root user's environment variables, a practice to promote stability
 
