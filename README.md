@@ -54,6 +54,8 @@ The Landscape project itself currently has a much smaller fan-base than Helm.
 This may be because it was only recently introduced, and is gaining traction.
 Some or all of its functionality may be pulled into Helm eventually.
 
+It handles deletes of objects by wiping out everything in the namespace that's not defined in Landscape.
+
 ## Deployment targets:
  - local (minikube)
  - GKE
@@ -296,9 +298,20 @@ spec:
 ```
 
 ### Secrets: certificate signing
+Two methods, current (cfssl) and future (Kubernetes-native)
+See an example of certificate requests/signing in the "nginx" helm chart at http://charts.downup.us/
+
+cfssl
 - pass `--cluster-signing-cert-file` and `--cluster-signing-key-file` to kube-controller-manager
+   - default values are /etc/kubernetes/ca/ca.pem and /etc/kubernetes/ca/ca.key
 - run `kubectl certificate approve http.jenkins.svc.cluster.local`
 - run `kubectl get csr http.jenkins.svc.cluster.local -o jsonpath='{.status.certificate}' | base64 -D > server.crt`
+
+Kubernetes-native
+- pass `--cluster-signing-cert-file` and `--cluster-signing-key-file` to kube-controller-manager
+   - default values are `/etc/kubernetes/ca/ca.pem` and `/etc/kubernetes/ca/ca.key`
+- run `kubectl certificate approve http.mynamespace.svc.cluster.local`
+- run `kubectl get csr http.mynamespace.svc.cluster.local -o jsonpath='{.status.certificate}' | base64 -D > server.crt`
 
 ### Secrets naming convention
 This is to prevent overrides of the root user's environment variables, a practice to promote stability
