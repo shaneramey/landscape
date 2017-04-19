@@ -1,0 +1,5 @@
+name: cfssl
+release:
+  chart: charts.downup.us/cfssl:0.1.0
+  version: 0.1.0
+
