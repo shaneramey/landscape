@@ -6,11 +6,14 @@
 #  - Hashicorp vault container in local docker engine
 
 # start minikube
-minikube start --kubernetes-version=v1.6.0 \
-  --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
-  --cpus=4 \
-  --disk-size=20g \
-  --memory=4096
+minikube status
+if [ $? -ne 0 ]; then
+  minikube start --kubernetes-version=v1.6.0 \
+    --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
+    --cpus=4 \
+    --disk-size=20g \
+    --memory=4096
+fi
 
 # log in to your private registries
 minikube addons enable registry-creds
@@ -24,7 +27,9 @@ vault auth `docker logs dev-vault 2>&1 | \
 export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
 # Authenticate to Google Container Registry
+
 gcloud auth login
+echo "Docker: logging into registry us.gcr.io"
 gcloud docker -- login us.gcr.io
 docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us.gcr.io
 
@@ -58,4 +63,6 @@ helm init && sleep 10
 make deploy
 
 # minikube-only: cluster ip routing
+echo "Need your password to add route to the service network"
+sudo route delete 10.0.0.0/24
 sudo route add 10.0.0.0/24 `minikube ip`
