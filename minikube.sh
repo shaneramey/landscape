@@ -2,7 +2,7 @@
 
 # Requirements
 #  - minikube
-#  - gcr login access
+#  - gcr login access (needed for landscaper Makefile)
 #  - Hashicorp vault container in local docker engine
 
 # start minikube
@@ -17,6 +17,8 @@ fi
 
 # log in to your private registries
 minikube addons enable registry-creds
+# dynamic volume provisioning
+minikube addons enable default-storageclass
 
 # Set up local Vault backend
 docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault
@@ -30,13 +32,9 @@ export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
 gcloud auth login
 echo "Docker: logging into registry us.gcr.io"
-gcloud docker -- login us.gcr.io
+echo "if Username prompt is 'oauthaccesstoken', just press Enter - and any password will work"
+gcloud docker -- login us.gcr.io # any password should work if Username=oauth2accesstoken
 docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us.gcr.io
-
-# ImagePullSecrets (docker registry logins)
-#  Download service account JSON from GCR and run:
-kubectl create secret docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
-kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
 
 # Add Helm Chart Repo
 helm repo add charts.downup.us http://charts.downup.us
@@ -56,7 +54,7 @@ helm plugin install https://github.com/shaneramey/helm-local-bump
 kubectl config use-context minikube # or cluster1, cluster2, etc.
 
 # Install Helm Tiller into cluster
-helm init && sleep 10
+sleep 10 && helm init && sleep 10
 
 # Deploy environment
 #  deploys to current branch to context in `kubectl config current-context`

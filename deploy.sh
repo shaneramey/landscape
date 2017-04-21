@@ -83,11 +83,17 @@ function deploy_namespace() {
 		echo "They are to be used as a guide for initial provisioning of a deployment."
 		echo "Other tools will leave pre-existing secret keys in Vault without wiping them. Use those tools for merges."
 		echo
+		missing_secret_count=${#missing_secret_list[@]}
+		echo Vault is missing $missing_secret_count secrets.
+		echo First read existing secrets, and see if you want to replace them
+		echo
+		echo vault read /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME
 		echo vault delete /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME
 		echo vault write /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME \\
-		for unset_secret in "${missing_secret_list[@]}"; do
+		for unset_secret in "${missing_secret_list[@]:0:missing_secret_count-1}"; do
 			echo " " $unset_secret "\\"
 		done
+		echo " " ${missing_secret_list[missing_secret_count-1]}
 		echo
 		echo '### WARNING WARNING WARNING'
 		echo
@@ -106,6 +112,17 @@ function deploy_namespace() {
 helm repo update
 for NAMESPACE in *; do
 	if [ -d $NAMESPACE ]; then
+		echo "Creating namespace $NAMESPACE with ImagePullSecrets (docker registry logins)"
+		kubectl get ns $NAMESPACE
+		if [ $? -ne 0 ]; then
+			kubectl create ns $NAMESPACE
+		fi
+		kubectl get secret docker-registry gcr-json-key
+		if [ $? -ne 0 ]; then
+			# Download service account JSON from GCR
+                	kubectl create secret --namespace=$NAMESPACE docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
+		fi
+                kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
 		echo "Deploying Charts in namespace $NAMESPACE"
 		for CHART_YAML in $NAMESPACE/*.yaml; do
 			CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
