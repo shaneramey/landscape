@@ -117,7 +117,7 @@ for NAMESPACE in *; do
 		if [ $? -ne 0 ]; then
 			kubectl create ns $NAMESPACE
 		fi
-		kubectl get secret docker-registry gcr-json-key
+		kubectl get secret --namespace=$NAMESPACE docker-registry gcr-json-key
 		if [ $? -ne 0 ]; then
 			# Download service account JSON from GCR
                 	kubectl create secret --namespace=$NAMESPACE docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
