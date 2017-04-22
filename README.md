@@ -8,6 +8,7 @@ fork off branches of current environments for testing or staging upgrades
 
 Principles:
 - Single point of control (branches of this repo) as Kubernetes deployments.
+- Prevent configuration sprawl by supplying "building blocks" (Helm Charts)
 
 Limitations:
 - Chart names can only be deployed once per namespace
@@ -131,6 +132,10 @@ master branch is customer-facing, by convention
 ## TODO
 - Running the bootstrap vault container within the cluster is untested
    The cluster must bootstrap from an external Vault
+- add trusted cert to MacOS
+```
+sudo security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" "/tmp/ca.pem"
+```
 
 ## MiniKube Setup
 ```
