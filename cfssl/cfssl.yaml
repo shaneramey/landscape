@@ -1,5 +1,10 @@
 name: cfssl
 release:
-  chart: charts.downup.us/cfssl:0.1.0
-  version: 0.1.0
-
+  chart: charts.downup.us/cfssl:0.1.90
+  version: 0.1.90
+configuration:
+  postgresql:
+    secretsRef: "cfssl-cfssl" # format is "${namespace}-${chart_name}"
+secrets:
+  - secret-postgresql-postgres-user
+  - secret-postgresql-postgres-password
