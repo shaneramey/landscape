@@ -6,17 +6,20 @@ pipeline {
     stages {
         stage('Environment') {
             steps {
-                echo 'envconsul ...'
+                echo 'make environment'
+                sh 'make environment'
             }
         }
         stage('Test') {
             steps {
-                echo 'landscaper apply --dry-run ...'
+                echo 'make test'
+                sh 'make test'
             }
         }
         stage('Deploy') {
             steps {
-                echo 'landscaper apply ...'
+                echo 'make deploy'
+                sh 'make deploy'
             }
         }
     }

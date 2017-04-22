@@ -5,13 +5,6 @@
 
 set -u
 
-if [ -z ${VAULT_ADDR+x} ]; then
-	echo "Configuration error. Set VAULT_ADDR (and other VAULT_ variables, if needed)"
-	exit 2;
-fi
-vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | tail -n 1 | awk -F ': ' '{ print \$2 }'`
-export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
-
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 
 darwin=false; # MacOSX compatibility
@@ -109,7 +102,6 @@ function deploy_namespace() {
 }
 
 # Main purpose here
-helm repo update
 for NAMESPACE in *; do
 	if [ -d $NAMESPACE ]; then
 		echo "Creating namespace $NAMESPACE with ImagePullSecrets (docker registry logins)"
@@ -120,9 +112,9 @@ for NAMESPACE in *; do
 		kubectl get secret --namespace=$NAMESPACE docker-registry gcr-json-key > /dev/null
 		if [ $? -ne 0 ]; then
 			# Download service account JSON from GCR
-                	kubectl create secret --namespace=$NAMESPACE docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
+        	kubectl create secret --namespace=$NAMESPACE docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
 		fi
-                kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}' > /dev/null
+        kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}' > /dev/null
 		echo "Deploying Charts in namespace $NAMESPACE"
 		for CHART_YAML in $NAMESPACE/*.yaml; do
 			CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
