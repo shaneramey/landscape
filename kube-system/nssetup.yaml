@@ -1,6 +1,6 @@
-name: ns-policies
+name: nssetup
 release:
-  chart: charts.downup.us/ns-policies:0.1.0
+  chart: charts.downup.us/nssetup:0.1.0
   version: 0.1.0
 configuration:
   limits:
