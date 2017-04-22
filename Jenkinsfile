@@ -6,20 +6,20 @@ pipeline {
     stages {
         stage('Environment') {
             steps {
-                echo 'make environment'
-                sh 'make environment'
+                echo './environment.sh'
+                sh './environment.sh'
             }
         }
         stage('Test') {
             steps {
-                echo 'make test'
-                sh 'make test'
+                echo './test.sh'
+                sh './test.sh'
             }
         }
         stage('Deploy') {
             steps {
-                echo 'make deploy'
-                sh 'make deploy'
+                echo './deploy.sh'
+                sh './deploy.sh'
             }
         }
     }
