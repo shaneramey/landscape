@@ -22,7 +22,7 @@ minikube addons enable default-storageclass
 
 # Set up local Vault backend
 docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault
-export VAULT_ADDR=http://127.0.0.1:8200
+export VAULT_ADDR=https://127.0.0.1:8200
 unset VAULT_TOKEN # auth doesnt work unless this is unset
 vault auth `docker logs dev-vault 2>&1 | \
   grep '^Root\ Token' | awk -F ': ' '{ print $2 }' | tail -n 1`
@@ -36,12 +36,6 @@ echo "if Username prompt is 'oauthaccesstoken', just press Enter - and any passw
 gcloud docker -- login us.gcr.io # any password should work if Username=oauth2accesstoken
 docker login -e shane.ramey@gmail.com -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us.gcr.io
 
-# Add Helm Chart Repo
-helm repo add charts.downup.us http://charts.downup.us
-
-# Install helm local_bump plugin
-helm plugin install https://github.com/shaneramey/helm-local-bump
-
 # OPTIONAL: checkout which branch you want to deploy
 #git checkout branch_i_want_to_deploy
 ## TIP: copy the produced `vault write` statements to a LastPass Secure Note
@@ -52,9 +46,6 @@ helm plugin install https://github.com/shaneramey/helm-local-bump
 
 # Set Kubernetes context
 kubectl config use-context minikube # or cluster1, cluster2, etc.
-
-# Install Helm Tiller into cluster
-sleep 10 && helm init && sleep 10
 
 # Deploy environment
 #  deploys to current branch to context in `kubectl config current-context`

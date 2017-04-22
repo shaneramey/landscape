@@ -1,15 +1,15 @@
 #! /usr/bin/env bash
-
+set -u
 # Deploys a Landscaper environment based on directory structure in this repo
 # Each branch deploys its own set of Helm Charts
+CLUSTER_DOMAIN=`grep search /etc/resolv.conf | awk '{ print $NF }'`
 
-set -u
-
+# Install 
 if [ -z ${VAULT_ADDR+x} ]; then
-	echo "Configuration error. Set VAULT_ADDR (and other VAULT_ variables, if needed)"
-	exit 2;
+	export VAULT_ADDR=http://http.vault.svc.${CLUSTER_DOMAIN}
 fi
-vault auth `docker logs dev-vault 2>&1 | grep 'Root\ Token' | tail -n 1 | awk -F ': ' '{ print \$2 }'`
+unset VAULT_TOKEN # auth doesnt work unless this is unset
+vault auth 00deadbeef
 export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
 darwin=false; # MacOSX compatibility
@@ -18,4 +18,8 @@ case "`uname`" in
   *) export sed_cmd=`which sed` ;;
 esac
 
+helm repo add charts.downup.us http://charts.downup.us
 helm repo update
+helm plugin install https://github.com/shaneramey/helm-local-bump
+
+sleep 10 && helm init && sleep 10
