@@ -1,0 +1,5 @@
+name: vault
+release:
+  chart: charts.downup.us/vault:0.1.0
+  version: 0.1.0
+
