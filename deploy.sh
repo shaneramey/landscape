@@ -102,6 +102,7 @@ function deploy_namespace() {
 }
 
 # Main purpose here
+helm repo update
 for NAMESPACE in *; do
 	if [ -d $NAMESPACE ]; then
 		echo "Creating namespace $NAMESPACE with ImagePullSecrets (docker registry logins)"
