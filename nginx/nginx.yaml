@@ -1,0 +1,4 @@
+name: nginx
+release:
+  chart: charts.downup.us/nginx:0.1.85
+  version: 0.1.85
