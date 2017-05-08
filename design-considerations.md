@@ -6,6 +6,22 @@ Put Kubernetes stack in any environment, with any of the following parameters
  - any PKI infrastructure, so a stack can be signed by/trusted with a single CA
  - privileged vs non-privileged containers should work as a toggle in any stack
 
+# How parameters are passed
+Cluster creation
+ - minikube
+```
+  minikube start --kubernetes-version=v1.6.0 \
+    --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
+    --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
+    --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
+    --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
+    --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
+    --extra-config=apiserver.GenericServerRunOptions.AuthorizationMode=RBAC \
+    --cpus=4 \
+    --disk-size=20g \
+    --memory=4096
+```
+ - kops (GCE, AWS)
 
 ## Parameters to Kubernetes components
 

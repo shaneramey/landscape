@@ -13,8 +13,52 @@ Principles:
 Limitations:
 - Chart names can only be deployed once per namespace
    to conform to the structure of vault and landscaper
-   charts must be deployed once per namespace.
-   Example: there must only be one `nginx` chart in namespace `app_name`
+   Example: there must only be one `nginx` chart in namespace `myapp`
+- Each cluster gets its own cluster domain (in /etc/resolv.conf on each pod and external calls to services). FIXME: explain this
+
+## Core Charts
+ - [common-chart](https://github.com/shaneramey/common-chart)
+       defines templates that can be used by all charts
+ - [vault](https://github.com/shaneramey/helm-charts/tree/master/vault)
+      back-end for Kubernetes secrets (including CA PKI)
+ - [cfssl](https://github.com/shaneramey/helm-charts/tree/master/cfssl)
+      optional;alternatively use k8s CertificateSigningRequests for auto-signing
+ - [nssetup](https://github.com/shaneramey/helm-charts/tree/master/nssetup)
+      Provides per-namespace resources (e.g., LimitRanges + ResourceQuotas)
+ - [389ds](https://github.com/shaneramey/helm-charts/tree/master/389ds)
+      LDAP server
+ - [nginx](https://github.com/shaneramey/helm-charts/tree/master/nginx)
+      nginx front-end for services that auto-submits a CSR / loads TLS cert
+ - [helm-chart-publisher](https://github.com/shaneramey/helm-charts/tree/master/helm-chart-publisher)
+      curl-able API to publish Helm charts to a HTTP Helm chart repo
+ - [monocular](https://github.com/shaneramey/helm-charts/tree/master/monocular)
+      GUI to view installed/available charts
+ - [jenkins](https://github.com/shaneramey/helm-charts/tree/master/jenkins)
+      back-end for secrets
+ - [fluentd](https://github.com/shaneramey/helm-charts/tree/master/fluentd)
+      DaemonSet to collect logs from each k8s node
+ - [elasticsearch](https://github.com/shaneramey/helm-charts/tree/master/elasticsearch)
+      PetSet with PersistentVolumeProvisioner support
+ - [kibana](https://github.com/shaneramey/helm-charts/tree/master/kibana)
+      Deployment with LDAP login front-end
+ - [openvpn](https://github.com/shaneramey/helm-charts/tree/master/openvpn)
+      Provides remote access
+ - [heapster](https://github.com/shaneramey/helm-charts/tree/master/heapster)
+      Deployment with LDAP login front-end
+ - [influxdb](https://github.com/shaneramey/helm-charts/tree/master/influxdb)
+      Deployment with LDAP login front-end
+
+## Application Charts
+ - [postgresql](https://github.com/shaneramey/helm-charts/tree/master/postgresql)
+       defines templates that can be used by all charts
+ - [redis](https://github.com/shaneramey/helm-charts/tree/master/redis)
+       defines templates that can be used by all charts
+ - [django](https://github.com/shaneramey/helm-charts/tree/master/django)
+       defines templates that can be used by all charts
+ - [django-nginx-redis-postgresql](https://github.com/shaneramey/helm-charts/tree/master/django-nginx-redis-postgresql)
+       Chart that wraps (requires) django + nginx + redis + postgresql charts
+ - [nodejs-nginx-redis-postgresql](https://github.com/shaneramey/helm-charts/tree/master/nodejs-nginx-redis-postgresql)
+       Chart that wraps (requires) nodejs + nginx + redis + postgresql charts
 
 ## Why use Helm?
 Helm is [an official Kubernetes](https://github.com/kubernetes/helm) package manager
@@ -345,4 +389,10 @@ make -C ../helm-charts/ publish_helm && helm repo update && helm local_bump -f o
 Try:
 ```
 helm delete helm-chart-publisher-helm-chart-publisher  --purge
+```
+
+# Auto signing certificate requests
+Get list of pending certificates
+```
+kubectl get csr | grep -v NAME  | awk '{ print $1 }' | grep Pending 
 ```

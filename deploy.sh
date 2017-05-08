@@ -2,15 +2,26 @@
 
 # Deploys a Landscaper environment based on directory structure in this repo
 # Each branch deploys its own set of Helm Charts
-
+# Expects `kubectl config get-contexts` to have the desired context selected
+# variables
+#  - GIT_BRANCH (auto-discovered)
+#  - 
 set -u
 
+# each branch has its own set of deployments
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
+
+# read secrets from Hashicorp Vault
+export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
+if [ "$VAULT_TOKEN" == "" ]; then
+	echo "ERROR: could not look up vault token. Auth first"
+	exit 4
+fi
 
 darwin=false; # MacOSX compatibility
 case "`uname`" in
-  Darwin*) export sed_cmd=`which gsed` ;;
-  *) export sed_cmd=`which sed` ;;
+	Darwin*) export sed_cmd=`which gsed` ;;
+	*) export sed_cmd=`which sed` ;;
 esac
 
 function join_by { local IFS="$1"; shift; echo "$*"; }
@@ -110,12 +121,12 @@ for NAMESPACE in *; do
 		if [ $? -ne 0 ]; then
 			kubectl create ns $NAMESPACE
 		fi
-		kubectl get secret --namespace=$NAMESPACE docker-registry gcr-json-key > /dev/null
-		if [ $? -ne 0 ]; then
-			# Download service account JSON from GCR
-        	kubectl create secret --namespace=$NAMESPACE docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
-		fi
-        kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}' > /dev/null
+		# kubectl get secret --namespace=$NAMESPACE docker-registry gcr-json-key > /dev/null
+		# if [ $? -ne 0 ]; then
+		# 	# Download service account JSON from GCR
+  #       	kubectl create secret --namespace=$NAMESPACE docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
+		# fi
+  #       kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}' > /dev/null
 		echo "Deploying Charts in namespace $NAMESPACE"
 		for CHART_YAML in $NAMESPACE/*.yaml; do
 			CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
