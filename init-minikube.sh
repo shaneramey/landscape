@@ -19,7 +19,7 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     exit 1
   fi
   echo "running 'minikube mount ~/external-pki' in background"
-  minikube mount ~/external-pki:/mount-9p &
+  minikube mount ~/external-pki:/etc/kubernetes/ca &
   minikube start --kubernetes-version=v1.6.0 \
     --extra-config=apiserver.Authorization.Mode=RBAC \
     --extra-config=apiserver.SecureServingOptions.CertDirectory=/mount-9p \
@@ -30,6 +30,9 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     --disk-size=20g \
     --memory=4096
 
+  # restart minikube to use mounted files
+  minikube stop
+  minikube start
 	# enable dynamic volume provisioning
 	minikube addons enable default-storageclass
 
