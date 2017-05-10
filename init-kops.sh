@@ -47,7 +47,38 @@ Other parameters
 
 Container parameters
 - apiserver
-  - allow-provileged
+  - allow-privileged
 
 Other considerations
 - kubernetes federation
+#! /usr/bin/env bash
+#
+# initializes a the following pki certs:
+# - root CA ("ca.[crt, key]" - key gets put in LastPass; not stored in Vault)
+# - intermediate CA used to sign everything ("intermediate.[crt, key]")
+# - cluster intermediate CA cert ("cluster.[crt, key]")
+#    - signed by cluster.crt:
+#       etcd server ("etcd-server.[crt,key]")
+#       etcd client ("etcd-client.[crt,key]")
+#       pod client ("pod-client.key" CN=pod-client)
+# - client signed by cluster.crt ("pod-client.key")
+# - client certificate to talk to etcd ("etcd-client.[crt, key]")
+# - k8s components tls arguments
+#    - apiserver
+#       - tls-cert-file: for https://kubernetes.default.svc/, etc.
+#       - tls-private-key-file: for https://kubernetes.default.svc/, etc.
+#       - ca-client-file: /var/run/secrets/kubernetes.io/ca.crt on pods
+#       - ca cert chain to be placed in
+#       - etcd-certfile: client cert for k8s api
+#       - etcd-keyfile: client key for k8s api
+#       - etcd-cafile: ca cert to auth etcd server
+#       - service-account-key-file=pod-client.key
+#       - authorization-rbac-super-user=pod-client
+#    - controller-manager
+#       - root-ca-file ("cluster.crt")
+#       - service-account-key-file=pod-client.key
+#       - kubeconfig
+#    - scheduler
+#       - kubeconfig
+#    - kube-proxy
+#       - kubeconfig

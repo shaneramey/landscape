@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 # Deploys a Landscaper environment based on directory structure in this repo
-# Each branch deploys its own set of Helm Charts
+# Each branch deploys its own set of Helm charts
 # Expects `kubectl config get-contexts` to have the desired context selected
 # variables
 #  - GIT_BRANCH (auto-discovered)
@@ -54,11 +54,11 @@ function vault_to_env() {
 
 	# Read secrets from Vault
 	ENVCONSUL_COMMAND="envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME" -once -retry=1s -pristine -upcase env"
-	echo "    - Running '$ENVCONSUL_COMMAND'"
+	echo "    - Running \`$ENVCONSUL_COMMAND\`"
 	export $($ENVCONSUL_COMMAND 2> /dev/null) > /dev/null
 }
 
-function deploy_namespace() {
+function apply_namespace() {
 	K8S_NAMESPACE=$1
 
 	missing_secret_list=() # in case any secrets are missing
@@ -66,7 +66,8 @@ function deploy_namespace() {
 
 	# Apply landscape
 	LANDSCAPER_COMMAND="landscaper apply --dir $K8S_NAMESPACE/ --namespace=$K8S_NAMESPACE"
-	echo "    - Running '$LANDSCAPER_COMMAND'"
+	echo
+	echo "Running \`$LANDSCAPER_COMMAND\`"
 	LANDSCAPER_OUTPUT=`$LANDSCAPER_COMMAND 2>&1`
 	echo "$LANDSCAPER_OUTPUT"
 	while read -r line ; do
@@ -116,10 +117,18 @@ function deploy_namespace() {
 helm repo update
 for NAMESPACE in *; do
 	if [ -d $NAMESPACE ]; then
-		echo "Creating namespace $NAMESPACE with ImagePullSecrets (docker registry logins)"
-		kubectl get ns $NAMESPACE
-		if [ $? -ne 0 ]; then
+		echo "###"
+		echo "# Namespace: $NAMESPACE"
+		echo "###"
+		echo
+		echo "Checking status of namespace $NAMESPACE"
+		kubectl get ns $NAMESPACE > /dev/null
+		if [ $? -eq 0 ]; then
+			echo "    - Namespace $NAMESPACE already exists"
+		else
+			echo -n "    - Namespace $NAMESPACE does not exist. Creating..."
 			kubectl create ns $NAMESPACE
+			echo " done."
 		fi
 		# kubectl get secret --namespace=$NAMESPACE docker-registry gcr-json-key > /dev/null
 		# if [ $? -ne 0 ]; then
@@ -127,12 +136,14 @@ for NAMESPACE in *; do
   #       	kubectl create secret --namespace=$NAMESPACE docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
 		# fi
   #       kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}' > /dev/null
-		echo "Deploying Charts in namespace $NAMESPACE"
-		for CHART_YAML in $NAMESPACE/*.yaml; do
+		echo
+		for CHART_YAML in ${NAMESPACE}/*.yaml; do
+			if [ "$NAMESPACE" == "ca-pki-init" ]; then continue; fi # skip tls init workspace
 			CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
-			echo "Reading secrets from Vault for $CHART_NAME in namespace $NAMESPACE"
+			echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
 			vault_to_env $CHART_NAME $NAMESPACE
 		done
-		deploy_namespace $NAMESPACE
+		# run landscaper
+		apply_namespace $NAMESPACE
 	fi
 done

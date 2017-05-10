@@ -19,9 +19,11 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     exit 1
   fi
   echo "running 'minikube mount ~/external-pki' in background"
-  minikube mount ~/external-pki &
+  minikube mount ~/external-pki:/mount-9p &
   minikube start --kubernetes-version=v1.6.0 \
     --extra-config=apiserver.Authorization.Mode=RBAC \
+    --extra-config=apiserver.SecureServingOptions.CertDirectory=/mount-9p \
+    --extra-config=apiserver.SecureServingOptions.PairName=ca \
     --extra-config=controller-manager.ClusterSigningCertFile=/mount-9p/ca.crt \
     --extra-config=controller-manager.ClusterSigningKeyFile=/mount-9p/ca.key \
     --cpus=4 \
@@ -44,6 +46,6 @@ sudo route delete 10.0.0.0/24
 sudo route add 10.0.0.0/24 `minikube ip`
 
 echo "NOTE: you may want to set /etc/resolv.conf to use nameserver 10.0.0.10"
+echo "      try adding /etc/resolver/cluster.local w/ 10.0.0.10 as its nameserver (MacOS)"
 echo "NOTE: you have to run 'minikube ssh' and kill -HUP the localkube process"
-
-
+echo "NOTE: you may have to run \`kubectl create clusterrolebinding add-on-cluster-admin  --clusterrole=cluster-admin --serviceaccount=kube-system:default\`"
