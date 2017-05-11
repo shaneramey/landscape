@@ -65,7 +65,7 @@ function apply_namespace() {
 	chart_errors=()
 
 	# Apply landscape
-	LANDSCAPER_COMMAND="landscaper apply --dir $K8S_NAMESPACE/ --namespace=$K8S_NAMESPACE"
+	LANDSCAPER_COMMAND="landscaper apply --namespace=$K8S_NAMESPACE $K8S_NAMESPACE/*.yaml"
 	echo
 	echo "Running \`$LANDSCAPER_COMMAND\`"
 	LANDSCAPER_OUTPUT=`$LANDSCAPER_COMMAND 2>&1`
