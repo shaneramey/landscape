@@ -90,6 +90,10 @@ function apply_namespace() {
 		echo
 		missing_secret_count=${#missing_secret_list[@]}
 		echo Vault is missing $missing_secret_count secrets.
+		echo
+		echo If you have lastpass-cli installed, run:
+		echo lpass show k8s-landscaper/$GIT_BRANCH --notes
+
 		echo First read existing secrets, and see if you want to replace them
 		echo
 		echo vault read /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME
@@ -113,8 +117,9 @@ function apply_namespace() {
 	fi
 }
 
-# Main purpose here
 helm repo update
+
+# Loop through namespace
 for NAMESPACE in *; do
 	if [ -d $NAMESPACE ]; then
 		echo "###"

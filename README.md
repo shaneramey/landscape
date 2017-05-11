@@ -4,7 +4,15 @@ Kubernetes cluster desired-state configuration repo
 Features:
 Compare branches to compare environments!
 Use GitHub workflow to approve environment changes
-fork off branches of current environments for testing or staging upgrades
+fork off branches of current environments for testing or staging upgrades with a simple command:
+```
+# fork off "mynewenv" cluster desired-state config
+git branch --track mynewenv master
+git checkout mynewenv
+git pull # pulls updates from master branch into mynewenv branch
+<use future script to copy vault items from /secret/landscaper/master to /secret/landscaper/mynewenv>
+make deploy
+```
 
 Principles:
 - Single point of control (branches of this repo) as Kubernetes deployments.
@@ -111,6 +119,7 @@ It handles deletes of objects by wiping out everything in the namespace that's n
 - [Landscaper](https://github.com/Eneco/landscaper)
 - [envconsul](https://github.com/hashicorp/envconsul)
 - [Hashicorp Vault](https://www.vaultproject.io) client `vault` command
+- (optional) [lastpass-cli](https://github.com/lastpass/lastpass-cli) for secrets backups
 - (minikube deploys) [minikube](https://github.com/kubernetes/minikube)
 - (minikube deploys) [docker vault container](https://hub.docker.com/_/vault/)
 
@@ -144,6 +153,17 @@ Secrets are pulled from Vault via [envconsul](envconsul.io) via `landscaper appl
 Environment variables pulled from Vault are prefixed with the string "SECRET_".
 This is to prevent overriding root user environment variables, for security reasons.
 Landscape `secrets` must use a 'secret-' prefix in their names.
+
+## Secrets backups via LastPass
+to use LastPass per-git-branch secrets, do:
+make WRITE_TO_VAULT_FROM_LASTPASS=true all
+
+the `make` command will exit if secrets aren't pre-loaded into Vault, and guide you with the commands to set all needed secrets.
+
+lastpass_to_vault target expects a Folder in LastPass named 'k8s-landscaper'
+with LastPass "Notes" named the git branch (e.g., "master").
+
+TODO: LastPass needs to be cleaned out for unused secrets to avoid cruft
 
 ## Prerequisite install steps
 ### Landscaper

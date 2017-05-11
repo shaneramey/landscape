@@ -1,17 +1,29 @@
 GIT_BRANCH := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 
-K8S_NAMESPACE="somefakenamespace"
+K8S_NAMESPACE := "__all_namespaces__"
 
-PROVISIONER="minikube"
+WRITE_TO_VAULT_FROM_LASTPASS := false
+
+LASTPASS_USERNAME := "shane.ramey@gmail.com"
+
+PROVISIONER := minikube
 
 PURGE_ALL="no"
 
-.PHONY: environment test deploy purge
+.PHONY: init_cluster lastpass_to_vault environment test deploy purge
 
-init:
+ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
+	lpass login $(LASTPASS_USERNAME)
+	# prints `vault write` commands
+	echo $(shell lpass show k8s-landscaper/$(GIT_BRANCH) --notes)
+endif
+
+init_cluster:
 	./init-vault-local.sh # create or start local dev-vault container
 	./init-${PROVISIONER}.sh # start cluster
 	helm init # install Helm into cluster
+	@echo waiting 10s for tiller pod to be Ready
+	sleep 10
 
 environment:
 	./environment.sh ${K8S_NAMESPACE}
@@ -19,44 +31,20 @@ environment:
 test:
 	./test.sh ${K8S_NAMESPACE}
 
-deploy: #init environment test
+deploy: init_cluster environment test
 	./deploy.sh ${K8S_NAMESPACE}
 
 csr_approve:
 	kubectl get csr -o "jsonpath={.items[*].metadata.name}" | xargs kubectl certificate approve
+
 purge:
 	if [ "$$PURGE_ALL" == "yes" ]; then \
 		helm list -q | xargs helm delete --purge \
 	fi
 
-all: environment test deploy csr_approve
+all: init_cluster lastpass_to_vault environment test deploy csr_approve
 
 # Deploy environment
 #  deploys to current branch to context in `kubectl config current-context`
 #make deploy
 
-# FIXME:
-# future parameters
-# Network parameters
-# - apiserver
-#   - service-cluster-ip-range
-# - kube-proxy
-#   - masquarade-all
-# - kubelet
-#   - cluster-dns
-#   - cluster-domain
-#   - network-plugin
-#   - resolv-conf
-
-# Other parameters
-# - kubernetes-apiserver
-#   - allow-privileged
-# - kubelet
-#   - allow-privileged
-
-# Container parameters
-# - apiserver
-#   - allow-provileged
-
-# Other considerations
-# - kubernetes federation

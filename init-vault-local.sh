@@ -8,6 +8,6 @@ if [ $? -ne 0 ]; then
 fi
 export VAULT_ADDR=http://127.0.0.1:8200
 unset VAULT_TOKEN # auth doesnt work unless this is unset
-sleep 1
+sleep 3
 vault auth `docker logs dev-vault 2>&1 | \
   grep '^Root\ Token' | awk -F ': ' '{ print $2 }' | tail -n 1`
