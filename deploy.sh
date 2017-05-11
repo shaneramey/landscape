@@ -149,6 +149,7 @@ for NAMESPACE in *; do
 			vault_to_env $CHART_NAME $NAMESPACE
 		done
 		# run landscaper
+		if [ "$NAMESPACE" == "ca-pki-init" ]; then continue; fi # skip tls init workspace
 		apply_namespace $NAMESPACE
 	fi
 done
