@@ -2,3 +2,8 @@ name: nginx
 release:
   chart: charts.downup.us/nginx:0.1.93
   version: 0.1.93
+configuration:
+  services:
+    dns:
+      clusterIP: 10.0.0.11 # FIXME: make this dynamically .10
+
