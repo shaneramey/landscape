@@ -16,18 +16,12 @@ if ! [ -z ${JENKINS_SECRET+x} ] && ! [ -z ${KUBERNETES_PORT} ]; then
 	kubectl config use-context ${CLUSTER_DOMAIN}
 fi
 
-# Install 
+# when this command is run from inside a k8s cluster, it should use its own cluster vault
 if [ -z ${VAULT_ADDR+x} ]; then
 	export VAULT_ADDR=http://http.vault.svc.${CLUSTER_DOMAIN}
 fi
 unset VAULT_TOKEN # auth doesnt work unless this is unset
 export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
-
-darwin=false; # MacOSX compatibility
-case "`uname`" in
-  Darwin*) export sed_cmd=`which gsed` ;;
-  *) export sed_cmd=`which sed` ;;
-esac
 
 helm repo add charts.downup.us http://charts.downup.us
 helm repo update
