@@ -36,6 +36,7 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
   minikube stop
   minikube start
   # enable dynamic volume provisioning
+  minikube addons disable kube-dns # DNS deployed via Landscaper/Helm Chart
   minikube addons enable default-storageclass
   minikube addons disable registry-creds # FIXME: https://github.com/kubernetes/minikube/blob/c23dfba5d25fc18b95c6896f3c98056cedce700f/deploy/addons/registry-creds/registry-creds-rc.yaml needs to be deployed first
 
