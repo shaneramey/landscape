@@ -1,0 +1,25 @@
+# FIXME:
+# future parameters
+# Network parameters
+# - apiserver
+#   - service-cluster-ip-range
+# - kube-proxy
+#   - masquarade-all
+# - kubelet
+#   - cluster-dns
+#   - cluster-domain
+#   - network-plugin
+#   - resolv-conf
+
+# Other parameters
+# - kubernetes-apiserver
+#   - allow-privileged
+# - kubelet
+#   - allow-privileged
+
+# Container parameters
+# - apiserver
+#   - allow-provileged
+
+# Other considerations
+# - kubernetes federation
