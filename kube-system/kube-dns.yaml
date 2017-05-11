@@ -1,7 +1,7 @@
 name: kube-dns
 release:
-  chart: charts.downup.us/kube-dns:0.1.11
-  version: 0.1.11
+  chart: charts.downup.us/kube-dns:0.1.15
+  version: 0.1.15
 configuration:
   services:
     dns:

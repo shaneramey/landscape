@@ -10,7 +10,7 @@ PROVISIONER := minikube
 
 PURGE_ALL="no"
 
-.PHONY: init_cluster lastpass_to_vault environment test deploy csr_approve purge
+.PHONY: init_cluster environment test deploy csr_approve purge
 
 ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 	lpass login $(LASTPASS_USERNAME)
@@ -32,6 +32,9 @@ environment:
 test:
 	./test.sh ${K8S_NAMESPACE}
 
+verify:
+	./verify.sh ${K8S_NAMESPACE}
+
 deploy: init_cluster environment test
 	./deploy.sh ${K8S_NAMESPACE}
 
@@ -43,7 +46,7 @@ purge:
 		helm list -q | xargs helm delete --purge \
 	fi
 
-all: init_cluster lastpass_to_vault environment test deploy csr_approve
+all: init_cluster environment test deploy verify csr_approve
 
 # Deploy environment
 #  deploys to current branch to context in `kubectl config current-context`
