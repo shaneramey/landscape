@@ -389,6 +389,12 @@ This is to prevent overrides of the root user's environment variables, a practic
  - by way of Helm via a ConfigMap attached to an init-container named `init-setup`
  - using secretKeyRef: in a k8s definition yaml file
 
+# Wiping the cluster
+WARNING: will wipe out everything in your current KUBERNETES_CONTEXT!
+```
+make PURGE_ALL=yes purge
+```
+
 ### Open questions
 - How can we generate a helm starter chart by prompting the user, such as:
 ```
