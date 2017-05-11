@@ -22,8 +22,9 @@ init_cluster:
 	./init-vault-local.sh # create or start local dev-vault container
 	./init-${PROVISIONER}.sh # start cluster
 	helm init # install Helm into cluster
-	@echo waiting 10s for tiller pod to be Ready
-	sleep 10
+	kubectl get pod --namespace=$$K8S_NAMESPACE tiller-deploy
+	@echo waiting 5s for tiller pod to be Ready
+	sleep 5
 
 environment:
 	./environment.sh ${K8S_NAMESPACE}
