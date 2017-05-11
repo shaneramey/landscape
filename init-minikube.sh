@@ -2,16 +2,16 @@
 
 # Sets up minikube cluster
 # - Starts minikube if it isn't running
-# - mounts local ca.crt and ca.key (may be intermediate ca keypair)
+# - mounts local ca.pem and ca.key for tls key signing (may be intermediate ca keypair)
 # - enables default-storageclass ("standard" type)
 # - adds local route to cluster
-# - prints note about resolving DNS
+# - adds dns resolver for cluster
 # prereq: VirtualBox or other minikube host driver
 
-## Note on ca.crt and ca.key
+## Note on ca.pem and ca.key
 # to get started run
 # openssl genrsa -out ~/external-pki/ca.key 2048
-# openssl req -x509 -new -nodes -key ca.key -sha256 -days 1024 -out ca.crt
+# openssl req -x509 -new -nodes -key ca.key -sha256 -days 1024 -out ca.pem
 
 # TODO
 #--extra-config=apiserver.SecureServingOptions.CertDirectory=/mount-9p \
@@ -20,8 +20,8 @@
 minikube_status=`minikube status --format {{.MinikubeStatus}}`
 
 if [ "$minikube_status" == "Does Not Exist" ]; then
-  if ! [ -f ~/external-pki/ca.crt ] || ! [ -f ~/external-pki/ca.key ]; then
-    echo "~/external-pki/ca.crt and ~/external-pki/ca.key do not exist. Create them"
+  if ! [ -f ~/external-pki/ca.pem ] || ! [ -f ~/external-pki/ca.key ]; then
+    echo "~/external-pki/ca.pem and ~/external-pki/ca.key do not exist. Create them"
     exit 1
   fi
   minikube start --kubernetes-version=v1.6.0 \
@@ -37,7 +37,7 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
   minikube start
   # enable dynamic volume provisioning
   minikube addons enable default-storageclass
-  minikube addons enable registry-creds
+  minikube addons disable registry-creds # FIXME: https://github.com/kubernetes/minikube/blob/c23dfba5d25fc18b95c6896f3c98056cedce700f/deploy/addons/registry-creds/registry-creds-rc.yaml needs to be deployed first
 
 elif [ "$minikube_status" == "Stopped" ]; then
 	minikube start
