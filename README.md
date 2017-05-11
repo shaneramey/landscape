@@ -145,7 +145,7 @@ gsed -i "s/__HELM_CHART__/$CHART_NAME/g" envconsul-config.hcl
 envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME" -once -retry=1s -pristine -upcase env
 
 # Apply landscape
-landscaper apply --dir $K8S_NAMESPACE/$CHART_NAME/ --namespace=$K8S_NAMESPACE
+landscaper apply --namespace=$K8S_NAMESPACE $K8S_NAMESPACE/*.yaml
 ```
 
 ## Secrets
