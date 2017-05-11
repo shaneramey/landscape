@@ -31,14 +31,18 @@ esac
 
 helm repo add charts.downup.us http://charts.downup.us
 helm repo update
-helm plugin install https://github.com/shaneramey/helm-local-bump
-# FIXME: needed until https://github.com/technosophos/helm-template/pull/11 is merged
-mkdir -p /Users/sramey/gocode/src/github.com/technosophos
-cd /Users/sramey/gocode/src/github.com/technosophos
-git clone https://github.com/shaneramey/helm-template.git
-cd helm-template/
-make bootstrap build
-SKIP_BIN_INSTALL=1 helm plugin install $GOPATH/src/github.com/technosophos/helm-template
-helm template -h # verify installed properly
 
-sleep 10 && helm init && sleep 10
+if ! [ -d ~/.helm/plugins/helm-local-bump ]; then
+	helm plugin install https://github.com/shaneramey/helm-local-bump
+fi
+
+if ! [ -d ~/.helm/plugins/helm-template ]; then
+	# FIXME: needed until https://github.com/technosophos/helm-template/pull/11 is merged
+	mkdir -p /Users/sramey/gocode/src/github.com/technosophos
+	cd /Users/sramey/gocode/src/github.com/technosophos
+	git clone https://github.com/shaneramey/helm-template.git
+	cd helm-template/
+	make bootstrap build
+	SKIP_BIN_INSTALL=1 helm plugin install $GOPATH/src/github.com/technosophos/helm-template
+	helm template -h # verify installed properly
+fi

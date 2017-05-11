@@ -10,7 +10,7 @@ PROVISIONER := minikube
 
 PURGE_ALL="no"
 
-.PHONY: init_cluster environment test deploy csr_approve purge
+.PHONY: environment test deploy csr_approve purge
 
 ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 	lpass login $(LASTPASS_USERNAME)
@@ -21,10 +21,6 @@ endif
 init_cluster:
 	./init-vault-local.sh # create or start local dev-vault container
 	./init-${PROVISIONER}.sh # start cluster
-	helm init # install Helm into cluster
-	@echo waiting 5s for tiller pod to be Ready
-	sleep 5
-	kubectl get pod  --namespace=kube-system -l app=helm -l name=tiller
 
 environment:
 	./environment.sh ${K8S_NAMESPACE}
