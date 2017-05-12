@@ -1,4 +1,7 @@
 name: kube-dns
 release:
-  chart: charts.downup.us/kube-dns:0.1.20
-  version: 0.1.20
+  chart: charts.downup.us/kube-dns:0.1.23
+  version: 0.1.23
+configuration:
+  clusterDomain: master.local
+

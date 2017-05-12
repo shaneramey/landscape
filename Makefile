@@ -31,10 +31,10 @@ test:
 	./test.sh ${K8S_NAMESPACE}
 
 verify:
-	sleep 10 # wait for kubedns to come up
+	sleep 7 # wait for kubedns to come up
 	./verify.sh ${K8S_NAMESPACE}
 
-deploy: init_cluster environment test
+deploy:
 	./deploy.sh ${K8S_NAMESPACE}
 
 csr_approve:
