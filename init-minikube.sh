@@ -24,7 +24,7 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     echo "~/external-pki/ca.pem and ~/external-pki/ca.key do not exist. Create them"
     exit 1
   fi
-  minikube start --kubernetes-version=v1.6.0 \
+  minikube start --vm-driver=xhyve --kubernetes-version=v1.6.0 \
     --extra-config=apiserver.Authorization.Mode=RBAC \
     --cpus=4 \
     --disk-size=20g \
@@ -43,21 +43,6 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
 
 elif [ "$minikube_status" == "Stopped" ]; then
 	minikube start
-fi
-
-# cluster ip routing so you can hit kube-dns service 
-GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
-netstat -rn | grep `minikube ip` | grep 10/24 > /dev/null
-ROUTE_NEEDED=$?
-if ! [ -f /etc/resolver/${GIT_BRANCH}.local ] || [ $ROUTE_NEEDED != 0 ]; then
-  echo Enter your local machine password to:
-  echo " - add route to the service network inside k8s"
-  echo " - set /etc/resolver/${GIT_BRANCH}.local to use 10.0.0.10"
-  sudo route delete 10.0.0.0/24
-  sudo route add 10.0.0.0/24 `minikube ip`
-  sudo sh -c "echo nameserver 10.0.0.10 > /etc/resolver/${GIT_BRANCH}.local"
-
-  echo "NOTE: you may have to run \`kubectl create clusterrolebinding add-on-cluster-admin  --clusterrole=cluster-admin --serviceaccount=kube-system:default\`"
 fi
 
 # install Helm tiller pod into cluster
