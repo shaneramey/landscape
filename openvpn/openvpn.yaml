@@ -1,6 +1,6 @@
 name: openvpn
 release:
-  chart: charts.downup.us/openvpn:0.1.46
-  version: 0.1.46
+  chart: charts.downup.us/openvpn:0.1.52
+  version: 0.1.52
 configuration:
 secrets:
