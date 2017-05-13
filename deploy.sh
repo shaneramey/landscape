@@ -136,12 +136,6 @@ for NAMESPACE in *; do
 			kubectl create ns $NAMESPACE
 			echo " done."
 		fi
-		# kubectl get secret --namespace=$NAMESPACE docker-registry gcr-json-key > /dev/null
-		# if [ $? -ne 0 ]; then
-		# 	# Download service account JSON from GCR
-  #       	kubectl create secret --namespace=$NAMESPACE docker-registry gcr-json-key --docker-server=https://us.gcr.io --docker-username=_json_key --docker-password="$(cat ~/Downloads/downup-3baac25cc60e.json)" --docker-email=shane.ramey@gmail.com
-		# fi
-  #       kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}' > /dev/null
 		echo
 		for CHART_YAML in ${NAMESPACE}/*.yaml; do
 			if [ "$NAMESPACE" == "ca-pki-init" ]; then continue; fi # skip tls init workspace
