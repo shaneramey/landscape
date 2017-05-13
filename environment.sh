@@ -23,9 +23,16 @@ fi
 unset VAULT_TOKEN # auth doesnt work unless this is unset
 export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
+# set up Helm chart repos
 helm repo add charts.downup.us http://charts.downup.us
+helm repo remove deis
+helm repo remove incubator
+helm repo remove common
+helm repo remove stable
+
 helm repo update
 
+# install plugins
 if ! [ -d ~/.helm/plugins/helm-local-bump ]; then
 	helm plugin install https://github.com/shaneramey/helm-local-bump
 fi

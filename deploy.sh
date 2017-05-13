@@ -55,7 +55,8 @@ function vault_to_env() {
 	# Read secrets from Vault
 	ENVCONSUL_COMMAND="envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME" -once -retry=1s -pristine -upcase env"
 	echo "    - Running \`$ENVCONSUL_COMMAND\`"
-	export $($ENVCONSUL_COMMAND 2> /dev/null) > /dev/null
+	produced_secrets=`$ENVCONSUL_COMMAND 2> /dev/null`
+	return $produced_secrets
 }
 
 function apply_namespace() {
@@ -146,7 +147,7 @@ for NAMESPACE in *; do
 			if [ "$NAMESPACE" == "ca-pki-init" ]; then continue; fi # skip tls init workspace
 			CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
 			echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
-			vault_to_env $CHART_NAME $NAMESPACE
+			export vault_to_env $CHART_NAME $NAMESPACE
 		done
 		# run landscaper
 		if [ "$NAMESPACE" == "ca-pki-init" ]; then continue; fi # skip tls init workspace
