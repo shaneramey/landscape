@@ -10,7 +10,7 @@ LASTPASS_USERNAME := "shane.ramey@gmail.com"
 
 PROVISIONER := minikube
 
-PURGE_ALL := no
+DELETE_ALL_DATA := false
 
 .PHONY: environment test deploy csr_approve purge
 
@@ -44,7 +44,12 @@ csr_approve:
 	kubectl get csr -o "jsonpath={.items[*].metadata.name}" | xargs kubectl certificate approve
 
 purge:
+ifeq ($(DELETE_ALL_DATA),true)
 	./purge.sh ${K8S_NAMESPACE}
+else
+	@echo "if you really want to purge, run \`make DELETE_ALL_DATA=true purge\`"
+	@exit 1
+endif
 
 # Deploy environment
 #  deploys to current branch to context in `kubectl config current-context`
