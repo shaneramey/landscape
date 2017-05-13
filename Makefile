@@ -46,6 +46,7 @@ csr_approve:
 purge:
 ifeq ($(DELETE_ALL_DATA),true)
 	./purge.sh ${K8S_NAMESPACE}
+	helm init
 else
 	@echo "if you really want to purge, run \`make DELETE_ALL_DATA=true purge\`"
 	@exit 1
