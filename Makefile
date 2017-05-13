@@ -1,3 +1,5 @@
+# Acts on a single Landscape namespace at a time (smallest unit to CRUD is namespace)
+# Helm charts can be deployed independently of Landscaper using helm install / helm upgrade utils
 GIT_BRANCH := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 
 K8S_NAMESPACE := "__all_namespaces__"
@@ -31,8 +33,9 @@ test:
 	./test.sh ${K8S_NAMESPACE}
 
 verify:
-	sleep 7 # wait for kubedns to come up
-	./verify.sh ${K8S_NAMESPACE}
+	# need VPN connection if outside of Jenkins
+	#sleep 7 # wait for kubedns to come up
+	#./verify.sh ${K8S_NAMESPACE}
 
 deploy:
 	./deploy.sh ${K8S_NAMESPACE}
@@ -41,12 +44,7 @@ csr_approve:
 	kubectl get csr -o "jsonpath={.items[*].metadata.name}" | xargs kubectl certificate approve
 
 purge:
-	if [ "$(PURGE_ALL)" == "yes" ]; then \
-		helm list -q | xargs helm delete --purge ; \
-		for resource_type in rs ns; do \
-			kubectl --namespace=kube-system get $$resource_type -o 'jsonpath={.items[*].metadata.name}' | xargs kubectl --namespace=kube-system delete $$resource_type ; \
-		done ; \
-	fi
+	./purge.sh ${K8S_NAMESPACE}
 
 # Deploy environment
 #  deploys to current branch to context in `kubectl config current-context`

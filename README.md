@@ -138,6 +138,10 @@ CHART_NAME=jenkins
 K8S_NAMESPACE=jenkins
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 
+## Jenkins jobs (WIP)
+# - deploy entire landscape to kubeconfig context
+# - wipe namespace: make PURGE_ALL=yes K8S_NAMESPACE=nginx purge
+
 # Read secrets from Hashicorp Vault
 gsed -i "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl > envconsul-config.hcl
 gsed -i "s/__K8S_NAMESPACE__/$K8S_NAMESPACE/g" envconsul-config.hcl
