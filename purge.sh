@@ -32,8 +32,7 @@ function purge_namespace() {
 	echo "Deleting following object types in ${namespace_to_purge}:"
 	for resource_type in ${k8s_purge_object_types[@]}; do
 		echo " - "$resource_type
-		kubectl get --namespace=$namespace_to_purge $resource_type -o 'jsonpath={.items[*].metadata.name}' | \
-			xargs kubectl --namespace=$namespace_to_purge delete $resource_type
+		kubectl --namespace=$namespace_to_purge delete $resource_type --all
 	done
 
 }
