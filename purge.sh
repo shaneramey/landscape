@@ -9,7 +9,7 @@
 
 K8S_NAMESPACE=$1
 
-k8s_purge_object_types=(deployment statefulset service configmap secrets)
+k8s_purge_object_types=(deployment statefulset replicaset service configmap secrets persistentvolumeclaims)
 
 TILLER_NAMESPACE=kube-system
 
@@ -24,24 +24,23 @@ function purge_namespace() {
 	for release in $helm_releases_in_namespace; do
 		helm_configmaps_for_release=`kubectl get configmap --namespace=$TILLER_NAMESPACE -o 'jsonpath={.items[*].metadata.name}' | tr ' ' '\n' | grep ${release}\.`
 		for cfg in $helm_configmaps_for_release; do
-			echo  - $cfg
-			kubectl delete configmap --namespace=$TILLER_NAMESPACE $cfg
+			echo "  - $cfg"
+			kubectl delete --namespace=$TILLER_NAMESPACE configmap $cfg
 		done
 	done
 
 	echo "Deleting following object types in ${namespace_to_purge}:"
 	for resource_type in ${k8s_purge_object_types[@]}; do
-		echo " - "$resource_type
-		kubectl --namespace=$namespace_to_purge delete $resource_type --all
+		echo " - $resource_type"
+		kubectl delete --namespace=$namespace_to_purge $resource_type --all
 	done
-
 }
 
 if [ "$K8S_NAMESPACE" == "__all_namespaces__" ]; then
 	namespace_list=`kubectl get ns -o jsonpath='{.items[*].metadata.name}'`
 	for ns in $namespace_list; do
 		echo
-		echo Purging namespace $ns
+		echo "Purging namespace $ns"
 		echo
 		purge_namespace $ns
 	done
