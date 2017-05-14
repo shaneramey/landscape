@@ -33,12 +33,6 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     --disk-size=20g \
     --memory=4096
 
-  echo "mounting /etc/kubernetes/ca inside minikube"
-  minikube mount ~/external-pki:/etc/kubernetes/ca -v=8 &
-
-  # restart minikube to use mounted files
-  minikube stop
-  minikube start
   # enable dynamic volume provisioning
   minikube addons disable kube-dns # DNS deployed via Landscaper/Helm Chart
   minikube addons enable default-storageclass
@@ -52,6 +46,7 @@ fi
 # install Helm tiller pod into cluster
 kubectl get pod  --namespace=kube-system -l app=helm -l name=tiller > /dev/null
 if [ $? -ne 0 ]; then
+  sleep 60 # pause for initial cluster setup to be provisioned by minikube
   helm init
   echo waiting 5s for tiller pod to be Ready
   sleep 5
