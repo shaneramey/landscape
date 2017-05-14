@@ -130,3 +130,10 @@ envconsul -config="./configtest.hcl" -secret="/secret/landscape/$(GIT_BRANCH)/$(
 # SECRET_USERNAME=foobar
 # SECRET_PASSWORD=barbaz
 ```
+
+# Jenkins server
+- needs github key
+- job for landscaper should not have "Setup Kubernetes CLI (kubectl) option checked"
+   Instead, kubeconfig is managed by the Makefile scripts.
+- use multi-pipeline branch project type
+
