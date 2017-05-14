@@ -136,4 +136,6 @@ envconsul -config="./configtest.hcl" -secret="/secret/landscape/$(GIT_BRANCH)/$(
 - job for landscaper should not have "Setup Kubernetes CLI (kubectl) option checked"
    Instead, kubeconfig is managed by the Makefile scripts.
 - use multi-pipeline branch project type
-
+- uses special image:
+   [container image](us.gcr.io/downup-164000/k8s-kubectl)
+   [source repo](https://github.com/shaneramey/apps/tree/master/jenkins-jnlp-slave)
