@@ -56,3 +56,11 @@ if [ $? -ne 0 ]; then
   echo waiting 5s for tiller pod to be Ready
   sleep 5
 fi
+
+# temp workaround
+echo DEBUGMODE setting up permissive access. This should not be used in prod!
+kubectl create clusterrolebinding permissive-binding \
+  --clusterrole=cluster-admin \
+  --user=admin \
+  --user=kubelet \
+  --group=system:serviceaccounts

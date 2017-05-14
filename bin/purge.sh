@@ -9,7 +9,30 @@
 
 K8S_NAMESPACE=$1
 
-k8s_purge_object_types=(deployment statefulset replicaset service configmap secrets persistentvolumeclaims)
+# list should mirror https://github.com/kubernetes/helm/blob/f7f85526448592a3785e00d5da0f51f03fc2a7a2/pkg/tiller/kind_sorter.go#L57
+k8s_purge_object_types=(
+	ingress
+	service
+	cronjob
+	job
+	statefulset
+	deployment
+	replicaset
+	replicationcontroller
+	pod
+	daemonset
+	rolebinding
+	rolebindingclusterrolebinding
+	clusterrole
+	serviceaccount
+	persistentvolumeclaim
+	persistentvolume
+	configmap
+	secret
+	limitrange
+	resourcequota
+	namespace
+)
 
 TILLER_NAMESPACE=kube-system
 
