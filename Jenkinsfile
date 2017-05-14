@@ -6,20 +6,32 @@ pipeline {
     stages {
         stage('Environment') {
             steps {
-                echo './environment.sh'
-                sh './environment.sh'
+                echo 'make environment'
+                sh 'make environment'
             }
         }
         stage('Test') {
             steps {
-                echo './test.sh'
-                sh './test.sh'
+                echo 'make test'
+                sh 'make test'
             }
         }
         stage('Deploy') {
             steps {
-                echo './deploy.sh'
-                sh './deploy.sh'
+                echo 'make deploy'
+                sh 'make deploy'
+            }
+        }
+        stage('Verify') {
+            steps {
+                echo 'make verify'
+                sh 'make verify'
+            }
+        }
+        stage('CSR Approve') {
+            steps {
+                echo 'make csr_approve'
+                sh 'make csr_approve'
             }
         }
     }
