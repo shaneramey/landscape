@@ -25,6 +25,8 @@ all: init_cluster environment test deploy verify csr_approve
 init_cluster:
 	./bin/init-vault-local.sh # create or start local dev-vault container
 	./bin/init-${PROVISIONER}.sh # start cluster
+	# FIXME: security hole. Create a more specific binding for Jenkins
+	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
 # useful if you accidentally delete helm. FIXME: take this out of the `make purge` workflow
 init_helm:
