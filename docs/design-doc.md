@@ -43,3 +43,10 @@ Some or all of its functionality may be pulled into Helm eventually.
 
 It handles deletes of objects by wiping out everything in the namespace that's not defined in Landscape.
 
+# Goals
+
+Put Kubernetes stack in any environment, with any of the following parameters
+ - Any DNS domain (so devs can uniquely identify their stacks)
+ - Any network range (so networks can be universally connected)
+ - any PKI infrastructure, so a stack can be signed by/trusted with a single CA
+ - privileged vs non-privileged containers should work as a toggle in any stack
