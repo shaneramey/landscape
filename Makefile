@@ -23,14 +23,14 @@ endif
 all: init_cluster environment test deploy verify csr_approve
 
 init_cluster:
-	./init-vault-local.sh # create or start local dev-vault container
-	./init-${PROVISIONER}.sh # start cluster
+	./bin/init-vault-local.sh # create or start local dev-vault container
+	./bin/init-${PROVISIONER}.sh # start cluster
 
 environment:
-	./environment.sh ${K8S_NAMESPACE}
+	./bin/environment.sh ${K8S_NAMESPACE}
 
 test:
-	./test.sh ${K8S_NAMESPACE}
+	./bin/test.sh ${K8S_NAMESPACE}
 
 verify:
 	# need VPN connection if outside of Jenkins
@@ -38,14 +38,14 @@ verify:
 	#./verify.sh ${K8S_NAMESPACE}
 
 deploy:
-	./deploy.sh ${K8S_NAMESPACE}
+	./bin/deploy.sh ${K8S_NAMESPACE}
 
 csr_approve:
 	kubectl get csr -o "jsonpath={.items[*].metadata.name}" | xargs kubectl certificate approve
 
 purge:
 ifeq ($(DELETE_ALL_DATA),true)
-	./purge.sh ${K8S_NAMESPACE}
+	./bin/purge.sh ${K8S_NAMESPACE}
 	helm init
 else
 	@echo "if you really want to purge, run \`make DELETE_ALL_DATA=true purge\`"
