@@ -17,6 +17,8 @@
 #--extra-config=apiserver.SecureServingOptions.CertDirectory=/mount-9p \
 #--extra-config=apiserver.SecureServingOptions.PairName=ca \
 
+GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
+
 minikube_status=`minikube status --format {{.MinikubeStatus}}`
 
 if [ "$minikube_status" == "Does Not Exist" ]; then
@@ -24,11 +26,13 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     echo "~/external-pki/ca.pem and ~/external-pki/ca.key do not exist. Create them"
     exit 1
   fi
-  minikube start --vm-driver=xhyve --kubernetes-version=v1.6.0 \
+  minikube start --vm-driver=xhyve --dns-domain=${GIT_BRANCH}.local \
+    --kubernetes-version=v1.6.0 \
     --extra-config=apiserver.Authorization.Mode=RBAC \
     --cpus=4 \
     --disk-size=20g \
     --memory=4096
+
   echo "mounting /etc/kubernetes/ca inside minikube"
   minikube mount ~/external-pki:/etc/kubernetes/ca -v=8 &
 
