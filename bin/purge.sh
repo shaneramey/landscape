@@ -22,11 +22,11 @@ k8s_purge_object_types=(
 	pod
 	daemonset
 	rolebinding
-	clusterrolebinding
-	clusterrole
+#	clusterrolebinding # FIXME: non-namespaced. Delete this after all namespaces
+#	clusterrole # FIXME: non-namespaced. Delete this after all namespaces
 	serviceaccount
 	persistentvolumeclaim
-	persistentvolume
+#	persistentvolume # FIXME: non-namespaced. Delete this after all namespaces
 	configmap
 	secret
 	limitrange
