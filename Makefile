@@ -12,7 +12,7 @@ PROVISIONER := minikube
 
 DELETE_ALL_DATA := false
 
-.PHONY: environment test deploy csr_approve purge
+.PHONY: environment test deploy csr_approve purge init_helm
 
 ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 	lpass login $(LASTPASS_USERNAME)
@@ -25,6 +25,10 @@ all: init_cluster environment test deploy verify csr_approve
 init_cluster:
 	./bin/init-vault-local.sh # create or start local dev-vault container
 	./bin/init-${PROVISIONER}.sh # start cluster
+
+# useful if you accidentally delete helm. FIXME: take this out of the `make purge` workflow
+init_helm:
+	helm init
 
 environment:
 	./bin/environment.sh ${K8S_NAMESPACE}
@@ -44,9 +48,12 @@ csr_approve:
 	kubectl get csr -o "jsonpath={.items[*].metadata.name}" | xargs kubectl certificate approve
 
 purge:
+ifeq ($(K8S_NAMESPACE),kube-system)
+	echo purge not supported for kube-system namespace due to problems it creates with tiller api access
+endif
+
 ifeq ($(DELETE_ALL_DATA),true)
 	./bin/purge.sh ${K8S_NAMESPACE}
-	helm init
 else
 	@echo "if you really want to purge, run \`make DELETE_ALL_DATA=true purge\`"
 	@exit 1

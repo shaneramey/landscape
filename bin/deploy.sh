@@ -143,14 +143,14 @@ for NAMESPACE in *; do
 		fi
 		echo
 		for CHART_YAML in ${NAMESPACE}/*.yaml; do
-			if [ "$NAMESPACE" == "ca-pki-init" ]; then continue; fi # skip tls init workspace
+			if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
 			CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
 			echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
 				echo running \`envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANCH/$NAMESPACE/$CHART_NAME" -once -retry=1s -pristine -upcase env\`
 			export $(vault_to_env $CHART_NAME $NAMESPACE) > /dev/null
 		done
 		# run landscaper
-		if [ "$NAMESPACE" == "ca-pki-init" ]; then continue; fi # skip tls init workspace
+		if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
 		apply_namespace $NAMESPACE
 	fi
 done

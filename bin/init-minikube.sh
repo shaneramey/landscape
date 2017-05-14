@@ -58,9 +58,9 @@ if [ $? -ne 0 ]; then
 fi
 
 # temp workaround
-echo DEBUGMODE setting up permissive access. This should not be used in prod!
-kubectl create clusterrolebinding permissive-binding \
-  --clusterrole=cluster-admin \
-  --user=admin \
-  --user=kubelet \
-  --group=system:serviceaccounts
+#echo DEBUGMODE setting up permissive access. This should not be used in prod!
+#kubectl create clusterrolebinding permissive-binding \
+#  --clusterrole=cluster-admin \
+#  --user=admin \
+#  --user=kubelet \
+#  --group=system:serviceaccounts
