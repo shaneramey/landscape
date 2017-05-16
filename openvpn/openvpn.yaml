@@ -1,7 +1,7 @@
 name: openvpn
 release:
-  chart: charts.downup.us/openvpn:0.1.64
-  version: 0.1.64
+  chart: charts.downup.us/openvpn:0.1.84
+  version: 0.1.84
 configuration:
   clusterDomain: master.local
 secrets:
