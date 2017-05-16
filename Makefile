@@ -28,10 +28,6 @@ init_cluster:
 	# FIXME: security hole. Create a more specific binding for Jenkins
 	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
-# useful if you accidentally delete helm. FIXME: take this out of the `make purge` workflow
-init_helm:
-	helm init
-
 environment:
 	./bin/environment.sh ${K8S_NAMESPACE}
 

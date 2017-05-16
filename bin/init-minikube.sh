@@ -27,7 +27,7 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     exit 1
   fi
   minikube start --vm-driver=xhyve --dns-domain=${GIT_BRANCH}.local \
-    --kubernetes-version=v1.6.0 \
+    --kubernetes-version=v1.6.3 \
     --extra-config=apiserver.Authorization.Mode=RBAC \
     --cpus=4 \
     --disk-size=20g \
@@ -44,18 +44,27 @@ elif [ "$minikube_status" == "Stopped" ]; then
 fi
 
 # install Helm tiller pod into cluster
-kubectl get pod  --namespace=kube-system -l app=helm -l name=tiller > /dev/null
-if [ $? -ne 0 ]; then
-  sleep 60 # pause for initial cluster setup to be provisioned by minikube
+echo "checking status of Helm tiller"
+EXISTING_TILLER_POD=`kubectl get pod --namespace=kube-system -l app=helm -l name=tiller 2>&1`
+if [ "$EXISTING_TILLER_POD" == "No resources found." ]; then
   helm init
-  echo waiting 5s for tiller pod to be Ready
-  sleep 5
+  echo "waiting for tiller pod to be Ready"
+
+  while [ "$EXISTING_TILLER_POD" != "Running" ]; do
+    EXISTING_TILLER_POD=`kubectl get pod --namespace=kube-system -l app=helm -l name=tiller -o jsonpath='{.items[0].status.phase}'`
+    echo -n .
+    sleep 1
+  done
+
 fi
 
-# temp workaround
+# FIXME: temp workaround
 #echo DEBUGMODE setting up permissive access. This should not be used in prod!
-#kubectl create clusterrolebinding permissive-binding \
-#  --clusterrole=cluster-admin \
-#  --user=admin \
-#  --user=kubelet \
-#  --group=system:serviceaccounts
+EXISTING_CLUSTERROLEBINDING_POD=`kubectl get clusterrolebinding permissive-binding 2>&1 > /dev/null`
+if [ $? -ne 0 ]; then
+  kubectl create clusterrolebinding permissive-binding \
+   --clusterrole=cluster-admin \
+   --user=admin \
+   --user=kubelet \
+   --group=system:serviceaccounts
+fi
