@@ -16,7 +16,22 @@
 # TODO
 #--extra-config=apiserver.SecureServingOptions.CertDirectory=/mount-9p \
 #--extra-config=apiserver.SecureServingOptions.PairName=ca \
-
+# ~/.minikube/ pki files
+# apiserver.crt kubernetes.default.svc.cluster.local API
+# apiserver.key
+# ca.crt
+# ca.key
+# ca.pem
+# cert.pem
+# key.pem
+# machines/server-key.pem
+# machines/server.pem
+# --extra-config=controller-manager.RootCAFile=/etc/kubernetes/ca/ca.pem \
+# mkdir /etc/kubernetes/ca
+# cp /var/lib/localkube/certs/ca.crt /etc/kubernetes/ca/ca.pem
+# cp /var/lib/localkube/certs/ca.key /etc/kubernetes/ca/
+# ClusterSigningCertFile=/var/lib/localkube/certs/ca.crt
+# ClusterSigningKeyFile=/var/lib/localkube/certs/ca.key
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 
 minikube_status=`minikube status --format {{.MinikubeStatus}}`
@@ -29,10 +44,13 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
   minikube start --vm-driver=xhyve --dns-domain=${GIT_BRANCH}.local \
     --kubernetes-version=v1.6.3 \
     --extra-config=apiserver.Authorization.Mode=RBAC \
+    --extra-config=controller-manager.ClusterSigningCertFile=/var/lib/localkube/certs/ca.crt \
+    --extra-config=controller-manager.ClusterSigningKeyFile=/var/lib/localkube/certs/ca.key \
     --cpus=4 \
     --disk-size=20g \
     --memory=4096
 
+  minikube ssh
   # enable dynamic volume provisioning
   minikube addons disable kube-dns # DNS deployed via Landscaper/Helm Chart
   minikube addons enable default-storageclass
