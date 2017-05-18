@@ -33,8 +33,9 @@ function tell_to_populate_secrets {
 }
 
 function generate_envconsul_config() {
-	CHART_NAME=$1
-	K8S_NAMESPACE=$2
+	GIT_BRANCH=$1
+	CHART_NAME=$2
+	K8S_NAMESPACE=$3
 
 	# Envconsul Vault setup
 	if [ ! -x $sed_cmd ]; then
@@ -56,12 +57,20 @@ function generate_envconsul_config() {
 }
 
 function vault_to_env() {
-	CHART_NAME=$1
-	K8S_NAMESPACE=$2
+	GIT_BRANCH=$1
+	CHART_NAME=$2
+	K8S_NAMESPACE=$3
 
+	# Generate envconsul config
+	generate_envconsul_config $GIT_BRANCH $NAMESPACE $CHART_NAME
 	# Read secrets from Vault
 	ENVCONSUL_COMMAND="envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME" -once -retry=1s -pristine -upcase env"
-	$ENVCONSUL_COMMAND 2> /dev/null
+	echo "Running ${ENVCONSUL_COMMAND}:"
+	for envvar_kv in `$ENVCONSUL_COMMAND`; do
+		envvar_k=`echo $envvar_kv | awk -F= '{ print $1}'`
+		echo "  - setting secret $envvar_k"
+		export $envvar_kv
+	done
 }
 
 function apply_namespace() {
@@ -146,8 +155,7 @@ for NAMESPACE in *; do
 			if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
 			CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
 			echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
-				echo running \`envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANCH/$NAMESPACE/$CHART_NAME" -once -retry=1s -pristine -upcase env\`
-			export $(vault_to_env $CHART_NAME $NAMESPACE) > /dev/null
+			vault_to_env $GIT_BRANCH $CHART_NAME $NAMESPACE
 		done
 		# run landscaper
 		if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
