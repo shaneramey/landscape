@@ -50,7 +50,6 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     --disk-size=20g \
     --memory=4096
 
-  minikube ssh
   # enable dynamic volume provisioning
   minikube addons disable kube-dns # DNS deployed via Landscaper/Helm Chart
   minikube addons enable default-storageclass
