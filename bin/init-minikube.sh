@@ -48,7 +48,8 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     --extra-config=controller-manager.ClusterSigningKeyFile=/var/lib/localkube/certs/ca.key \
     --cpus=4 \
     --disk-size=20g \
-    --memory=4096
+    --memory=4096 \
+    -v=0 # disabled to keep CPU usage down. Re-enable to debug minikube itself
 
   # enable dynamic volume provisioning
   minikube addons disable kube-dns # DNS deployed via Landscaper/Helm Chart
