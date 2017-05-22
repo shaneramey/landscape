@@ -36,6 +36,7 @@ GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 
 minikube_status=`minikube status --format {{.MinikubeStatus}}`
 
+kubectl config use-context minikube
 if [ "$minikube_status" == "Does Not Exist" ]; then
   if ! [ -f ~/external-pki/ca.pem ] || ! [ -f ~/external-pki/ca.key ]; then
     echo "~/external-pki/ca.pem and ~/external-pki/ca.key do not exist. Create them"

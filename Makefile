@@ -12,6 +12,8 @@ PROVISIONER := minikube
 
 DELETE_ALL_DATA := false
 
+PURGE_NAMESPACE_ITSELF := false
+
 .PHONY: environment test deploy csr_approve purge init_helm
 
 ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
@@ -51,7 +53,7 @@ ifeq ($(K8S_NAMESPACE),kube-system)
 endif
 
 ifeq ($(DELETE_ALL_DATA),true)
-	./bin/purge.sh ${K8S_NAMESPACE}
+	./bin/purge.sh ${K8S_NAMESPACE} $(PURGE_NAMESPACE_ITSELF)
 else
 	@echo "if you really want to purge, run \`make DELETE_ALL_DATA=true purge\`"
 	@exit 1

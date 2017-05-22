@@ -8,6 +8,7 @@
 #  - kubectl delete  --namespace
 
 K8S_NAMESPACE=$1
+PURGE_NAMESPACE_ITSELF=$2
 
 # list should mirror https://github.com/kubernetes/helm/blob/f7f85526448592a3785e00d5da0f51f03fc2a7a2/pkg/tiller/kind_sorter.go#L57
 k8s_purge_object_types=(
@@ -38,6 +39,7 @@ TILLER_NAMESPACE=kube-system
 
 function purge_namespace() {
 	namespace_to_purge=$1
+	purge_namespace_itself=$2
 
 	helm_releases_in_namespace_command="helm list -q"
 	if [ "$namespace_to_purge" != "__all_namespaces__" ]; then
@@ -65,8 +67,13 @@ function purge_namespace() {
 		kubectl delete --namespace=$namespace_to_purge $resource_type --all
 	done
 
-	echo "Deleting namespace ${namespace_to_purge}"
-	kubectl delete namespace ${namespace_to_purge}
+	if [ "$PURGE_NAMESPACE_ITSELF" == "true"]; then
+		echo "Deleting namespace ${namespace_to_purge}"
+		kubectl delete namespace ${namespace_to_purge}
+	else
+		echo "not purging namespace object ${namespace_to_purge} (pass PURGE_NAMESPACE_ITSELF=true to purge it)"
+	fi
+
 }
 
 if [ "$K8S_NAMESPACE" == "__all_namespaces__" ]; then
