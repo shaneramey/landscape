@@ -1,0 +1,11 @@
+name: dirsrv-389ds
+release:
+  chart: charts.downup.us/dirsrv-389ds:0.1.24
+  version: 0.1.24
+configuration:
+  clusterDomain: master.local
+  directorySuffix: dc=master,dc=local
+secrets:
+- secret-admin-username
+- secret-admin-password
+
