@@ -67,7 +67,7 @@ function purge_namespace() {
 		kubectl delete --namespace=$namespace_to_purge $resource_type --all
 	done
 
-	if [ "$PURGE_NAMESPACE_ITSELF" == "true"]; then
+	if [ "$PURGE_NAMESPACE_ITSELF" == "true" ]; then
 		echo "Deleting namespace ${namespace_to_purge}"
 		kubectl delete namespace ${namespace_to_purge}
 	else

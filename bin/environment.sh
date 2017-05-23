@@ -25,10 +25,10 @@ export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
 # set up Helm chart repos
 helm repo add charts.downup.us http://charts.downup.us
-helm repo remove deis
-helm repo remove incubator
-helm repo remove common
-helm repo remove stable
+# helm repo remove deis
+# helm repo remove incubator
+# helm repo remove common
+# helm repo remove stable
 
 helm repo update
 
