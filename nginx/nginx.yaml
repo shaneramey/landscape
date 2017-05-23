@@ -1,6 +1,6 @@
 name: nginx
 release:
-  chart: charts.downup.us/nginx:0.1.132
-  version: 0.1.132
+  chart: charts.downup.us/nginx:0.1.156
+  version: 0.1.156
 configuration:
   clusterDomain: master.local
