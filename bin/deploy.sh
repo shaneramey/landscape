@@ -132,8 +132,6 @@ function apply_namespace() {
 	fi
 }
 
-helm repo update
-
 # Loop through namespace
 for NAMESPACE in *; do
 	if [ -d $NAMESPACE ]; then
