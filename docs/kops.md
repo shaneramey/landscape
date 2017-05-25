@@ -1,3 +1,56 @@
+# kops
+
+## DNS
+
+### CoreDNS controller
+The dns-controller recognizes annotations on nodes. They are used to specify whether an internal or external dns record is made for the service or node.
+
+### labels
+dns.alpha.kubernetes.io/external will set up records for accessing the resource externally
+
+dns.alpha.kubernetes.io/internal will set up records for accessing the resource internally
+
+The syntax is a comma separated list of fully qualified domain names.
+
+When added on Service controllers:
+
+dns.alpha.kubernetes.io/external creates a Route53 A record with public IPs of all the nodes dns.alpha.kubernetes.io/internal creates a Route53 A record with private IPs of all the nodes
+
+https://github.com/kubernetes/kops/blob/master/dns-controller/README.md
+
+## Getting started
+
+Define your cluster state store (must be in S3 or GFS or local minio server)
+```
+export KOPS_STATE_STORE=s3://clusterstate2
+
+### AWS
+```
+kops create cluster --admin-access=`curl http://ipecho.net/plain`/32 --associate-public-ip=true --authorization=RBAC --cloud=aws --cloud-labels=shane=ramey --dns=public  --networking=calico --node-count=1 --target=terraform --name=test6.downup.us --zones=us-west-2a --dns-zone=downup.us
+```
+### vSphere
+see https://github.com/kubernetes/kops/blob/master/docs/development/vsphere-dev.md
+```
+KOPS_FEATURE_FLAGS=+VSphereCloudProvider kops create cluster --admin-access=`curl http://ipecho.net/plain`/32 --associate-public-ip=true --authorization=RBAC --cloud=vsphere --cloud-labels=shane=ramey --dns=public  --networking=calico --node-count=1 --target=terraform --zones=us-west-2a --dns-zone=downup.us --name=test7.downup.us
+
+
+      --vsphere-coredns-server string        vsphere-coredns-server is required for vSphere.
+      --vsphere-datacenter string            vsphere-datacenter is required for vSphere. Set the name of the datacenter in which to deploy Kubernetes VMs.
+      --vsphere-datastore string             vsphere-datastore is required for vSphere.  Set a valid datastore in which to store dynamic provision volumes.
+      --vsphere-resource-pool string         vsphere-resource-pool is required for vSphere. Set a valid Cluster, Host or Resource Pool in which to deploy Kubernetes VMs.
+      --vsphere-server string                vsphere-server is required for vSphere. Set vCenter URL Ex: 10.192.10.30 or myvcenter.io (without https://)
+```
+
+To apply, choose one of the above cloud providers and run:
+```
+cd out/terraform/
+terraform plan
+terraform apply
+terraform destroy
+```
+
+# Not verified to work:
+
 kops create cluster --admin-access=`curl http://ipecho.net/plain` --associate-public-ip=true --authorization=RBAC --cloud=gce --cloud-labels=shane=ramey --dns=public  --dns-zone=shane.local --networking=calico --node-count=1 --target=terraform
 
 
