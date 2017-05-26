@@ -14,7 +14,7 @@ DELETE_ALL_DATA := false
 
 PURGE_NAMESPACE_ITSELF := false
 
-.PHONY: environment test deploy csr_approve purge init_helm
+.PHONY: environment test deploy csr_approve report purge init_helm
 
 ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 	lpass login $(LASTPASS_USERNAME)
@@ -22,7 +22,7 @@ ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 	echo $(shell lpass show k8s-landscaper/$(GIT_BRANCH) --notes)
 endif
 
-all: init_cluster environment test deploy verify csr_approve
+all: init_cluster environment test deploy verify csr_approve report
 
 init_cluster:
 	./bin/init-vault-local.sh # create or start local dev-vault container
@@ -45,7 +45,10 @@ deploy:
 	./bin/deploy.sh ${K8S_NAMESPACE}
 
 csr_approve:
-	kubectl get csr -o "jsonpath={.items[*].metadata.name}" | xargs kubectl certificate approve
+	./bin/csr_approve.sh
+
+report:
+	./bin/report.sh ${K8S_NAMESPACE}
 
 purge:
 ifeq ($(K8S_NAMESPACE),kube-system)
