@@ -38,12 +38,6 @@ if ! [ -d ~/.helm/plugins/helm-local-bump ]; then
 fi
 
 if ! [ -d ~/.helm/plugins/helm-template ]; then
-	# FIXME: needed until https://github.com/technosophos/helm-template/pull/11 is merged
-	mkdir -p /Users/sramey/gocode/src/github.com/technosophos
-	cd /Users/sramey/gocode/src/github.com/technosophos
-	git clone https://github.com/shaneramey/helm-template.git
-	cd helm-template/
-	make bootstrap build
-	SKIP_BIN_INSTALL=1 helm plugin install $GOPATH/src/github.com/technosophos/helm-template
+	helm plugin install https://github.com/technosophos/helm-template --version=2.4.1+2
 	helm template -h # verify installed properly
 fi
