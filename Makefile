@@ -31,7 +31,9 @@ init_cluster:
 	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
 environment:
-	./bin/environment.sh ${K8S_NAMESPACE}
+	./bin/env-vault.sh ${K8S_NAMESPACE}
+	./bin/env-k8s.sh ${K8S_NAMESPACE}
+	./bin/env-helm.sh ${K8S_NAMESPACE}
 
 test:
 	./bin/test.sh ${K8S_NAMESPACE}
@@ -39,7 +41,7 @@ test:
 verify:
 	# need VPN connection if outside of Jenkins
 	#sleep 7 # wait for kubedns to come up
-	#./verify.sh ${K8S_NAMESPACE}
+	#./bin/verify.sh ${K8S_NAMESPACE}
 
 deploy:
 	./bin/deploy.sh ${K8S_NAMESPACE}

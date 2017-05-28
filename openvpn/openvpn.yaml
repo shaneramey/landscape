@@ -1,7 +1,7 @@
 name: openvpn
 release:
-  chart: charts.downup.us/openvpn:0.1.164
-  version: 0.1.164
+  chart: charts.downup.us/openvpn:0.1.175
+  version: 0.1.175
 configuration:
   clusterDomain: master.local
   directorySuffix: "dc=master,dc=local"

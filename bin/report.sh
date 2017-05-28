@@ -8,7 +8,7 @@ echo sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System
 
 echo "Helm Release Notes"
 for release in `helm list -q`; do
-	echo "-----" &&
-	echo "Release: $release" &&
-	helm status $release
+    echo "-----" &&
+    echo "Release: $release" &&
+    helm status $release
 done

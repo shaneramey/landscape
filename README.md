@@ -8,6 +8,7 @@
  - install prerequisites
  - `git clone https://github.com/shaneramey/landscape`
  - `cd landscape`
+ - (optional) set HTTP_PROXY and HTTPS_PROXY env vars for speedy image pulls
  - `make`
 
 ## Features

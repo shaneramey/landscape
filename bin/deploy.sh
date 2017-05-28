@@ -14,46 +14,45 @@ GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 # read secrets from Hashicorp Vault
 export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 if [ "$VAULT_TOKEN" == "" ]; then
-	echo "ERROR: could not look up vault token. Auth first"
-	exit 4
+    echo "ERROR: could not look up vault token. Auth first"
+    exit 4
 fi
 
 darwin=false; # MacOSX compatibility
 case "`uname`" in
-	Darwin*) export sed_cmd=`which gsed` ;;
-	*) export sed_cmd=`which sed` ;;
+    Darwin*) export sed_cmd=`which gsed` ;;
+    *) export sed_cmd=`which sed` ;;
 esac
 
 function join_by { local IFS="$1"; shift; echo "$*"; }
 
 function tell_to_populate_secrets {
-	MISSING_SECRET_LIST=("$@")
-	echo MISSING_SECRET_LIST $MISSING_SECRET_LIST 
-
+    MISSING_SECRET_LIST=("$@")
+    echo MISSING_SECRET_LIST $MISSING_SECRET_LIST 
 }
 
 function generate_envconsul_config() {
-	GIT_BRANCH=$1
-	CHART_NAME=$2
-	K8S_NAMESPACE=$3
+    GIT_BRANCH=$1
+    CHART_NAME=$2
+    K8S_NAMESPACE=$3
 
-	# Envconsul Vault setup
-	if [ ! -x $sed_cmd ]; then
-		echo "ERROR: sed command $sed_cmd not found (MacOS users: run brew install gnu-sed)"
-		exit 2
-	fi
-	if [ ! -f /usr/local/bin/envconsul ]; then
-		echo "envconsul not installed. aborting"
-		exit 2
-	fi
+    # Envconsul Vault setup
+    if [ ! -x $sed_cmd ]; then
+    	echo "ERROR: sed command $sed_cmd not found (MacOS users: run brew install gnu-sed)"
+    	exit 2
+    fi
+    if [ ! -f /usr/local/bin/envconsul ]; then
+    	echo "envconsul not installed. aborting"
+    	exit 2
+    fi
 
-	echo "    - Using Vault prefix /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME"
-	echo "    - Writing envconsul-config.hcl (.gitignored)"
+    echo "    - Using Vault prefix /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME"
+    echo "    - Writing envconsul-config.hcl (.gitignored)"
 
 
-	$sed_cmd "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl > envconsul-config.hcl
-	$sed_cmd -i "s/__K8S_NAMESPACE__/$K8S_NAMESPACE/g" envconsul-config.hcl
-	$sed_cmd -i "s/__HELM_CHART__/$CHART_NAME/g" envconsul-config.hcl
+    $sed_cmd "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl > envconsul-config.hcl
+    $sed_cmd -i "s/__K8S_NAMESPACE__/$K8S_NAMESPACE/g" envconsul-config.hcl
+    $sed_cmd -i "s/__HELM_CHART__/$CHART_NAME/g" envconsul-config.hcl
 }
 
 function vault_to_env() {
@@ -107,8 +106,9 @@ function apply_namespace() {
 		echo Vault is missing $missing_secret_count secrets.
 		echo
 		echo NOTE: If you have lastpass-cli installed, run:
+		echo
 		echo "lpass show k8s\\\\k8s-landscaper/$GIT_BRANCH --notes"
-
+		echo
 		echo First read existing secrets, and see if you want to replace them
 		echo
 		echo vault read /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME
