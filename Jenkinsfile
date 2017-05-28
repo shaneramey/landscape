@@ -3,10 +3,18 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
+    }
+
+    triggers {
+        cron('H/1 * * * *')
+    }
+
     stages {
         stage('Environment') {
             steps {
-                echo 'make environment'
+                echo "make environment ${params.PERSON}"
                 sh 'make environment'
             }
         }
