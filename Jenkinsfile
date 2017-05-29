@@ -1,15 +1,38 @@
-#! groovy
+#! /usr/bin/env groovy
+
+def getBranches() {
+}
+
+// get list of provisioners
+def getProvisioners() {
+    return ['minikube', 'kops']
+}
+
+def getTargets(provisioner) {
+    minikube_target = nil
+    kops_target = clustername
+}
 
 pipeline {
-    agent any
+    agent {
+        node {
+            label 'default'
+        }
+    }
+
+    environment {
+        VAULT_ADDR = "https://http.vault:8200"
+    }
 
     parameters {
-        string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
+        string(name: 'branch', defaultValue: '<current branch>', description: 'landscape branch')
+        ['minikube', 'kops']
     }
 
     triggers {
         pollSCM('* * * * *')
     }
+
     stages {
 
         stage('Environment') {
