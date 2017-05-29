@@ -24,9 +24,12 @@ pipeline {
         VAULT_ADDR = "https://http.vault:8200"
     }
 
+    options {
+        timeout(time: 1, unit: 'HOURS') 
+    }
+
     parameters {
-        string(name: 'branch', defaultValue: '<current branch>', description: 'landscape branch')
-        ['minikube', 'kops']
+        booleanParam(name: 'DEBUG_BUILD', defaultValue: true, description: '')
     }
 
     triggers {
