@@ -16,7 +16,7 @@ def getTargets(provisioner) {
 pipeline {
     agent {
         node {
-            label 'default'
+            label 'k8s-default'
         }
     }
 
