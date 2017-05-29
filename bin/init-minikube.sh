@@ -48,6 +48,12 @@ function use_proxy() {
         mk_start_cmd=$mk_start_cmd$extra_args
     fi
 }
+
+# use backplane.io
+function expose_jenkins() {
+    export BACKPLANE_TOKEN=
+    backplane connect "endpoint=amicable-mouse-4.backplaneapp.io,release=v1" https://http.jenkins.svc.master.local
+}
 minikube_status=`minikube status --format {{.MinikubeStatus}}`
 
 mk_start_cmd="minikube start \
