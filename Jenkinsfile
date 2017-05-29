@@ -7,8 +7,9 @@ pipeline {
         string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
     }
 
-    git poll: true, url: 'https://github.com/shaneramey/landscape'
-
+    triggers {
+        pollSCM('* * * * *')
+    }
     stages {
 
         stage('Environment') {
