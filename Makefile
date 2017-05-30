@@ -31,9 +31,10 @@ init_cluster:
 	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
 environment:
-	./bin/env-vault.sh ${K8S_NAMESPACE}
-	./bin/env-k8s.sh ${K8S_NAMESPACE}
-	./bin/env-helm.sh ${K8S_NAMESPACE}
+	./bin/env-auth-vault.sh
+	./bin/env-set-context-k8s.sh
+	./bin/env-add-repos-helm.sh
+	./bin/env-install-plugins-helm.sh
 
 test:
 	./bin/test.sh ${K8S_NAMESPACE}

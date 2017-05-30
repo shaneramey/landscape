@@ -133,8 +133,37 @@ function apply_namespace() {
 	helm status ${K8S_NAMESPACE}-${CHART_NAME}
 }
 
-# Loop through namespace
-for NAMESPACE in *; do
+if [ -z $1 ]; then
+	# Loop through namespace
+	for NAMESPACE in *; do
+		if [ -d $NAMESPACE ]; then
+			echo "###"
+			echo "# Namespace: $NAMESPACE"
+			echo "###"
+			echo
+			echo "Checking status of namespace $NAMESPACE"
+			kubectl get ns $NAMESPACE > /dev/null
+			if [ $? -eq 0 ]; then
+				echo "    - Namespace $NAMESPACE already exists"
+			else
+				echo -n "    - Namespace $NAMESPACE does not exist. Creating..."
+				kubectl create ns $NAMESPACE
+				echo " done."
+			fi
+			echo
+			for CHART_YAML in ${NAMESPACE}/*.yaml; do
+				if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
+				CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
+				echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
+				vault_to_env $GIT_BRANCH $CHART_NAME $NAMESPACE
+			done
+			# run landscaper
+			if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
+			apply_namespace $NAMESPACE
+		fi
+	done
+else
+	NAMESPACE=$1
 	if [ -d $NAMESPACE ]; then
 		echo "###"
 		echo "# Namespace: $NAMESPACE"
@@ -160,4 +189,4 @@ for NAMESPACE in *; do
 		if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
 		apply_namespace $NAMESPACE
 	fi
-done
+fi
