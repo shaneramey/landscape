@@ -8,6 +8,7 @@
 #  - 
 set -u
 
+namespace_arg=$1
 # each branch has its own set of deployments
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 
@@ -133,7 +134,7 @@ function apply_namespace() {
 	helm status ${K8S_NAMESPACE}-${CHART_NAME}
 }
 
-if [ -z $1 ]; then
+if [ "$namespace_arg" == "__all_namespaces__" ]; then
 	# Loop through namespace
 	for NAMESPACE in *; do
 		if [ -d $NAMESPACE ]; then
