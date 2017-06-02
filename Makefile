@@ -22,7 +22,7 @@ ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 	echo $(shell lpass show k8s-landscaper/$(GIT_BRANCH) --notes)
 endif
 
-all: init_cluster environment test deploy verify csr_approve report
+all: init_cluster environment test deploy verify report
 
 init_cluster:
 	./bin/init-vault-local.sh # create or start local dev-vault container
@@ -47,11 +47,12 @@ verify:
 deploy:
 	./bin/deploy.sh ${K8S_NAMESPACE}
 
-csr_approve:
-	./bin/csr_approve.sh
-
 report:
 	./bin/report.sh ${K8S_NAMESPACE}
+
+# helper targets not usually used in deployments, but useful for troubleshooting
+csr_approve:
+	./bin/csr_approve.sh
 
 purge:
 ifeq ($(K8S_NAMESPACE),kube-system)

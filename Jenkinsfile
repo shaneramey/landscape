@@ -62,11 +62,5 @@ pipeline {
                 sh 'make verify'
             }
         }
-        stage('CSR Approve') {
-            steps {
-                echo 'make csr_approve'
-                sh 'make csr_approve'
-            }
-        }
     }
 }
