@@ -57,7 +57,7 @@ function expose_jenkins() {
 minikube_status=`minikube status --format {{.MinikubeStatus}}`
 
 mk_start_cmd="minikube start \
-                --vm-driver=xhyve \
+                --vm-driver=virtualbox \
                 --dns-domain=${GIT_BRANCH}.local \
                 --kubernetes-version=v1.6.3 \
                 --extra-config=apiserver.Authorization.Mode=RBAC \
@@ -68,6 +68,7 @@ mk_start_cmd="minikube start \
                 --memory=4096 \
                 -v=0" # Re-enable to debug minikube itself (off to save CPU)
 
+echo "Running $mk_start_cmd"
 kubectl config use-context minikube
 if [ "$minikube_status" == "Does Not Exist" ]; then
     if ! [ -f ~/external-pki/ca.pem ] || ! [ -f ~/external-pki/ca.key ]; then
