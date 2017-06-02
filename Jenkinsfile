@@ -1,7 +1,7 @@
 #! /usr/bin/env groovy
 
 def getProvisioners() {
-    return ['minikube', 'kops']
+    return "minikube kops"
 }
 
 provisioners = getProvisioners();
