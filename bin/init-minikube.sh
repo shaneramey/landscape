@@ -65,9 +65,9 @@ mk_start_cmd="minikube start \
                 --extra-config=apiserver.Authorization.Mode=RBAC \
                 --extra-config=controller-manager.ClusterSigningCertFile=/var/lib/localkube/certs/ca.crt \
                 --extra-config=controller-manager.ClusterSigningKeyFile=/var/lib/localkube/certs/ca.key \
-                --cpus=4 \
+                --cpus=8 \
                 --disk-size=20g \
-                --memory=4096 \
+                --memory=8192 \
                 -v=0" # Re-enable to debug minikube itself (off to save CPU)
 
 echo "Running $mk_start_cmd"

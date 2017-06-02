@@ -36,8 +36,8 @@ function tell_to_populate_secrets {
 
 function generate_envconsul_config() {
     GIT_BRANCH=$1
-    CHART_NAME=$2
-    K8S_NAMESPACE=$3
+    K8S_NAMESPACE=$2
+    CHART_NAME=$3
 
     # Envconsul Vault setup
     if [ ! -x $sed_cmd ]; then
