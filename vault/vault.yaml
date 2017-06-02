@@ -1,6 +1,8 @@
-name: jenkins
+name: vault
 release:
-  chart: charts.downup.us/vault:0.1.15
-  version: 0.1.15
+  chart: charts.downup.us/vault:0.1.22
+  version: 0.1.22
 configuration:
   clusterDomain: master.local
+secrets:
+ - vault-dev-root-token-id
