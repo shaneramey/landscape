@@ -1,19 +1,13 @@
 #! /usr/bin/env groovy
 
-def getBranches() {
-}
-
-// get list of provisioners
 def getProvisioners() {
     return ['minikube', 'kops']
 }
 
-def getTargets(provisioner) {
-    minikube_target = nil
-    kops_target = clustername
-}
+provisioners = getProvisioners();
 
 pipeline {
+
     agent {
         node {
             label 'k8s-default'
@@ -29,7 +23,8 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'DEBUG_BUILD', defaultValue: true, description: '')
+        booleanParam(name: 'DEBUG_BUILD', defaultValue: true, description: 'turn on debugging')
+        choice(name: 'PROVISIONER', choices: provisioners, description: 'cluster provisioner')
     }
 
     triggers {
@@ -40,25 +35,25 @@ pipeline {
 
         stage('Environment') {
             steps {
-                echo "make environment ${params.PERSON}"
+                echo "make PROVISIONER=${params.PROVISIONER} environment"
                 sh 'make environment'
             }
         }
         stage('Test') {
             steps {
-                echo 'make test'
+                echo 'make PROVISIONER=${params.PROVISIONER} test'
                 sh 'make test'
             }
         }
         stage('Deploy') {
             steps {
-                echo 'make deploy'
+                echo 'make PROVISIONER=${params.PROVISIONER} deploy'
                 sh 'make deploy'
             }
         }
         stage('Verify') {
             steps {
-                echo 'make verify'
+                echo 'make PROVISIONER=${params.PROVISIONER} verify'
                 sh 'make verify'
             }
         }

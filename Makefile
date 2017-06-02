@@ -8,6 +8,7 @@ WRITE_TO_VAULT_FROM_LASTPASS := false
 
 LASTPASS_USERNAME := "shane.ramey@gmail.com"
 
+# PROVISIONER can be minikube or kops. See also CLOUD_PROVIDER
 PROVISIONER := minikube
 
 DELETE_ALL_DATA := false
