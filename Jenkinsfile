@@ -1,5 +1,12 @@
 #! /usr/bin/env groovy
 
+GIT_BRANCH = sh (
+    script: 'git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3',
+    returnStdout: true
+).trim()
+
+def clusterdomain = "${GIT_BRANCH}.local"
+
 pipeline {
 
     agent {
@@ -9,7 +16,7 @@ pipeline {
     }
 
     environment {
-        VAULT_ADDR = "https://http.vault:8200"
+        VAULT_ADDR = "https://http.vault.svc.${clusterdomain}:8200"
     }
 
     options {
