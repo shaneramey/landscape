@@ -51,8 +51,10 @@ function use_proxy() {
 
 # use backplane.io
 function expose_jenkins() {
-    export BACKPLANE_TOKEN=
+    export BACKPLANE_TOKEN=""
     backplane connect "endpoint=amicable-mouse-4.backplaneapp.io,release=v1" https://http.jenkins.svc.master.local
+backplane connect "endpoint=amicable-mouse-4.backplaneapp.io,release=v1" https://http.jenkins.svc.master.local
+
 }
 minikube_status=`minikube status --format {{.MinikubeStatus}}`
 
