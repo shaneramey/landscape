@@ -1,7 +1,5 @@
 #! /usr/bin/env groovy
 
-provisioners = ['kops', 'minikube']
-
 pipeline {
 
     agent {
@@ -20,7 +18,7 @@ pipeline {
 
     parameters {
         booleanParam(name: 'DEBUG_BUILD', defaultValue: true, description: 'turn on debugging')
-        choice(name: 'PROVISIONER', choices: provisioners, description: 'cluster provisioner')
+        choice(name: 'PROVISIONER', choices: "kops\nminikube\n, description: 'cluster provisioner')
     }
 
     triggers {
