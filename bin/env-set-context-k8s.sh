@@ -19,7 +19,7 @@ if ! [ -z ${JENKINS_SECRET+x} ] && ! [ -z ${KUBERNETES_PORT} ]; then
     --server=https://kubernetes.default.svc.${CLUSTER_DOMAIN} --api-version=v1
     
     kubectl config set-credentials clusterrole \
-    --token=`cat /var/run/kubernetes.io/secrets/token`
+    --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
     
     kubectl config set-context ${CLUSTER_DOMAIN} \
     --cluster=${CLUSTER_DOMAIN} --user=clusterrole --namespace=default
