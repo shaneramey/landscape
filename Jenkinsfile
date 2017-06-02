@@ -1,10 +1,6 @@
 #! /usr/bin/env groovy
 
-def getProvisioners() {
-    return "minikube kops"
-}
-
-provisioners = getProvisioners();
+provisioners = ['kops', 'minikube']
 
 pipeline {
 
