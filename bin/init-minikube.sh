@@ -42,8 +42,8 @@ function enable_addons() {
 }
 
 function use_proxy() {
-    extra_args =    " --docker-env HTTP_PROXY=http://$YOURPROXY:PORT \
-                    --docker-env HTTPS_PROXY=https://$YOURPROXY:PORT"
+    extra_args =    " --docker-env HTTPS_PROXY=$HTTPS_PROXY \
+                    --docker-env HTTP_PROXY=$HTTP_PROXY"
     if [ -z "$HTTP_PROXY" ] || [ -z "$HTTPS_PROXY" ]; then
         mk_start_cmd=$mk_start_cmd$extra_args
     fi
