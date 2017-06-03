@@ -39,8 +39,8 @@ fi
 
 if ! [ -d ~/.helm/plugins/helm-template ]; then
 	# FIXME: needed until https://github.com/technosophos/helm-template/pull/11 is merged
-	mkdir -p /Users/sramey/gocode/src/github.com/technosophos
-	cd /Users/sramey/gocode/src/github.com/technosophos
+	mkdir -p $GOPATH/src/github.com/technosophos
+	cd $GOPATH/src/github.com/technosophos
 	git clone https://github.com/shaneramey/helm-template.git
 	cd helm-template/
 	make bootstrap build

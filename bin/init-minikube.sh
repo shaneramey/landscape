@@ -38,11 +38,23 @@ minikube_status=`minikube status --format {{.MinikubeStatus}}`
 
 kubectl config use-context minikube
 if [ "$minikube_status" == "Does Not Exist" ]; then
-  if ! [ -f ~/external-pki/ca.pem ] || ! [ -f ~/external-pki/ca.key ]; then
-    echo "~/external-pki/ca.pem and ~/external-pki/ca.key do not exist. Create them"
-    exit 1
-  fi
-  minikube start --vm-driver=xhyve --dns-domain=${GIT_BRANCH}.local \
+#  if ! [ -f ~/external-pki/ca.pem ] || ! [ -f ~/external-pki/ca.key ]; then
+#    echo "~/external-pki/ca.pem and ~/external-pki/ca.key do not exist. Create them"
+#    exit 1
+#  fi
+
+os_type="$(uname)"
+echo "OS Type: ${os_type}"
+
+if [ ${os_type} == "Darwin" ]; then
+    MKUBE_ARGS = "--vm-driver=xhyve"
+    echo "Detected OS X.  Using xhyve driver"
+elif [ ${os_type} == "Linux" ]; then
+    MKUBE_ARGS = "--vm-driver=kvm"
+    echo "Detected Linux OS.  Using KVM driver"
+fi
+
+  minikube start ${MKUBE_ARGS} --dns-domain=${GIT_BRANCH}.local \
     --kubernetes-version=v1.6.3 \
     --extra-config=apiserver.Authorization.Mode=RBAC \
     --extra-config=controller-manager.ClusterSigningCertFile=/var/lib/localkube/certs/ca.crt \
