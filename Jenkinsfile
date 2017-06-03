@@ -1,37 +1,61 @@
-#! groovy
+#! /usr/bin/env groovy
+
+GIT_BRANCH = sh (
+    script: 'git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3',
+    returnStdout: true
+).trim()
+
+def clusterdomain = "${GIT_BRANCH}.local"
 
 pipeline {
-    agent any
+
+    agent {
+        node {
+            label 'k8s-default'
+        }
+    }
+
+    environment {
+        VAULT_ADDR = "https://http.vault.svc.${clusterdomain}:8200"
+    }
+
+    options {
+        timeout(time: 1, unit: 'HOURS') 
+    }
+
+    parameters {
+        booleanParam(name: 'DEBUG_BUILD', defaultValue: true, description: 'turn on debugging')
+        choice(name: 'PROVISIONER', choices: "minikube\nkops\ngce\n", description: 'cluster provisioner')
+    }
+
+    triggers {
+        pollSCM('* * * * *')
+    }
 
     stages {
+
         stage('Environment') {
             steps {
-                echo 'make environment'
+                echo "make PROVISIONER=${params.PROVISIONER} environment"
                 sh 'make environment'
             }
         }
         stage('Test') {
             steps {
-                echo 'make test'
+                echo 'make PROVISIONER=${params.PROVISIONER} test'
                 sh 'make test'
             }
         }
         stage('Deploy') {
             steps {
-                echo 'make deploy'
+                echo 'make PROVISIONER=${params.PROVISIONER} deploy'
                 sh 'make deploy'
             }
         }
         stage('Verify') {
             steps {
-                echo 'make verify'
+                echo 'make PROVISIONER=${params.PROVISIONER} verify'
                 sh 'make verify'
-            }
-        }
-        stage('CSR Approve') {
-            steps {
-                echo 'make csr_approve'
-                sh 'make csr_approve'
             }
         }
     }

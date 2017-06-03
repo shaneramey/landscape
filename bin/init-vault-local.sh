@@ -11,7 +11,7 @@ elif [ $RUNNING == "false" ]; then
 fi
 
 sleep 3
-export VAULT_ADDR=http://127.0.0.1:8200
+export VAULT_ADDR='http://127.0.0.1:8200'
 unset VAULT_TOKEN # auth doesnt work unless this is unset
 
 vault auth `docker logs dev-vault 2>&1 | \
