@@ -110,7 +110,7 @@ function apply_namespace() {
         echo
         echo NOTE: If you have lastpass-cli installed, run:
         echo
-        echo "lpass show k8s\\\\k8s-landscaper/$GIT_BRANCH --notes"
+        echo "lpass show k8s-landscaper/$GIT_BRANCH --notes"
         echo
         echo First read existing secrets, and see if you want to replace them
         echo
