@@ -82,7 +82,7 @@ function apply_namespace() {
     chart_errors=()
 
     # Apply landscape
-    LANDSCAPER_COMMAND="landscaper apply -v --namespace=$K8S_NAMESPACE $K8S_NAMESPACE/*.yaml"
+    LANDSCAPER_COMMAND="landscaper apply -v --namespace=$K8S_NAMESPACE namespaces/$K8S_NAMESPACE/*.yaml"
     echo
     echo "Running \`$LANDSCAPER_COMMAND\`"
     LANDSCAPER_OUTPUT=`$LANDSCAPER_COMMAND 2>&1`
@@ -138,8 +138,9 @@ function apply_namespace() {
 
 if [ "$namespace_arg" == "__all_namespaces__" ]; then
 	# Loop through namespace
-    for NAMESPACE in *; do
-        if [ -d $NAMESPACE ]; then
+    for NAMESPACE_W_DIR in namespaces/*; do
+        if [ -d $NAMESPACE_W_DIR ]; then
+            NAMESPACE=`echo $NAMESPACE_W_DIR | awk -F/ '{ print $2 }'`
             echo "###"
             echo "# Namespace: $NAMESPACE"
             echo "###"
@@ -154,14 +155,12 @@ if [ "$namespace_arg" == "__all_namespaces__" ]; then
                 echo " done."
             fi
             echo
-            for CHART_YAML in ${NAMESPACE}/*.yaml; do
-                if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
+            for CHART_YAML in namespaces/${NAMESPACE}/*.yaml; do
                 CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
                 echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
                 vault_to_env $GIT_BRANCH $CHART_NAME $NAMESPACE
             done
             # run landscaper
-            if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
             apply_namespace $NAMESPACE
         fi
     done
@@ -182,8 +181,7 @@ else
             echo " done."
         fi
         echo
-        for CHART_YAML in ${NAMESPACE}/*.yaml; do
-            if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
+        for CHART_YAML in namespaces/${NAMESPACE}/*.yaml; do
         	CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
             echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
             vault_to_env $GIT_BRANCH $CHART_NAME $NAMESPACE
