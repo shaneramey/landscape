@@ -1,11 +1,6 @@
 #! /usr/bin/env groovy
 
-GIT_BRANCH = sh (
-    script: 'git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3',
-    returnStdout: true
-).trim()
-
-def clusterdomain = "${GIT_BRANCH}.local"
+def clusterdomain = "${env.BRANCH_NAME}.local"
 
 pipeline {
 
@@ -25,7 +20,7 @@ pipeline {
 
     parameters {
         booleanParam(name: 'DEBUG_BUILD', defaultValue: true, description: 'turn on debugging')
-        choice(name: 'PROVISIONER', choices: "minikube\nkops\ngce\n", description: 'cluster provisioner')
+        choice(name: 'PROVISIONER', choices: "minikube\nkops\ngke\n", description: 'cluster provisioner')
     }
 
     triggers {
