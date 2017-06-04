@@ -31,6 +31,8 @@ pipeline {
 
         stage('Environment') {
             steps {
+                echo "Setting environment branch: ${env.BRANCH_NAME}"
+                echo "clusterdomain: ${clusterdomain}"
                 echo "make PROVISIONER=${params.PROVISIONER} environment"
                 sh 'make environment'
             }
