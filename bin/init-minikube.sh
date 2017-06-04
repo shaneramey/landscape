@@ -58,8 +58,32 @@ backplane connect "endpoint=amicable-mouse-4.backplaneapp.io,release=v1" https:/
 }
 minikube_status=`minikube status --format {{.MinikubeStatus}}`
 
+echo "Running $mk_start_cmd"
+kubectl config use-context minikube
+if [ "$minikube_status" == "Does Not Exist" ]; then
+
+    if ! [ -f ~/external-pki/ca.pem ] || ! [ -f ~/external-pki/ca.key ]; then
+        echo
+        echo "~/external-pki/ca.{pem,key} keypair does not exist"
+        echo "Create them from an external CA and drop them here"
+        echo
+        exit 1
+    fi
+
+# Detect OS to determine which driver to use
+os_type="$(uname)"
+echo "OS Type Detected: ${os_type}"
+
+if [ ${os_type} == "Darwin" ]; then
+    MKUBE_DRIVER = "xhyve"
+    echo "Detected OS X.  Using xhyve driver"
+elif [ ${os_type} == "Linux" ]; then
+    MKUBE_DRIVER = "kvm"
+    echo "Detected Linux OS.  Using KVM driver"
+fi
+
 mk_start_cmd="minikube start \
-                --vm-driver=virtualbox \
+                --vm-driver=${MKUBE_DRIVER} \
                 --dns-domain=${GIT_BRANCH}.local \
                 --kubernetes-version=v1.6.3 \
                 --extra-config=apiserver.Authorization.Mode=RBAC \
@@ -70,20 +94,11 @@ mk_start_cmd="minikube start \
                 --memory=8192 \
                 -v=0" # Re-enable to debug minikube itself (off to save CPU)
 
+use_proxy # set HTTPS_PROXY and HTTP_PROXY before running 'make'
 echo "Running $mk_start_cmd"
-kubectl config use-context minikube
-if [ "$minikube_status" == "Does Not Exist" ]; then
-    if ! [ -f ~/external-pki/ca.pem ] || ! [ -f ~/external-pki/ca.key ]; then
-        echo
-        echo "~/external-pki/ca.{pem,key} keypair does not exist"
-        echo "Create them from an external CA and drop them here"
-        echo
-        exit 1
-    fi
-    use_proxy # set HTTPS_PROXY and HTTP_PROXY before running 'make'
-    $mk_start_cmd
-    enable_addons
-    # enable dynamic volume provisioning
+$mk_start_cmd
+enable_addons
+
 elif [ "$minikube_status" == "Stopped" ]; then
     $mk_start_cmd
 fi
