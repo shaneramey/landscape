@@ -72,15 +72,12 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
 
 # Detect OS to determine which driver to use
 os_type="$(uname)"
-echo "OS Type Detected: ${os_type}"
-
-if [ ${os_type} == "Darwin" ]; then
-    MKUBE_DRIVER = "xhyve"
-    echo "Detected OS X.  Using xhyve driver"
-elif [ ${os_type} == "Linux" ]; then
-    MKUBE_DRIVER = "kvm"
-    echo "Detected Linux OS.  Using KVM driver"
+if [ "${os_type}" == "Darwin" ]; then
+    MKUBE_DRIVER="xhyve"
+elif [ "${os_type}" == "Linux" ]; then
+    MKUBE_DRIVER="kvm"
 fi
+echo "OS ${os_type} detected. Using ${MKUBE_DRIVER} driver"
 
 mk_start_cmd="minikube start \
                 --vm-driver=${MKUBE_DRIVER} \
