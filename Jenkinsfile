@@ -1,12 +1,10 @@
 #! /usr/bin/env groovy
 
-def clusterdomain = "${env.BRANCH_NAME}.local"
-
 pipeline {
     agent any
 
     environment {
-        VAULT_ADDR = "https://http.vault.svc.${clusterdomain}:8200"
+        VAULT_ADDR = "https://http.vault.svc.${env.BRANCH_NAME}.local:8200"
     }
 
     options {
@@ -27,7 +25,7 @@ pipeline {
         stage('Environment') {
             steps {
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
-                echo "clusterdomain: ${clusterdomain}"
+                echo "clusterDomain: ${env.BRANCH_NAME}.local"
                 echo "make PROVISIONER=${params.PROVISIONER} environment"
                 sh 'make environment'
             }
