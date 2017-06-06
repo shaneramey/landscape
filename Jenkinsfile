@@ -3,8 +3,11 @@
 def clusterdomain = "${env.BRANCH_NAME}.local"
 
 pipeline {
-
-    agent any
+    agent {
+        node {
+            label 'default'
+        }
+    }
 
     environment {
         VAULT_ADDR = "https://http.vault.svc.${clusterdomain}:8200"
