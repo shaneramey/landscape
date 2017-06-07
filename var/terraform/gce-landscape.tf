@@ -30,6 +30,15 @@ variable "network2_ipv4_cidr" {
   description = "The network assigned to network2"
 }
 
+variable "vpn1_remote_network1" {
+  description = "The remote tunneled VPN network1 on vpn1"
+}
+
+variable "vpn2_remote_network1" {
+  description = "The remote tunneled VPN network1 on vpn2"
+
+}
+
 provider "vault" {
   # settings configured via environment variables:
   #  - VAULT_ADDR
@@ -44,33 +53,40 @@ data "vault_generic_secret" "gce_creds" {
 
 # An example of how to connect two GCE networks with a VPN
 provider "google" {
-  credentials = "${jsonencode(data.vault_generic_secret.gce_creds.data)}"
+  credentials = "${file("/Users/sramey/Downloads/develop-f15c27eaaebe.json")}"
   project      = "${var.project}"
   region       = "${var.region}"
 }
 
 # Create the two networks we want to join. They must have separate, internal
 # ranges.
-resource "google_compute_network" "network1" {
-  name       = "network1"
-  ipv4_range = "${var.network1_ipv4_cidr}"
+resource "google_compute_network" "network0" {
+  name                    = "test"
+  auto_create_subnetworks = "false"
 }
 
-resource "google_compute_network" "network2" {
+resource "google_compute_subnetwork" "network1" {
+  name       = "network1"
+  ip_cidr_range = "${var.network1_ipv4_cidr}"
+  network = "${google_compute_network.network0.self_link}"
+}
+
+resource "google_compute_subnetwork" "network2" {
   name       = "network2"
-  ipv4_range = "${var.network2_ipv4_cidr}"
+  ip_cidr_range = "${var.network2_ipv4_cidr}"
+  network = "${google_compute_network.network0.self_link}"
 }
 
 # Attach a VPN gateway to each network.
 resource "google_compute_vpn_gateway" "target_gateway1" {
   name    = "vpn1"
-  network = "${google_compute_network.network1.self_link}"
+  network = "${google_compute_network.network0.self_link}"
   region  = "${var.region}"
 }
 
 resource "google_compute_vpn_gateway" "target_gateway2" {
   name    = "vpn2"
-  network = "${google_compute_network.network2.self_link}"
+  network = "${google_compute_network.network0.self_link}"
   region  = "${var.region}"
 }
 
@@ -149,6 +165,8 @@ resource "google_compute_vpn_tunnel" "tunnel1" {
   peer_ip            = "${google_compute_address.vpn_static_ip2.address}"
   shared_secret      = "a secret message"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway1.self_link}"
+  local_traffic_selector  = ["${google_compute_subnetwork.network1.ip_cidr_range}", "${google_compute_subnetwork.network2.ip_cidr_range}"]
+  remote_traffic_selector = ["${var.vpn1_remote_network1}"]
 
   depends_on = ["google_compute_forwarding_rule.fr1_udp500",
     "google_compute_forwarding_rule.fr1_udp4500",
@@ -162,6 +180,8 @@ resource "google_compute_vpn_tunnel" "tunnel2" {
   peer_ip            = "${google_compute_address.vpn_static_ip1.address}"
   shared_secret      = "a secret message"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway2.self_link}"
+  local_traffic_selector  = ["${google_compute_subnetwork.network1.ip_cidr_range}", "${google_compute_subnetwork.network2.ip_cidr_range}"]
+  remote_traffic_selector = ["${var.vpn2_remote_network1}"]
 
   depends_on = ["google_compute_forwarding_rule.fr2_udp500",
     "google_compute_forwarding_rule.fr2_udp4500",
@@ -173,17 +193,17 @@ resource "google_compute_vpn_tunnel" "tunnel2" {
 # through the VPN tunnel
 resource "google_compute_route" "route1" {
   name                = "route1"
-  network             = "${google_compute_network.network1.name}"
+  network             = "${google_compute_network.network0.name}"
   next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel1.self_link}"
-  dest_range          = "${google_compute_network.network2.ipv4_range}"
+  dest_range          = "${var.vpn1_remote_network1}"
   priority            = 1000
 }
 
 resource "google_compute_route" "route2" {
   name                = "route2"
-  network             = "${google_compute_network.network2.name}"
+  network             = "${google_compute_network.network0.name}"
   next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel2.self_link}"
-  dest_range          = "${google_compute_network.network1.ipv4_range}"
+  dest_range          = "${var.vpn2_remote_network1}"
   priority            = 1000
 }
 
@@ -191,8 +211,8 @@ resource "google_compute_route" "route2" {
 # them in the firewall
 resource "google_compute_firewall" "network1-allow-network1" {
   name          = "network1-allow-network1"
-  network       = "${google_compute_network.network1.name}"
-  source_ranges = ["${google_compute_network.network1.ipv4_range}"]
+  network       = "${google_compute_network.network0.name}"
+  source_ranges = ["${google_compute_subnetwork.network1.ip_cidr_range}"]
 
   allow {
     protocol = "tcp"
@@ -209,8 +229,8 @@ resource "google_compute_firewall" "network1-allow-network1" {
 
 resource "google_compute_firewall" "network1-allow-network2" {
   name          = "network1-allow-network2"
-  network       = "${google_compute_network.network1.name}"
-  source_ranges = ["${google_compute_network.network2.ipv4_range}"]
+  network       = "${google_compute_network.network0.name}"
+  source_ranges = ["${google_compute_subnetwork.network2.ip_cidr_range}"]
 
   allow {
     protocol = "tcp"
