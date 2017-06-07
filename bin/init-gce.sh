@@ -1,5 +1,12 @@
 #! /usr/bin/env bash
 
-GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
+PROJECT=
 
-gcloud container clusters create $GIT_BRANCH
+REGION=
+
+CLUSTER_DOMAIN=
+
+terraform apply \
+	-var="region=${REGION}" \
+	-var="project=${PROJECT}" \
+	-var="clusterDomain=${GIT_BRANCH}.local"
