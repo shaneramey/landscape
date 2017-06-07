@@ -30,15 +30,6 @@ variable "network2_ipv4_cidr" {
   description = "The network assigned to network2"
 }
 
-variable "vpn1_remote_network1" {
-  description = "The remote tunneled VPN network1 on vpn1"
-}
-
-variable "vpn2_remote_network1" {
-  description = "The remote tunneled VPN network1 on vpn2"
-
-}
-
 provider "vault" {
   # settings configured via environment variables:
   #  - VAULT_ADDR
@@ -53,7 +44,7 @@ data "vault_generic_secret" "gce_creds" {
 
 # An example of how to connect two GCE networks with a VPN
 provider "google" {
-  credentials = "${file("/Users/sramey/Downloads/develop-f15c27eaaebe.json")}"
+  credentials = "${file("downloaded-creds.json")}"
   project      = "${var.project}"
   region       = "${var.region}"
 }
@@ -157,16 +148,24 @@ resource "google_compute_forwarding_rule" "fr2_udp4500" {
   target      = "${google_compute_vpn_gateway.target_gateway2.self_link}"
 }
 
+data "vault_generic_secret" "gce_vpn_vpn1" {
+  path = "secret/gce/${var.branch_name}/vpns/vpn1"
+}
+
+data "vault_generic_secret" "gce_vpn_vpn2" {
+  path = "secret/gce/${var.branch_name}/vpns/vpn2"
+}
+
 # Each tunnel is responsible for encrypting and decrypting traffic exiting
 # and leaving its associated gateway
 resource "google_compute_vpn_tunnel" "tunnel1" {
   name               = "tunnel1"
   region             = "${var.region}"
-  peer_ip            = "${google_compute_address.vpn_static_ip2.address}"
-  shared_secret      = "a secret message"
+  peer_ip            = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_remote_ip"]}"
+  shared_secret      = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_secret_key"]}"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway1.self_link}"
   local_traffic_selector  = ["${google_compute_subnetwork.network1.ip_cidr_range}", "${google_compute_subnetwork.network2.ip_cidr_range}"]
-  remote_traffic_selector = ["${var.vpn1_remote_network1}"]
+  remote_traffic_selector = ["${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_tunneled_net1"]}"]
 
   depends_on = ["google_compute_forwarding_rule.fr1_udp500",
     "google_compute_forwarding_rule.fr1_udp4500",
@@ -177,11 +176,11 @@ resource "google_compute_vpn_tunnel" "tunnel1" {
 resource "google_compute_vpn_tunnel" "tunnel2" {
   name               = "tunnel2"
   region             = "${var.region}"
-  peer_ip            = "${google_compute_address.vpn_static_ip1.address}"
-  shared_secret      = "a secret message"
+  peer_ip            = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_remote_ip"]}"
+  shared_secret      = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_secret_key"]}"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway2.self_link}"
   local_traffic_selector  = ["${google_compute_subnetwork.network1.ip_cidr_range}", "${google_compute_subnetwork.network2.ip_cidr_range}"]
-  remote_traffic_selector = ["${var.vpn2_remote_network1}"]
+  remote_traffic_selector = ["${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_tunneled_net1"]}"]
 
   depends_on = ["google_compute_forwarding_rule.fr2_udp500",
     "google_compute_forwarding_rule.fr2_udp4500",
@@ -195,7 +194,7 @@ resource "google_compute_route" "route1" {
   name                = "route1"
   network             = "${google_compute_network.network0.name}"
   next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel1.self_link}"
-  dest_range          = "${var.vpn1_remote_network1}"
+  dest_range          = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_tunneled_net1"]}"
   priority            = 1000
 }
 
@@ -203,7 +202,7 @@ resource "google_compute_route" "route2" {
   name                = "route2"
   network             = "${google_compute_network.network0.name}"
   next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel2.self_link}"
-  dest_range          = "${var.vpn2_remote_network1}"
+  dest_range          = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_tunneled_net1"]}"
   priority            = 1000
 }
 
