@@ -22,6 +22,14 @@ variable "branch_name" {
   description = "The branch name, used for Vault keys and k8s DNS domain"
 }
 
+variable "network1_ipv4_cidr" {
+  description = "The network assigned to network1"
+}
+
+variable "network2_ipv4_cidr" {
+  description = "The network assigned to network2"
+}
+
 provider "vault" {
   # settings configured via environment variables:
   #  - VAULT_ADDR
@@ -45,12 +53,12 @@ provider "google" {
 # ranges.
 resource "google_compute_network" "network1" {
   name       = "network1"
-  ipv4_range = "10.120.0.0/16"
+  ipv4_range = "${var.network1_ipv4_cidr}"
 }
 
 resource "google_compute_network" "network2" {
   name       = "network2"
-  ipv4_range = "10.121.0.0/16"
+  ipv4_range = "${var.network2_ipv4_cidr}"
 }
 
 # Attach a VPN gateway to each network.
