@@ -39,12 +39,12 @@ provider "vault" {
 }
 
 data "vault_generic_secret" "gce_creds" {
-  path = "secret/gce/${var.branch_name}"
+  path = "secret/gce/${var.branch_name}/credentials"
 }
 
 # An example of how to connect two GCE networks with a VPN
 provider "google" {
-  account_file = "${data.vault_generic_secret.gce_creds}"
+  credentials = "${jsonencode(data.vault_generic_secret.gce_creds.data)}"
   project      = "${var.project}"
   region       = "${var.region}"
 }
