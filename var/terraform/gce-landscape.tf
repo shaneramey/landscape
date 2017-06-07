@@ -1,3 +1,13 @@
+# Terraform Kubernetes cluster
+# Single region
+# Installs
+#  - Network
+#  - Firewalls
+#  - External IPs
+#  - Forwarding Rules
+#  - Routes
+#  - VPN Gateway
+
 variable "project" {
   description = "Your project name"
 }
