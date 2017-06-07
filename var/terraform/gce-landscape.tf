@@ -7,6 +7,8 @@
 #  - Forwarding Rules
 #  - Routes
 #  - VPN Gateway
+#
+# Uses Vault for secrets, keyed on this repo's branch name
 
 variable "project" {
   description = "Your project name"
@@ -16,13 +18,25 @@ variable "region" {
   description = "The desired region for the cluster"
 }
 
-variable "cluster_domain" {
-  description = "The DNS name for the cluster"
+variable "branch_name" {
+  description = "The branch name, used for Vault keys and k8s DNS domain"
+}
+
+provider "vault" {
+  # settings configured via environment variables:
+  #  - VAULT_ADDR
+  #  - VAULT_TOKEN
+  #  - VAULT_CACERT
+  #  - TERRAFORM_VAULT_MAX_TTL
+}
+
+data "vault_generic_secret" "gce_creds" {
+  path = "secret/gce/${var.branch_name}"
 }
 
 # An example of how to connect two GCE networks with a VPN
 provider "google" {
-  account_file = "${file("~/gce/account.json")}"
+  account_file = "${data.vault_generic_secret.gce_creds}"
   project      = "${var.project}"
   region       = "${var.region}"
 }
