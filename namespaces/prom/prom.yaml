@@ -1,0 +1,6 @@
+name: prom
+release:
+  chart: charts.downup.us/prometheus:3.0.7
+  version: 3.0.7
+configuration:
+  clusterDomain: master.local
