@@ -6,7 +6,7 @@ ENVCONSUL_VERSION=0.6.2
 KUBECTL_VERSION=1.6.2
 HELM_VERSION=2.4.2
 LANDSCAPER_VERSION=1.0.5
-TERRAFORM_VERSION=1.0.4
+TERRAFORM_VERSION=0.9.8
 
 # update_package_lists() {
 #     local platform_name=$2
@@ -111,7 +111,7 @@ install_terraform() {
         local download_file=terraform_${TERRAFORM_VERSION}_darwin_amd64.zip
         curl -LO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/${download_file} && \
         unzip -d /usr/local/bin/ ${download_file} && \
-        rm v${TERRAFORM_VERSION}.zip
+        rm ${download_file}
     else
         echo "terraform already installed"
     fi
@@ -128,7 +128,7 @@ install_package() {
 main() {
     os_name="$(uname)"
     #update_package_lists "${os_name}"
-    for program in lastpass vault envconsul kubectl helm landscaper; do
+    for program in lastpass vault envconsul kubectl helm landscaper terraform; do
         install_package "${program}" "${os_name}"
     done
 

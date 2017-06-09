@@ -10,7 +10,6 @@
 set -u
 
 namespace_arg=$1
-vault_token=$2
 # each branch has its own set of deployments
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 
@@ -133,9 +132,6 @@ function apply_namespace {
     fi
     helm status ${K8S_NAMESPACE}-${CHART_NAME}
 }
-
-vault auth ${vault_token}
-export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
 if [ "$namespace_arg" == "__all_namespaces__" ]; then
 	# Loop through namespace

@@ -1,4 +1,4 @@
 name: monocular
 release:
-  chart: charts.downup.us/monocular:0.2.8
-  version: 0.2.8
+  chart: charts.downup.us/monocular:0.4.1
+  version: 0.4.1
