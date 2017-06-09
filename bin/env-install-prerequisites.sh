@@ -82,7 +82,8 @@ install_helm() {
         curl -LO https://storage.googleapis.com/kubernetes-helm/${download_file} && \
         tar zvxf ${download_file} --strip-components=1 ${platform}-amd64/helm && \
         chmod +x helm && \
-        mv helm /usr/local/bin/
+        mv helm /usr/local/bin/ && \
+        rm ${download_file}
     else
         echo "helm already installed"
     fi

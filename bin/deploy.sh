@@ -190,7 +190,6 @@ else
             vault_to_env $GIT_BRANCH $CHART_NAME $NAMESPACE
         done
         # run landscaper
-        if [ "$NAMESPACE" == "ca-pki-init" ] || [ "$NAMESPACE" == "docs" ] || [ "$NAMESPACE" == "bin" ]; then continue; fi # skip tls init workspace
         apply_namespace $NAMESPACE
     fi
 fi

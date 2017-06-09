@@ -49,52 +49,38 @@ function use_proxy() {
     fi
 }
 
-# use backplane.io
-function expose_jenkins() {
-    export BACKPLANE_TOKEN=""
-    backplane connect "endpoint=amicable-mouse-4.backplaneapp.io,release=v1" https://http.jenkins.svc.master.local
-backplane connect "endpoint=amicable-mouse-4.backplaneapp.io,release=v1" https://http.jenkins.svc.master.local
-
-}
 minikube_status=`minikube status --format {{.MinikubeStatus}}`
 
-echo "Running $mk_start_cmd"
+# note: Jun 9 2017: Delete this and use the env-set-context-k8s.sh version
+# leaving it here for now to not overwrite a live cluster w minikube cfg FIXME
 kubectl config use-context minikube
 if [ "$minikube_status" == "Does Not Exist" ]; then
 
-    if ! [ -f ~/external-pki/ca.pem ] || ! [ -f ~/external-pki/ca.key ]; then
-        echo
-        echo "~/external-pki/ca.{pem,key} keypair does not exist"
-        echo "Create them from an external CA and drop them here"
-        echo
-        exit 1
+    # Detect OS to determine which driver to use
+    os_type="$(uname)"
+    if [ "${os_type}" == "Darwin" ]; then
+        MKUBE_DRIVER="xhyve"
+    elif [ "${os_type}" == "Linux" ]; then
+        MKUBE_DRIVER="kvm"
     fi
+    echo "${os_type} OS detected. Using ${MKUBE_DRIVER} driver"
 
-# Detect OS to determine which driver to use
-os_type="$(uname)"
-if [ "${os_type}" == "Darwin" ]; then
-    MKUBE_DRIVER="xhyve"
-elif [ "${os_type}" == "Linux" ]; then
-    MKUBE_DRIVER="kvm"
-fi
-echo "${os_type} OS detected. Using ${MKUBE_DRIVER} driver"
+    mk_start_cmd="minikube start \
+                    --vm-driver=${MKUBE_DRIVER} \
+                    --dns-domain=${GIT_BRANCH}.local \
+                    --kubernetes-version=v1.6.3 \
+                    --extra-config=apiserver.Authorization.Mode=RBAC \
+                    --extra-config=controller-manager.ClusterSigningCertFile=/var/lib/localkube/certs/ca.crt \
+                    --extra-config=controller-manager.ClusterSigningKeyFile=/var/lib/localkube/certs/ca.key \
+                    --cpus=8 \
+                    --disk-size=20g \
+                    --memory=8192 \
+                    -v=0" # Re-enable to debug minikube itself (off to save CPU)
 
-mk_start_cmd="minikube start \
-                --vm-driver=${MKUBE_DRIVER} \
-                --dns-domain=${GIT_BRANCH}.local \
-                --kubernetes-version=v1.6.3 \
-                --extra-config=apiserver.Authorization.Mode=RBAC \
-                --extra-config=controller-manager.ClusterSigningCertFile=/var/lib/localkube/certs/ca.crt \
-                --extra-config=controller-manager.ClusterSigningKeyFile=/var/lib/localkube/certs/ca.key \
-                --cpus=8 \
-                --disk-size=20g \
-                --memory=8192 \
-                -v=0" # Re-enable to debug minikube itself (off to save CPU)
-
-use_proxy # set HTTPS_PROXY and HTTP_PROXY before running 'make'
-echo "Running $mk_start_cmd"
-$mk_start_cmd
-enable_addons
+    use_proxy # set HTTP(S)_PROXY before running 'make' = faster docker pulls
+    echo "Running $mk_start_cmd"
+    $mk_start_cmd
+    enable_addons
 
 elif [ "$minikube_status" == "Stopped" ]; then
     $mk_start_cmd
@@ -107,7 +93,7 @@ EXISTING_TILLER_POD=`kubectl get pod \
                     -l name=tiller 2>&1`
 if [ "$EXISTING_TILLER_POD" == "No resources found." ]; then
     helm init
-    echo "waiting for tiller pod to be Ready"
+    echo "Waiting for tiller pod to be Ready..."
 
     while [ "$EXISTING_TILLER_POD" != "Running" ]; do
         EXISTING_TILLER_POD=`kubectl get pod --namespace=kube-system \
@@ -119,8 +105,7 @@ fi
 
 # FIXME: temp workaround
 #echo DEBUGMODE setting up permissive access. This should not be used in prod!
-EXISTING_CLUSTERROLEBINDING_POD=`kubectl get clusterrolebinding \
-                                permissive-binding 2>&1 > /dev/null`
+EXISTING_CLUSTERROLEBINDING_POD=`kubectl get clusterrolebinding permissive-binding 2>&1 > /dev/null`
 if [ $? -ne 0 ]; then
     kubectl create clusterrolebinding permissive-binding \
     --clusterrole=cluster-admin \

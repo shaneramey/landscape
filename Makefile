@@ -35,7 +35,7 @@ environment:
 	./bin/env-auth-vault.sh
 	./bin/env-set-context-k8s.sh
 	./bin/env-add-repos-helm.sh
-	./bin/env-install-plugins-helm.sh
+	./bin/env-install-prerequisites.sh
 
 test:
 	./bin/test.sh ${K8S_NAMESPACE}
