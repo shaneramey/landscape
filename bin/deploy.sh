@@ -5,19 +5,14 @@
 # Expects `kubectl config get-contexts` to have the desired context selected
 # variables
 #  - GIT_BRANCH (auto-discovered)
-#  - 
+#  - vault_token passed in as argument, used for envconsul auth
+# assumes you've authed to vault
 set -u
 
 namespace_arg=$1
+vault_token=$2
 # each branch has its own set of deployments
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
-
-# read secrets from Hashicorp Vault
-export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
-if [ "$VAULT_TOKEN" == "" ]; then
-    echo "ERROR: could not look up vault token. Auth first"
-    exit 4
-fi
 
 darwin=false; # MacOSX compatibility
 case "`uname`" in
@@ -138,6 +133,9 @@ function apply_namespace {
     fi
     helm status ${K8S_NAMESPACE}-${CHART_NAME}
 }
+
+vault auth ${vault_token}
+export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
 
 if [ "$namespace_arg" == "__all_namespaces__" ]; then
 	# Loop through namespace

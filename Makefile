@@ -4,6 +4,11 @@ GIT_BRANCH := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 
 K8S_NAMESPACE := "__all_namespaces__"
 
+ROOT_TOKEN := $(shell docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }')
+
+VAULT_TOKEN := $(shell ./bin/env-auth-vault.sh $(ROOT_TOKEN))
+
+# FIXME: use https://github.com/shaneramey/vault-backup for backup/restore
 WRITE_TO_VAULT_FROM_LASTPASS := false
 
 LASTPASS_USERNAME := "shane.ramey@gmail.com"
@@ -32,7 +37,6 @@ init_cluster:
 	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
 environment:
-	./bin/env-auth-vault.sh
 	./bin/env-set-context-k8s.sh
 	./bin/env-add-repos-helm.sh
 	./bin/env-install-prerequisites.sh
@@ -46,7 +50,7 @@ verify:
 	#./bin/verify.sh ${K8S_NAMESPACE}
 
 deploy:
-	./bin/deploy.sh ${K8S_NAMESPACE}
+	./bin/deploy.sh ${K8S_NAMESPACE} $(VAULT_TOKEN)
 
 report:
 	./bin/report.sh ${K8S_NAMESPACE}
