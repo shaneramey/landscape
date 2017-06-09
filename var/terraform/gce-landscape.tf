@@ -1,33 +1,37 @@
 # Terraform Kubernetes cluster
 # Single region
 # Installs
-#  - Network
+#  - Network for GKE cluster
 #  - Firewalls
 #  - External IPs
 #  - Forwarding Rules
 #  - Routes
-#  - VPN Gateway
+#  - VPN Gateway with 2 connections
 #
 # Uses Vault for secrets, keyed on this repo's branch name
+#
+# run with:
+# terraform apply -var=region=us-central1 -var=project=myproject-123456 \
+#  -var=branch_name=master -var=network1_ipv4_cidr=10.0.0.0/20
+#
+#
+# TODO: Good idea? to maintain its identity, block "master" branch from being
+# deployed anywhere except the "prod" GCE project
 
 variable "project" {
-  description = "Your project name"
+  description = "Your GCE project name"
 }
 
 variable "region" {
-  description = "The desired region for the cluster"
+  description = "The desired region for the resources in this file"
 }
 
 variable "branch_name" {
-  description = "The branch name, used for Vault keys and k8s DNS domain"
+  description = "The branch name. Used for Vault keys and k8s DNS domain"
 }
 
 variable "network1_ipv4_cidr" {
   description = "The network assigned to network1"
-}
-
-variable "network2_ipv4_cidr" {
-  description = "The network assigned to network2"
 }
 
 provider "vault" {
@@ -44,40 +48,34 @@ data "vault_generic_secret" "gce_creds" {
 
 # An example of how to connect two GCE networks with a VPN
 provider "google" {
-  credentials = "${file("downloaded-creds.json")}"
+  credentials = "${file("/Users/sramey/Downloads/develop-f15c27eaaebe.json")}"
   project      = "${var.project}"
   region       = "${var.region}"
 }
 
 # Create the two networks we want to join. They must have separate, internal
 # ranges.
-resource "google_compute_network" "network0" {
-  name                    = "test"
+resource "google_compute_network" "networkA" {
+  name                    = "gke"
   auto_create_subnetworks = "false"
 }
 
-resource "google_compute_subnetwork" "network1" {
-  name       = "network1"
+resource "google_compute_subnetwork" "gke_cluster1" {
+  name       = "gke-${var.branch_name}"
   ip_cidr_range = "${var.network1_ipv4_cidr}"
-  network = "${google_compute_network.network0.self_link}"
-}
-
-resource "google_compute_subnetwork" "network2" {
-  name       = "network2"
-  ip_cidr_range = "${var.network2_ipv4_cidr}"
-  network = "${google_compute_network.network0.self_link}"
+  network = "${google_compute_network.networkA.self_link}"
 }
 
 # Attach a VPN gateway to each network.
 resource "google_compute_vpn_gateway" "target_gateway1" {
   name    = "vpn1"
-  network = "${google_compute_network.network0.self_link}"
+  network = "${google_compute_network.networkA.self_link}"
   region  = "${var.region}"
 }
 
 resource "google_compute_vpn_gateway" "target_gateway2" {
   name    = "vpn2"
-  network = "${google_compute_network.network0.self_link}"
+  network = "${google_compute_network.networkA.self_link}"
   region  = "${var.region}"
 }
 
@@ -164,8 +162,9 @@ resource "google_compute_vpn_tunnel" "tunnel1" {
   peer_ip            = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_remote_ip"]}"
   shared_secret      = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_secret_key"]}"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway1.self_link}"
-  local_traffic_selector  = ["${google_compute_subnetwork.network1.ip_cidr_range}", "${google_compute_subnetwork.network2.ip_cidr_range}"]
+  local_traffic_selector  = ["${google_compute_subnetwork.gke_cluster1.ip_cidr_range}"]
   remote_traffic_selector = ["${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_tunneled_net1"]}"]
+  ike_version        = "1"
 
   depends_on = ["google_compute_forwarding_rule.fr1_udp500",
     "google_compute_forwarding_rule.fr1_udp4500",
@@ -179,8 +178,9 @@ resource "google_compute_vpn_tunnel" "tunnel2" {
   peer_ip            = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_remote_ip"]}"
   shared_secret      = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_secret_key"]}"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway2.self_link}"
-  local_traffic_selector  = ["${google_compute_subnetwork.network1.ip_cidr_range}", "${google_compute_subnetwork.network2.ip_cidr_range}"]
+  local_traffic_selector  = ["${google_compute_subnetwork.gke_cluster1.ip_cidr_range}"]
   remote_traffic_selector = ["${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_tunneled_net1"]}"]
+  ike_version        = "1"
 
   depends_on = ["google_compute_forwarding_rule.fr2_udp500",
     "google_compute_forwarding_rule.fr2_udp4500",
@@ -192,7 +192,7 @@ resource "google_compute_vpn_tunnel" "tunnel2" {
 # through the VPN tunnel
 resource "google_compute_route" "route1" {
   name                = "route1"
-  network             = "${google_compute_network.network0.name}"
+  network             = "${google_compute_network.networkA.name}"
   next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel1.self_link}"
   dest_range          = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_tunneled_net1"]}"
   priority            = 1000
@@ -200,46 +200,38 @@ resource "google_compute_route" "route1" {
 
 resource "google_compute_route" "route2" {
   name                = "route2"
-  network             = "${google_compute_network.network0.name}"
+  network             = "${google_compute_network.networkA.name}"
   next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel2.self_link}"
   dest_range          = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_tunneled_net1"]}"
   priority            = 1000
 }
 
-# We want to allow the two networks to communicate, so we need to unblock
-# them in the firewall
-resource "google_compute_firewall" "network1-allow-network1" {
-  name          = "network1-allow-network1"
-  network       = "${google_compute_network.network0.name}"
-  source_ranges = ["${google_compute_subnetwork.network1.ip_cidr_range}"]
-
-  allow {
-    protocol = "tcp"
-  }
-
-  allow {
-    protocol = "udp"
-  }
-
-  allow {
-    protocol = "icmp"
-  }
+data "vault_generic_secret" "gke_cluster1" {
+  path = "secret/gce/${var.branch_name}/gke/cluster1"
 }
 
-resource "google_compute_firewall" "network1-allow-network2" {
-  name          = "network1-allow-network2"
-  network       = "${google_compute_network.network0.name}"
-  source_ranges = ["${google_compute_subnetwork.network2.ip_cidr_range}"]
-
-  allow {
-    protocol = "tcp"
+resource "google_container_cluster" "cluster1" {
+  name               = "${var.branch_name}"
+  network            = "${google_compute_network.networkA.name}"
+  subnetwork         = "${google_compute_subnetwork.gke_cluster1.name}"
+  zone               = "${var.region}-a"
+  additional_zones = [
+    "${var.region}-b",
+    "${var.region}-c",
+  ]
+  initial_node_count = 3
+  node_version       = "1.6.4"
+  master_auth {
+    username = "${data.vault_generic_secret.gke_cluster1.data["master_auth_username"]}"
+    password = "${data.vault_generic_secret.gke_cluster1.data["master_auth_password"]}"
   }
 
-  allow {
-    protocol = "udp"
-  }
-
-  allow {
-    protocol = "icmp"
+  node_config {
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/compute",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+    ]
   }
 }
