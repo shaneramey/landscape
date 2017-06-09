@@ -44,7 +44,7 @@ function enable_addons() {
 function use_proxy() {
     extra_args=" --docker-env HTTPS_PROXY=$HTTPS_PROXY \
                  --docker-env HTTP_PROXY=$HTTP_PROXY"
-    if [ -z "$HTTP_PROXY" ] || [ -z "$HTTPS_PROXY" ]; then
+    if ! [ -z "$HTTP_PROXY" ] || ! [ -z "$HTTPS_PROXY" ]; then
         mk_start_cmd=$mk_start_cmd$extra_args
     fi
 }
@@ -77,7 +77,7 @@ if [ "${os_type}" == "Darwin" ]; then
 elif [ "${os_type}" == "Linux" ]; then
     MKUBE_DRIVER="kvm"
 fi
-echo "OS ${os_type} detected. Using ${MKUBE_DRIVER} driver"
+echo "${os_type} OS detected. Using ${MKUBE_DRIVER} driver"
 
 mk_start_cmd="minikube start \
                 --vm-driver=${MKUBE_DRIVER} \

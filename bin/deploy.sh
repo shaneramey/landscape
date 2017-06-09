@@ -34,14 +34,15 @@ function tell_to_populate_secrets {
     echo MISSING_SECRET_LIST $MISSING_SECRET_LIST
 }
 
-function generate_envconsul_config() {
+function generate_envconsul_config {
     GIT_BRANCH=$1
     K8S_NAMESPACE=$2
     CHART_NAME=$3
 
     # Envconsul Vault setup
     if [ ! -x $sed_cmd ]; then
-        echo "ERROR: sed command $sed_cmd not found (MacOS users: run brew install gnu-sed)"
+        echo "ERROR: sed command $sed_cmd not found " \
+            " (MacOS users: run brew install gnu-sed)"
         exit 2
     fi
     if [ ! -f /usr/local/bin/envconsul ]; then
@@ -49,16 +50,18 @@ function generate_envconsul_config() {
         exit 2
     fi
 
-    echo "    - Using Vault prefix /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME"
+    V_PREFIX="/secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME"
+    echo "    - Using Vault prefix $V_PREFIX"
     echo "    - Writing envconsul-config.hcl (.gitignored)"
 
 
-    $sed_cmd "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl > envconsul-config.hcl
+    $sed_cmd "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl \
+        > envconsul-config.hcl
     $sed_cmd -i "s/__K8S_NAMESPACE__/$K8S_NAMESPACE/g" envconsul-config.hcl
     $sed_cmd -i "s/__HELM_CHART__/$CHART_NAME/g" envconsul-config.hcl
 }
 
-function vault_to_env() {
+function vault_to_env {
     GIT_BRANCH=$1
     CHART_NAME=$2
     K8S_NAMESPACE=$3
@@ -66,7 +69,7 @@ function vault_to_env() {
     # Generate envconsul config
     generate_envconsul_config $GIT_BRANCH $NAMESPACE $CHART_NAME
     # Read secrets from Vault
-    ENVCONSUL_COMMAND="envconsul -config="./envconsul-config.hcl" -secret="/secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME" -once -retry=1s -pristine -upcase env"
+    ENVCONSUL_COMMAND="envconsul -config=./envconsul-config.hcl -secret="$V_PREFIX" -once -retry=1s -pristine -upcase env"
     echo "Running ${ENVCONSUL_COMMAND}:"
     for envvar_kv in `$ENVCONSUL_COMMAND`; do
         envvar_k=`echo $envvar_kv | awk -F= '{ print $1}'`
@@ -75,7 +78,7 @@ function vault_to_env() {
     done
 }
 
-function apply_namespace() {
+function apply_namespace {
     K8S_NAMESPACE=$1
 
     missing_secret_list=() # in case any secrets are missing
@@ -114,9 +117,9 @@ function apply_namespace() {
         echo
         echo First read existing secrets, and see if you want to replace them
         echo
-        echo vault read /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME
-        echo vault delete /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME
-        echo vault write /secret/landscape/$GIT_BRANCH/$K8S_NAMESPACE/$CHART_NAME \\
+        echo vault read $V_PREFIX
+        echo vault delete $V_PREFIX
+        echo vault write $V_PREFIX \\
         for unset_secret in "${missing_secret_list[@]:0:missing_secret_count-1}"; do
             echo " " $unset_secret "\\"
         done
