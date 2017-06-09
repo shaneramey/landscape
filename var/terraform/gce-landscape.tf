@@ -11,8 +11,8 @@
 # Uses Vault for secrets, keyed on this repo's branch name
 #
 # run with:
-# terraform apply -var=region=us-central1 -var=project=myproject-123456 \
-#  -var=branch_name=master -var=network1_ipv4_cidr=10.0.0.0/20
+# terraform apply -var=region=us-west1 -var=project=myproject-123456 \
+#  -var=branch_name=master -var=network1_ipv4_cidr=10.128.0.0/20 -var=gke_cluster1_pod_ipv4_cidr=10.128.32.0/1
 #
 #
 # TODO: Good idea? to maintain its identity, block "master" branch from being
@@ -32,6 +32,10 @@ variable "branch_name" {
 
 variable "network1_ipv4_cidr" {
   description = "The network assigned to network1"
+}
+
+variable "gke_cluster1_pod_ipv4_cidr" {
+  description = "The IP address range of the container pods in this cluster"
 }
 
 provider "vault" {
@@ -162,7 +166,7 @@ resource "google_compute_vpn_tunnel" "tunnel1" {
   peer_ip            = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_remote_ip"]}"
   shared_secret      = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_secret_key"]}"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway1.self_link}"
-  local_traffic_selector  = ["${google_compute_subnetwork.gke_cluster1.ip_cidr_range}"]
+  local_traffic_selector  = ["${google_compute_subnetwork.gke_cluster1.ip_cidr_range}", "${google_container_cluster.cluster1.cluster_ipv4_cidr}"]
   remote_traffic_selector = ["${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_tunneled_net1"]}"]
   ike_version        = "1"
 
@@ -178,7 +182,7 @@ resource "google_compute_vpn_tunnel" "tunnel2" {
   peer_ip            = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_remote_ip"]}"
   shared_secret      = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_secret_key"]}"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway2.self_link}"
-  local_traffic_selector  = ["${google_compute_subnetwork.gke_cluster1.ip_cidr_range}"]
+  local_traffic_selector  = ["${google_compute_subnetwork.gke_cluster1.ip_cidr_range}", "${google_container_cluster.cluster1.cluster_ipv4_cidr}"]
   remote_traffic_selector = ["${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_tunneled_net1"]}"]
   ike_version        = "1"
 
@@ -214,12 +218,13 @@ resource "google_container_cluster" "cluster1" {
   name               = "${var.branch_name}"
   network            = "${google_compute_network.networkA.name}"
   subnetwork         = "${google_compute_subnetwork.gke_cluster1.name}"
+  cluster_ipv4_cidr  = "${var.gke_cluster1_pod_ipv4_cidr}"
   zone               = "${var.region}-a"
   additional_zones = [
     "${var.region}-b",
     "${var.region}-c",
   ]
-  initial_node_count = 3
+  initial_node_count = 1
   node_version       = "1.6.4"
   master_auth {
     username = "${data.vault_generic_secret.gke_cluster1.data["master_auth_username"]}"
