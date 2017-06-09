@@ -10,7 +10,7 @@
  - `cd landscape`
  - (optional) set HTTP_PROXY and HTTPS_PROXY env vars for speedy image pulls
  - `make`
-
+ - `make report # print cluster summary`
 ## Features
  - Compare branches to compare environments
  - Sign off on production changes using GitHub approve workflow
