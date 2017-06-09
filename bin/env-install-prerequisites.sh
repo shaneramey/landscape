@@ -96,7 +96,8 @@ install_landscaper() {
         local download_file=landscaper-${LANDSCAPER_VERSION}-darwin-amd64.tar.gz
         curl -LO https://github.com/Eneco/landscaper/releases/download/${LANDSCAPER_VERSION}/${download_file} && \
         tar zxvf ${download_file} landscaper && \
-        mv landscaper /usr/local/bin/
+        mv landscaper /usr/local/bin/ && \
+        rm ${download_file}
     else
         echo "landscaper already installed"
     fi
