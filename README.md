@@ -108,3 +108,12 @@ export HTTP_PROXY=http://${DEFAULT_IP}:3128
 
 ## Known issues
 MacOS xhyve driver: `host is already mounted or /Users busy` error. [Workaround](https://github.com/kubernetes/minikube/issues/1400)oMacOS xhyve driver: `Could not convert the UUID to MAC address: exit status 1` error. [Workaround](https://github.com/zchee/docker-machine-driver-xhyve/issues/156)
+
+## Future
+Expose local clusters to the Internet via backplane.io
+
+Example:
+```
+export BACKPLANE_TOKEN=""
+backplane connect "endpoint=amicable-mouse-4.backplaneapp.io,release=v1" https://http.jenkins.svc.master.local
+```
