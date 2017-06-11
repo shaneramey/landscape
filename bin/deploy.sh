@@ -61,7 +61,7 @@ function vault_to_env {
     K8S_NAMESPACE=$3
 
     # Generate envconsul config
-    generate_envconsul_config $GIT_BRANCH $NAMESPACE $CHART_NAME
+    generate_envconsul_config $GIT_BRANCH $K8S_NAMESPACE $CHART_NAME
     # Read secrets from Vault
     ENVCONSUL_COMMAND="envconsul -config=./envconsul-config.hcl -secret="$V_PREFIX" -once -retry=1s -pristine -upcase env"
     echo "Running ${ENVCONSUL_COMMAND}:"
@@ -162,28 +162,27 @@ if [ "$namespace_arg" == "__all_namespaces__" ]; then
         fi
     done
 else
-    NAMESPACE=$1
-    if [ -d $NAMESPACE ]; then
+    if [ -d "namespaces/$namespace_arg" ]; then
         echo "###"
-        echo "# Namespace: $NAMESPACE"
+        echo "# Namespace: $namespace_arg"
         echo "###"
         echo
-        echo "Checking status of namespace $NAMESPACE"
-        kubectl get ns $NAMESPACE > /dev/null
+        echo "Checking status of namespace $namespace_arg"
+        kubectl get ns $namespace_arg > /dev/null
         if [ $? -eq 0 ]; then
-            echo "    - Namespace $NAMESPACE already exists"
+            echo "    - Namespace $namespace_arg already exists"
         else
-            echo -n "    - Namespace $NAMESPACE does not exist. Creating..."
-            kubectl create ns $NAMESPACE
+            echo -n "    - Namespace $namespace_arg does not exist. Creating..."
+            kubectl create ns $namespace_arg
             echo " done."
         fi
         echo
-        for CHART_YAML in namespaces/${NAMESPACE}/*.yaml; do
+        for CHART_YAML in namespaces/${namespace_arg}/*.yaml; do
         	CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
             echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
-            vault_to_env $GIT_BRANCH $CHART_NAME $NAMESPACE
+            vault_to_env $GIT_BRANCH $CHART_NAME $namespace_arg
         done
         # run landscaper
-        apply_namespace $NAMESPACE
+        apply_namespace $namespace_arg
     fi
 fi

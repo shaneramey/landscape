@@ -20,7 +20,9 @@ done
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 CLUSTER_DOMAIN=${GIT_BRANCH}.local
 echo "#####"
-echo "# Cluster service list"
+echo "# CLUSTER SUMMARY
+echo "#
+echo "# Service list:"
 echo "#"
 echo "# cAdvisor: http://$MINIKUBE_IP:4194"
 echo "# k8s dashboard: http://kubernetes-dashboard.kube-system.svc.${CLUSTER_DOMAIN}"
