@@ -135,7 +135,7 @@ main() {
     # install Helm plugins
     if ! [ -d ~/.helm/plugins/helm-local-bump ]; then
         helm plugin install https://github.com/shaneramey/helm-local-bump
-        pip install -r  ~/.helm/plugins/helm-local-bump/requirements.txt
+        pip3 install -r  ~/.helm/plugins/helm-local-bump/requirements.txt
     fi
 
     if ! [ -d ~/.helm/plugins/helm-template ]; then
