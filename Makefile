@@ -18,7 +18,7 @@ DELETE_ALL_DATA := false
 
 PURGE_NAMESPACE_ITSELF := false
 
-.PHONY: environment test deploy csr_approve report purge init_helm
+.PHONY: bootstrap environment test deploy csr_approve report purge init_helm
 
 ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 	lpass login $(LASTPASS_USERNAME)
@@ -27,6 +27,9 @@ ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 endif
 
 all: init_cluster environment test deploy verify report
+
+bootstrap:
+	./bin/env-install-prerequisites.sh
 
 init_cluster:
 	./bin/init-vault-local.sh # create or start local dev-vault container
@@ -37,7 +40,6 @@ init_cluster:
 environment:
 	./bin/env-set-context-k8s.sh
 	./bin/env-add-repos-helm.sh
-	./bin/env-install-prerequisites.sh
 
 test:
 	./bin/test.sh ${K8S_NAMESPACE}
