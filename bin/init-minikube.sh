@@ -33,6 +33,7 @@
 # ClusterSigningCertFile=/var/lib/localkube/certs/ca.crt
 # ClusterSigningKeyFile=/var/lib/localkube/certs/ca.key
 GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
+CLUSTER_DOMAIN=${GIT_BRANCH}.local
 
 function enable_addons() {
     minikube addons disable kube-dns # DNS deployed via Landscaper/Helm Chart
@@ -54,7 +55,7 @@ minikube_status=`minikube status --format {{.MinikubeStatus}}`
 # note: Jun 9 2017: Delete this and use the env-set-context-k8s.sh version
 # leaving it here for now to not overwrite a live cluster w minikube cfg FIXME
 kubectl config use-context minikube
-if [ "$minikube_status" == "Does Not Exist" ]; then
+if [ "$minikube_status" != "Running" ]; then
 
     # Detect OS to determine which driver to use
     os_type="$(uname)"
@@ -67,8 +68,8 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
 
     mk_start_cmd="minikube start \
                     --vm-driver=${MKUBE_DRIVER} \
-                    --dns-domain=${GIT_BRANCH}.local \
-                    --kubernetes-version=v1.6.3 \
+                    --dns-domain=${CLUSTER_DOMAIN} \
+                    --kubernetes-version=v1.6.4 \
                     --extra-config=apiserver.Authorization.Mode=RBAC \
                     --extra-config=controller-manager.ClusterSigningCertFile=/var/lib/localkube/certs/ca.crt \
                     --extra-config=controller-manager.ClusterSigningKeyFile=/var/lib/localkube/certs/ca.key \
@@ -82,8 +83,6 @@ if [ "$minikube_status" == "Does Not Exist" ]; then
     $mk_start_cmd
     enable_addons
 
-elif [ "$minikube_status" == "Stopped" ]; then
-    $mk_start_cmd
 fi
 
 # install Helm tiller pod into cluster
@@ -101,6 +100,7 @@ if [ "$EXISTING_TILLER_POD" == "No resources found." ]; then
                             -o jsonpath='{.items[0].status.phase}'`
     echo -n . && sleep 1
     done
+    sleep 3 # give tiller some warm-up time after it's "Ready"
 fi
 
 # FIXME: temp workaround
@@ -113,3 +113,9 @@ if [ $? -ne 0 ]; then
     --user=kubelet \
     --group=system:serviceaccounts
 fi
+
+# minikube ssh cat << EOF >> /var/lib/boot2docker/bootlocal.sh
+sed -ie 's/--generate-certs=false/--generate-certs=true/' \
+    //etc/systemd/system/multi-user.target.wants/localkube.service
+EOF
+
