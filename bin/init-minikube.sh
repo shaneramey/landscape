@@ -118,4 +118,5 @@ fi
 #sed -ie 's/--generate-certs=false/--generate-certs=true/' \
 #    /etc/systemd/system/multi-user.target.wants/localkube.service
 #EOF
+#systemctl daemon-reload && systemctl restart localkube
 
