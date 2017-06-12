@@ -115,7 +115,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # minikube ssh cat << EOF >> /var/lib/boot2docker/bootlocal.sh
-sed -ie 's/--generate-certs=false/--generate-certs=true/' \
-    //etc/systemd/system/multi-user.target.wants/localkube.service
-EOF
+#sed -ie 's/--generate-certs=false/--generate-certs=true/' \
+#    /etc/systemd/system/multi-user.target.wants/localkube.service
+#EOF
 
