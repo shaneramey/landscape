@@ -168,6 +168,7 @@ else
         echo "###"
         echo
         echo "Checking status of namespace $namespace_arg"
+        kubectl config view
         kubectl get ns $namespace_arg > /dev/null
         if [ $? -eq 0 ]; then
             echo "    - Namespace $namespace_arg already exists"
