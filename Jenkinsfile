@@ -24,6 +24,14 @@ pipeline {
     stages {
 
         stage('Environment') {
+            def vaultConfig = [$class: 'VaultConfiguration',
+                                 vaultUrl: "${env.VAULT_ADDR}",
+                                 vaultCredentialId: 'my-vault-cred-id']
+            // inside this block your credentials will be available as env variables
+            wrap([$class: 'VaultBuildWrapper', configuration: vaultConfig, vaultSecrets: secrets]) {
+                sh 'vault list /secret'
+            }
+
             steps {
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
                 echo "clusterDomain: ${env.BRANCH_NAME}.local"
