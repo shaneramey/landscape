@@ -13,14 +13,14 @@ if ! [ -z ${JENKINS_SECRET+x} ] && ! [ -z ${KUBERNETES_PORT} ]; then
     kubectl config set preferences.colors true
 
     kubectl config set-cluster ${CLUSTER_DOMAIN} \
-    --server=https://kubernetes.default.svc.${CLUSTER_DOMAIN} --api-version=v1
+        --server=https://kubernetes.default.svc.${CLUSTER_DOMAIN} --api-version=v1
     
     kubectl config set-credentials clusterrole \
-    --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
+        --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token` \
+        --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
     
     kubectl config set-context ${CLUSTER_DOMAIN} \
-    --cluster=${CLUSTER_DOMAIN} --user=clusterrole --namespace=default \
-    --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        --cluster=${CLUSTER_DOMAIN} --user=clusterrole --namespace=default
     
     kubectl config use-context ${CLUSTER_DOMAIN}
     echo begin
