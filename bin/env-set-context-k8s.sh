@@ -7,9 +7,6 @@ set -u
 
 CLUSTER_DOMAIN=`grep search /etc/resolv.conf | awk '{ print $NF }'`
 
-# Set Kubernetes context
-kubectl config use-context minikube # or cluster1, cluster2, etc.
-
 # Inside Kubernetes:
 # Create kubeconfig if we detect script in Jenkins inside of Kubernetes
 if ! [ -z ${JENKINS_SECRET+x} ] && ! [ -z ${KUBERNETES_PORT} ]; then
@@ -26,4 +23,7 @@ if ! [ -z ${JENKINS_SECRET+x} ] && ! [ -z ${KUBERNETES_PORT} ]; then
     --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
     
     kubectl config use-context ${CLUSTER_DOMAIN}
+    echo begin
+    kubectl config view
+    echo end
 fi
