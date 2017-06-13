@@ -25,5 +25,6 @@ if ! [ -z ${JENKINS_SECRET+x} ] && ! [ -z ${KUBERNETES_PORT} ]; then
     kubectl config use-context ${CLUSTER_DOMAIN}
     echo begin
     kubectl config view
+    kubectl get pod --all-namespaces
     echo end
 fi
