@@ -22,7 +22,8 @@ if ! [ -z ${JENKINS_SECRET+x} ] && ! [ -z ${KUBERNETES_PORT} ]; then
     --token=`cat /var/run/secrets/kubernetes.io/serviceaccount/token`
     
     kubectl config set-context ${CLUSTER_DOMAIN} \
-    --cluster=${CLUSTER_DOMAIN} --user=clusterrole --namespace=default
+    --cluster=${CLUSTER_DOMAIN} --user=clusterrole --namespace=default \
+    --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
     
     kubectl config use-context ${CLUSTER_DOMAIN}
 fi
