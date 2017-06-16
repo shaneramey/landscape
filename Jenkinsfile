@@ -18,7 +18,7 @@ pipeline {
     }
 
     triggers {
-        githubPullRequest()
+        pollSCM('* * * * *')
     }
 
     stages {
