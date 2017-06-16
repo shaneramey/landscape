@@ -17,8 +17,11 @@ pipeline {
         choice(name: 'PROVISIONER', choices: "minikube\nkops\ngke\n", description: 'cluster provisioner')
     }
 
-    stages {
+    triggers {
+        githubPullRequest()
+    }
 
+    stages {
         stage('Environment') {
             steps {
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
