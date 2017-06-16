@@ -17,14 +17,11 @@ pipeline {
         choice(name: 'PROVISIONER', choices: "minikube\nkops\ngke\n", description: 'cluster provisioner')
     }
 
-    triggers {
-        properties([pipelineTriggers([[$class: 'GitHubPushTrigger'], pollSCM('H/1 * * * *')])])
-    }
-
     stages {
 
         stage('Environment') {
             steps {
+                properties([pipelineTriggers([[$class: 'GitHubPushTrigger'], pollSCM('H/1 * * * *')])])
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
                 echo "clusterDomain: ${env.BRANCH_NAME}.local"
                 echo "make PROVISIONER=${params.PROVISIONER} environment"
