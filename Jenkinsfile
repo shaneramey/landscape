@@ -18,7 +18,7 @@ pipeline {
     }
 
     triggers {
-        githubPullRequest()
+        properties([pipelineTriggers([[$class: 'GitHubPushTrigger'], pollSCM('H/1 * * * *')])])
     }
 
     stages {
