@@ -20,8 +20,8 @@ pipeline {
     stages {
 
         stage('Environment') {
+            properties([pipelineTriggers([[$class: 'GitHubPushTrigger'], pollSCM('H/1 * * * *')])])
             steps {
-                properties([pipelineTriggers([[$class: 'GitHubPushTrigger'], pollSCM('H/1 * * * *')])])
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
                 echo "clusterDomain: ${env.BRANCH_NAME}.local"
                 echo "make PROVISIONER=${params.PROVISIONER} environment"
