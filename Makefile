@@ -1,5 +1,9 @@
 # Acts on a single Landscape namespace at a time (smallest unit to CRUD is namespace)
 # Helm charts can be deployed independently of Landscaper using helm install / helm upgrade utils
+#
+# Deploy environment
+#  deploys to current branch to context in `kubectl config current-context`
+
 GIT_BRANCH := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 
 K8S_NAMESPACE := "__all_namespaces__"
@@ -9,7 +13,7 @@ export VAULT_TOKEN=$(shell docker logs dev-vault 2>&1 | grep 'Root Token' | tail
 # FIXME: use https://github.com/shaneramey/vault-backup for backup/restore
 WRITE_TO_VAULT_FROM_LASTPASS := false
 
-LASTPASS_USERNAME := "shane.ramey@gmail.com"
+LASTPASS_USERNAME := "set_LASTPASS_USERNAME_in_env_var"
 
 # PROVISIONER can be minikube or kops. See also CLOUD_PROVIDER
 PROVISIONER := minikube
@@ -70,8 +74,3 @@ else
 	@echo "if you really want to purge, run \`make DELETE_ALL_DATA=true purge\`"
 	@exit 1
 endif
-
-# Deploy environment
-#  deploys to current branch to context in `kubectl config current-context`
-#make deploy
-

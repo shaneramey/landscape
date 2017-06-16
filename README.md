@@ -3,6 +3,10 @@
 - Secrets pulled in from Hashicorp Vault
 - Can be applied locally (via minikube) or in GCE (via kops)
 - Use branches for different deployed apps / configs / secrets
+- anything in namespace that's not in landscaper will be deleted
+
+## Jenkins deployment
+see Jenkinsfile in repo
 
 ## Usage
  - install prerequisites

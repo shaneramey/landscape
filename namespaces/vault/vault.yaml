@@ -1,6 +1,6 @@
 name: vault
 release:
-  chart: charts.downup.us/vault:0.1.78
-  version: 0.1.78
+  chart: charts.downup.us/vault:0.1.100
+  version: 0.1.100
 configuration:
   clusterDomain: master.local

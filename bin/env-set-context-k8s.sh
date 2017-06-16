@@ -23,5 +23,4 @@ if ! [ -z ${JENKINS_SECRET+x} ] && ! [ -z ${KUBERNETES_PORT} ]; then
         --cluster=${CLUSTER_DOMAIN} --user=clusterrole --namespace=default
     
     kubectl config use-context ${CLUSTER_DOMAIN}
-    echo end
 fi
