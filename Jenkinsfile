@@ -14,7 +14,7 @@ def extendedChoice = new ExtendedChoiceParameterDefinition(name,
             projectName,
             propertyFile,
             groovyScript,
- 
+ )
 
 pipeline {
     agent any
