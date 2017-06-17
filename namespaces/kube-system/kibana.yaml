@@ -1,0 +1,6 @@
+name: kibana
+release:
+  chart: charts.downup.us/kibana:0.1.6
+  version: 0.1.6
+configuration:
+  clusterDomain: master.local

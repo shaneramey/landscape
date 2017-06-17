@@ -1,0 +1,6 @@
+name: fluentd
+release:
+  chart: charts.downup.us/fluentd:0.1.1
+  version: 0.1.1
+configuration:
+  clusterDomain: master.local
