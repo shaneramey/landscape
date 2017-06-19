@@ -9,7 +9,8 @@
 # assumes you've authed to vault
 set -u
 
-namespace_arg=$1
+GIT_BRANCH=$1
+namespace_arg=$2
 # each branch has its own set of deployments
 PWD=`pwd`
 echo "CWD=${PWD}"
