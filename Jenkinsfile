@@ -38,8 +38,8 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                echo 'make PROVISIONER=${params.PROVISIONER} deploy'
-                sh 'make GIT_BRANCH=${env.BRANCH_NAME} deploy'
+                echo 'make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy'
+                sh 'make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy'
             }
         }
         stage('Verify') {
