@@ -1,21 +1,5 @@
 #! /usr/bin/env groovy
 
-import com.cwctravel.hudson.plugins.extended_choice_parameter.ExtendedChoiceParameterDefinition
-
-def type = "PT_JSON"
-def groovyScript  = null
-def propertyValue  = null
-def projectName = null
-def propertyFile = null
-def groovyScriptFile = "/path_to/script.groovy"
-def extendedChoice = new ExtendedChoiceParameterDefinition(name,
-            type,
-            propertyValue,
-            projectName,
-            propertyFile,
-            groovyScript,
- )
-
 pipeline {
     agent any
 
