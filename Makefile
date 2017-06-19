@@ -54,7 +54,7 @@ verify:
 	#./bin/verify.sh ${K8S_NAMESPACE}
 
 deploy:
-	./bin/deploy.sh ${K8S_NAMESPACE}
+	./bin/deploy.sh ${GIT_BRANCH} ${K8S_NAMESPACE}
 
 report:
 	./bin/report.sh ${K8S_NAMESPACE}

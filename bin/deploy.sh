@@ -11,7 +11,6 @@ set -u
 
 namespace_arg=$1
 # each branch has its own set of deployments
-GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 PWD=`pwd`
 echo "CWD=${PWD}"
 echo "Using GIT_BRANCH ${GIT_BRANCH}"

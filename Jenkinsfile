@@ -39,7 +39,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'make PROVISIONER=${params.PROVISIONER} deploy'
-                sh 'make deploy'
+                sh 'make GIT_BRANCH=${env.BRANCH_NAME} deploy'
             }
         }
         stage('Verify') {
