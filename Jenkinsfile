@@ -38,7 +38,7 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                echo 'make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy'
+                sh 'echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy'
                 sh 'make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy'
                 sh 'sleep 999999'
             }
