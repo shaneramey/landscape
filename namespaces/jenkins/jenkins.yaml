@@ -7,3 +7,4 @@ configuration:
 secrets:
  - jenkins-admin-user
  - jenkins-admin-password
+ - jenkins-github-access-token
