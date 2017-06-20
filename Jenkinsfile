@@ -26,7 +26,7 @@ pipeline {
             steps {
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
                 echo "clusterDomain: ${env.BRANCH_NAME}.local"
-                echo "make PROVISIONER=${params.PROVISIONER} environment"
+                echo "echo make PROVISIONER=${params.PROVISIONER} environment"
                 sh 'make environment'
             }
         }
