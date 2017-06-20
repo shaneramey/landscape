@@ -1,7 +1,7 @@
 name: jenkins
 release:
-  chart: charts.downup.us/jenkins:0.6.173
-  version: 0.6.173
+  chart: charts.downup.us/jenkins:0.6.175
+  version: 0.6.175
 configuration:
   clusterDomain: master.local
 secrets:
