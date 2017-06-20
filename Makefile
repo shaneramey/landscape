@@ -22,7 +22,7 @@ DELETE_ALL_DATA := false
 
 PURGE_NAMESPACE_ITSELF := false
 
-.PHONY: bootstrap environment test deploy csr_approve report purge init_helm
+.PHONY: bootstrap environment test deploy report purge # csr_approve
 
 ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 	lpass login $(LASTPASS_USERNAME)
@@ -30,20 +30,18 @@ ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
 	echo $(shell lpass show k8s-landscaper/$(GIT_BRANCH) --notes)
 endif
 
-all: init_cluster environment test deploy verify report
+all: environment test deploy verify report
 
 bootstrap:
 	./bin/env-install-prerequisites.sh
 
-init_cluster:
+environment:
 	./bin/init-vault-local.sh # create or start local dev-vault container
 	./bin/init-${PROVISIONER}.sh # start cluster
-	# FIXME: security hole. Create a more specific binding for Jenkins
-	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
-
-environment:
 	./bin/env-set-context-k8s.sh
 	./bin/env-add-repos-helm.sh
+	# FIXME: security hole. Create a more specific binding for Jenkins
+	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
 test:
 	./bin/test.sh ${K8S_NAMESPACE}
@@ -60,12 +58,12 @@ report:
 	./bin/report.sh ${K8S_NAMESPACE}
 
 # helper targets not usually used in deployments, but useful for troubleshooting
-csr_approve:
-	./bin/csr_approve.sh
+#csr_approve:
+#	./bin/csr_approve.sh
 
 purge:
 ifeq ($(K8S_NAMESPACE),kube-system)
-	echo purge not supported for kube-system namespace due to problems it creates with tiller api access
+	echo "purge not supported for kube-system namespace due to problems it creates with tiller api access"
 endif
 
 ifeq ($(DELETE_ALL_DATA),true)
