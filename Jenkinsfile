@@ -38,9 +38,9 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sh 'sleep 999999'
                 echo 'make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy'
                 sh 'make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy'
+                sh 'sleep 999999'
             }
         }
         stage('Verify') {
