@@ -18,6 +18,10 @@ backplane secure ip amicable-mouse-4.backplaneapp.io < iprules.txt
 
 Follow instructions at http://www.inanzzz.com/index.php/post/ljgv/setup-github-and-jenkins-integration-for-pull-request-builder-and-merger to set up Jenkins and GitHub
 
+# GitHub setup
+- Set up personal access token https://github.com/settings/tokens
+- access token should have permissions: Issue comment, Pull request and Push [more details](https://support.cloudbees.com/hc/en-us/articles/224621668-GitHub-User-Scopes-and-Organization-Permission)
+  
 ## Jenkins setup
 Manage Jenkins -> Configure System
 
@@ -27,7 +31,5 @@ Click "Advanced" button.
 
 Tick "Specify another hook url for GitHub configuration" tickbox and obtain URL https://amicable-mouse-4.backplaneapp.io/github-webhook/ somewhere then untick it again.
 
-Exit without saving.
+Set up Credentials as "secret text" that you created in GitHub token generation
 
-# GitHub setup
-add Issue comment, Pull request and Push
