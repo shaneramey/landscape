@@ -2,9 +2,7 @@
 
 
 pipeline {
-    agent {
-        any
-    }
+    agent any
 
     environment {
         VAULT_ADDR = "https://http.vault.svc.${env.BRANCH_NAME}.local:8200"
