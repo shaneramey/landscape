@@ -8,13 +8,6 @@
 ## Jenkins deployment
 see Jenkinsfile in repo
 
-## Usage
- - install prerequisites
- - `git clone https://github.com/shaneramey/landscape`
- - `cd landscape`
- - (optional) set HTTP_PROXY and HTTPS_PROXY env vars for speedy image pulls
- - `make`
- - `make report # print cluster summary`
 ## Features
  - Compare branches to compare environments
  - Sign off on production changes using GitHub approve workflow
@@ -78,6 +71,7 @@ see Jenkinsfile in repo
  - [open-questions](docs/open-questions.md)
 
 ## Requirements
+running `make bootstrap` installs:
 - [Kubernetes Helm](https://github.com/kubernetes/helm)
 - [Landscaper](https://github.com/Eneco/landscaper)
 - [envconsul](https://github.com/hashicorp/envconsul)
@@ -98,7 +92,7 @@ Decommission cluster:
 make PURGE_ALL=yes purge
 ```
 
-## Proxy configuration
+## HTTP Proxy configuration
 wiping out minikube and re-restarting it from scratch means pulling all of the docker images inside of the cluster.
 
 To set a proxy for the docker daemon, you can set environment variables in your shell. Then run `make` and they will show in the `minikube start` command.
@@ -109,16 +103,4 @@ DEFAULT_INTERFACE=`netstat -rn | grep default | head -n 1 | awk '{ print $NF }'`
 DEFAULT_IP=`ifconfig $DEFAULT_INTERFACE | grep inet | awk '{ print $2 }'`
 export HTTPS_PROXY=http://${DEFAULT_IP}:3128
 export HTTP_PROXY=http://${DEFAULT_IP}:3128
-```
-
-## Known issues
-MacOS xhyve driver: `host is already mounted or /Users busy` error. [Workaround](https://github.com/kubernetes/minikube/issues/1400)oMacOS xhyve driver: `Could not convert the UUID to MAC address: exit status 1` error. [Workaround](https://github.com/zchee/docker-machine-driver-xhyve/issues/156)
-
-## Future
-Expose local clusters to the Internet via backplane.io
-
-Example:
-```
-export BACKPLANE_TOKEN=""
-backplane connect "endpoint=amicable-mouse-4.backplaneapp.io,release=v1" https://http.jenkins.svc.master.local
 ```
