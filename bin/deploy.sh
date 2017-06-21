@@ -9,10 +9,12 @@
 # assumes you've authed to vault
 set -u
 
-namespace_arg=$1
+GIT_BRANCH=$1
+namespace_arg=$2
 # each branch has its own set of deployments
-GIT_BRANCH=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
-
+PWD=`pwd`
+echo "CWD=${PWD}"
+echo "Using GIT_BRANCH ${GIT_BRANCH}"
 darwin=false; # MacOSX compatibility
 case "`uname`" in
     Darwin*) export sed_cmd=`which gsed` ;;
@@ -155,6 +157,9 @@ if [ "$namespace_arg" == "__all_namespaces__" ]; then
             for CHART_YAML in namespaces/${NAMESPACE}/*.yaml; do
                 CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
                 echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
+                echo "GIT_BRANCH=${GIT_BRANCH}"
+                echo "CHART_NAME=${CHART_NAME}"
+                echo "NAMESPACE=${NAMESPACE}"
                 vault_to_env $GIT_BRANCH $CHART_NAME $NAMESPACE
             done
             # run landscaper

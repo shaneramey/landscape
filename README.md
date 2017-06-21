@@ -68,6 +68,7 @@ see Jenkinsfile in repo
  - [forking](docs/forking.md)
  - [secrets](docs/secrets.md)
  - [deployment](docs/deployment.md)
+ - [exposing jenkins to github behind nat](docs/exposing-jenkins-behind-nat.md)
  - [targets](docs/targets.md)
  - [pki](docs/pki.md)
  - [storageclasses](docs/storageclasses.md)

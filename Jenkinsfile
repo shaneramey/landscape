@@ -1,5 +1,6 @@
 #! /usr/bin/env groovy
 
+
 pipeline {
     agent any
 
@@ -26,26 +27,27 @@ pipeline {
             steps {
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
                 echo "clusterDomain: ${env.BRANCH_NAME}.local"
-                echo "make PROVISIONER=${params.PROVISIONER} environment"
-                sh 'make environment'
+                sh "echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
+                sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
             }
         }
         stage('Test') {
             steps {
-                echo 'make PROVISIONER=${params.PROVISIONER} test'
-                sh 'make test'
+                sh "echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} test"
+                sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} test"
             }
         }
         stage('Deploy') {
             steps {
-                echo 'make PROVISIONER=${params.PROVISIONER} deploy'
-                sh 'make deploy'
+                sh "echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
+                sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
+                sh 'sleep 999999'
             }
         }
         stage('Verify') {
             steps {
-                echo 'make PROVISIONER=${params.PROVISIONER} verify'
-                sh 'make verify'
+                sh "echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} verify"
+                sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} verify"
             }
         }
     }
