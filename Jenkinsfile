@@ -29,7 +29,7 @@ pipeline {
                                   credentialsId: 'vault',
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
-                    sh "echo -n ${VAULT_PASSWORD} | vault auth -method=ldap username=${VAULT_USER} -"
+                    sh "echo -n $VAULT_PASSWORD | vault auth -method=ldap username=$VAULT_USER -"
                 }
                 echo "Vault: using LDAP username: ${VAULT_USER}"
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
