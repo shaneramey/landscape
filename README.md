@@ -70,8 +70,8 @@ see Jenkinsfile in repo
  - [design-doc](docs/design-doc.md)
  - [open-questions](docs/open-questions.md)
 
-## Requirements
-running `make bootstrap` installs:
+## Dependencies
+Clone this repo, and install dependencies by running `make bootstrap`. This will install:
 - [Kubernetes Helm](https://github.com/kubernetes/helm)
 - [Landscaper](https://github.com/Eneco/landscaper)
 - [envconsul](https://github.com/hashicorp/envconsul)

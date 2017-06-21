@@ -30,3 +30,16 @@ Environment variables pulled from Vault are prefixed with the string "SECRET_".
 This is to prevent overriding root user environment variables, for security reasons.
 Landscape `secrets` must use a 'secret-' prefix in their names.
 
+## Bootstrapping secrets
+or, how to copy secrets from one Vault server to another
+When using the "dev-vault" mode, you pull secrets in from LastPass to a Vault
+docker container on your local machine. To copy these secrets to a deployed
+Vault cluster, run:
+```
+# first install https://github.com/shaneramey/vault-backup
+vault-dump.py > ~/my.backup
+export VAULT_ADDR=https://http.vault.svc.master.local:8200
+export VAULT_CACERT=~/.minikube/ca.crt
+# sh ~/my.backup # WARNING! This will overwrite your VAULT_ADDR Vault
+
+```

@@ -1,25 +1,28 @@
-# FIXME:
-# future parameters
-# Network parameters
-# - apiserver
-#   - service-cluster-ip-range
-# - kube-proxy
-#   - masquarade-all
-# - kubelet
-#   - cluster-dns
-#   - cluster-domain
-#   - network-plugin
-#   - resolv-conf
+## Known issues
+https://github.com/kubernetes/minikube/issues/1568
 
-# Other parameters
-# - kubernetes-apiserver
-#   - allow-privileged
-# - kubelet
-#   - allow-privileged
+# Allow passing in all the following as parameters to cluster creation
 
-# Container parameters
-# - apiserver
-#   - allow-provileged
+Network parameters
+- apiserver
+  - service-cluster-ip-range
+- kube-proxy
+  - masquarade-all
+- kubelet
+  - cluster-dns
+  - cluster-domain
+  - network-plugin
+  - resolv-conf
 
-# Other considerations
-# - kubernetes federation
+Other parameters
+- kubernetes-apiserver
+  - allow-privileged
+- kubelet
+  - allow-privileged
+
+Container parameters
+- apiserver
+  - allow-provileged
+
+Other considerations
+- kubernetes federation
