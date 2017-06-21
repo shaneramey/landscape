@@ -50,10 +50,16 @@ function generate_envconsul_config {
     echo "    - Using Vault prefix $V_PREFIX"
     echo "    - Writing envconsul-config.hcl (.gitignored)"
 
-
     $sed_cmd "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl \
         > envconsul-config.hcl
-    $sed_cmd -i "s/__VAULT_ADDR__/$VAULT_ADDR/g" envconsul-config.hcl
+    $sed_cmd -i "s^__VAULT_ADDR__^$VAULT_ADDR^g" envconsul-config.hcl
+
+    VAULT_SSL_ENABLED="false"
+    if [[ $VAULT_ADDR == https* ]]; then
+        VAULT_SSL_ENABLED="true"
+    fi
+    $sed_cmd -i "s^__VAULT_CACERT__^$VAULT_CACERT^g" envconsul-config.hcl
+    $sed_cmd -i "s/__VAULT_SSL_ENABLED__/$VAULT_SSL_ENABLED/g" envconsul-config.hcl
     $sed_cmd -i "s/__K8S_NAMESPACE__/$K8S_NAMESPACE/g" envconsul-config.hcl
     $sed_cmd -i "s/__HELM_CHART__/$CHART_NAME/g" envconsul-config.hcl
 }
