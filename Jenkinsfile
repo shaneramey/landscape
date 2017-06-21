@@ -2,7 +2,9 @@
 
 
 pipeline {
-    agent any
+    agent {
+        any
+    }
 
     environment {
         VAULT_ADDR = "https://http.vault.svc.${env.BRANCH_NAME}.local:8200"
@@ -25,10 +27,17 @@ pipeline {
     stages {
         stage('Environment') {
             steps {
+                withCredentials([[$class: 'UsernamePasswordMultiBinding',
+                                  credentialsId: 'vault',
+                                  usernameVariable: 'VAULT_USER',
+                                  passwordVariable: 'VAULT_PASSWORD']]) {
+                    echo -n ${VAULT_PASSWORD} | vault auth -method=ldap username=${VAULT_USER} -
+                }
+                echo "Vault: using LDAP username: ${VAULT_USER}"
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
                 echo "clusterDomain: ${env.BRANCH_NAME}.local"
                 sh "echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
-                sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
+                sh "VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
             }
         }
         stage('Test') {

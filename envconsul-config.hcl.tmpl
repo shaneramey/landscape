@@ -1,7 +1,14 @@
 vault {
-  address = "http://127.0.0.1:8200"
+  address = "__VAULT_ADDR__"
   renew  = false
 }
+
+ssl {
+  enabled = true
+  verify  = true
+  ca_cert = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+}
+
 
 secret {
   no_prefix = true
