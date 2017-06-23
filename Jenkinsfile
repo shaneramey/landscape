@@ -29,13 +29,10 @@ pipeline {
                                   credentialsId: 'vault',
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
-                    sh "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"
-                    sh "sleep 2"
+                    echo "Setting environment branch: ${env.BRANCH_NAME}"
+                    echo "clusterDomain: ${env.BRANCH_NAME}.local"
+                    sh "export VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 && export VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt && vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD && sleep 2 && make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
                 }
-                echo "Setting environment branch: ${env.BRANCH_NAME}"
-                echo "clusterDomain: ${env.BRANCH_NAME}.local"
-                sh "echo export VAULT_TOKEN=\$(vault read -field id auth/token/lookup-self) && echo VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
-                sh "export VAULT_TOKEN=\$(vault read -field id auth/token/lookup-self) && VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
             }
         }
         stage('Test') {
