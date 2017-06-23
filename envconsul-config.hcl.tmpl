@@ -1,6 +1,7 @@
 vault {
   address = "__VAULT_ADDR__"
-  renew  = false
+  token   = "__VAULT_TOKEN__"
+  renew   = false
 }
 
 ssl {
@@ -12,5 +13,5 @@ ssl {
 
 secret {
   no_prefix = true
-  path   = "/secret/landscape/__GIT_BRANCH__/__K8S_NAMESPACE__/__HELM_CHART__"
+  path      = "/secret/landscape/__GIT_BRANCH__/__K8S_NAMESPACE__/__HELM_CHART__"
 }

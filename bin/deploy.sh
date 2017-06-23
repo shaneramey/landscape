@@ -65,6 +65,7 @@ function generate_envconsul_config {
     $sed_cmd -i "s^__VAULT_ADDR__^$VAULT_ADDR^g" envconsul-config.hcl
     $sed_cmd -i "s^__VAULT_CACERT__^$VAULT_CACERT^g" envconsul-config.hcl
     $sed_cmd -i "s/__VAULT_SSL_ENABLED__/$VAULT_SSL_ENABLED/g" envconsul-config.hcl
+    $sed_cmd -i "s/__VAULT_TOKEN__/$VAULT_TOKEN/g" envconsul-config.hcl
     $sed_cmd -i "s/__K8S_NAMESPACE__/$K8S_NAMESPACE/g" envconsul-config.hcl
     $sed_cmd -i "s/__HELM_CHART__/$CHART_NAME/g" envconsul-config.hcl
 }
