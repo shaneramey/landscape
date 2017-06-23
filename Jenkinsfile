@@ -44,13 +44,13 @@ pipeline {
             }
         }
         stage('Deploy') {
+            withCredentials([[$class: 'UsernamePasswordMultiBinding',
+                              credentialsId: 'vault',
+                              usernameVariable: 'VAULT_USER',
+                              passwordVariable: 'VAULT_PASSWORD']]) {
+                def vault_token = sh "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD 2>&1"
+            }
             steps {
-                withCredentials([[$class: 'UsernamePasswordMultiBinding',
-                                  credentialsId: 'vault',
-                                  usernameVariable: 'VAULT_USER',
-                                  passwordVariable: 'VAULT_PASSWORD']]) {
-                    def vault_token = sh "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD 2>&1"
-                }
                 sh "echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
                 sh "VAULT_TOKEN=$vault_token make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
                 sh 'sleep 999999'
