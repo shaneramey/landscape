@@ -30,7 +30,7 @@ pipeline {
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
                     sh "echo Vault: using LDAP username: $VAULT_USER"
-                    sh "vault auth -method=ldap username=$VAULT_USER $VAULT_PASSWORD"
+                    sh "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"
                 }
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
                 echo "clusterDomain: ${env.BRANCH_NAME}.local"
