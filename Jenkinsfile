@@ -3,7 +3,7 @@
 def git_branch     = "${env.BRANCH_NAME}"
 def cluster_domain = "${env.BRANCH_NAME}.local"
 
-def vault_addr   = 'https://http.vault.svc.${env.BRANCH_NAME}.local:8200'
+def vault_addr   = 'https://http.vault.svc.${cluster_domain}:8200'
 def vault_cacert = '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
 
 pipeline {
