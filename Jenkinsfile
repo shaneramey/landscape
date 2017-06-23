@@ -37,7 +37,7 @@ pipeline {
                                   credentialsId: 'vault',
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
-                    vault_token = sh (
+                    sh (
                         script: "VAULT_ADDR=$vault_addr VAULT_CACERT=$vault_cacert vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD",
                         returnStdout: true
                     ).trim()
