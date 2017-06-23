@@ -169,10 +169,7 @@ if [ "$namespace_arg" == "__all_namespaces__" ]; then
             echo
             for CHART_YAML in namespaces/${NAMESPACE}/*.yaml; do
                 CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
-                echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
-                echo "GIT_BRANCH=${GIT_BRANCH}"
-                echo "CHART_NAME=${CHART_NAME}"
-                echo "NAMESPACE=${NAMESPACE}"
+                echo "Chart $CHART_NAME: exporting Vault secrets for git branch $GIT_BRANCH in namespace $NAMESPACE to env vars"
                 vault_to_env $GIT_BRANCH $CHART_NAME $NAMESPACE
             done
             # run landscaper
