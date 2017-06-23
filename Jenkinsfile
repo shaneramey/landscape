@@ -34,8 +34,8 @@ pipeline {
                 }
                 echo "Setting environment branch: ${env.BRANCH_NAME}"
                 echo "clusterDomain: ${env.BRANCH_NAME}.local"
-                sh "export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self) && echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
-                sh "VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
+                sh "echo VAULT_TOKEN=\$(vault read -field id auth/token/lookup-self) VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
+                sh "VAULT_TOKEN=\$(vault read -field id auth/token/lookup-self) VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
             }
         }
         stage('Test') {
