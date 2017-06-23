@@ -48,7 +48,6 @@ pipeline {
                     sh "export VAULT_TOKEN=\$(vault read -field id auth/token/lookup-self)"
                     sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy && echo \$VAULT_TOKEN"
                 }
-                sh 'sleep 999999'
             }
         }
         stage('Verify') {
