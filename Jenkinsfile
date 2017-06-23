@@ -36,7 +36,6 @@ pipeline {
                 echo "using git branch: ${env.BRANCH_NAME}"
                 echo "using clusterDomain: ${env.BRANCH_NAME}.local"
                 sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
-                sh "echo vault auth -method=ldap username=\$VAULT_USER password=\$VAULT_PASSWORD"
             }
         }
         stage('Test') {
@@ -51,7 +50,7 @@ pipeline {
                                   credentialsId: 'vault',
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
-                    sh "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"
+                    sh "vault auth -method=ldap username=\$VAULT_USER password=\$VAULT_PASSWORD 2>&1 | grep '^token: ' | awk '{ print $2 }'"
                 }
                 sh "echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
                 sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
