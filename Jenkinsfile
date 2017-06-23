@@ -37,7 +37,7 @@ pipeline {
                                   credentialsId: 'vault',
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
-                    vault_token = sh(script: "VAULT_ADDR=$vault_addr VAULT_CACERT=$vault_cacert vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD", returnStdout: true).trim()
+                    vault_token = sh(script: "VAULT_ADDR=a VAULT_CACERT=b vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD", returnStdout: true).trim()
                 }
                 sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
             }
