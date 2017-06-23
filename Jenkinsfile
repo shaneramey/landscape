@@ -13,6 +13,14 @@ pipeline {
     environment {
         VAULT_ADDR = "https://http.vault.svc.${env.BRANCH_NAME}.local:8200"
         VAULT_CACERT = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        withCredentials([[$class: 'UsernamePasswordMultiBinding',
+                          credentialsId: 'vault',
+                          usernameVariable: 'VAULT_USER',
+                          passwordVariable: 'VAULT_PASSWORD']]) {
+        VAULT_TOKEN = sh(
+            script: "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD",
+            returnStdout: true
+        ).trim()
     }
 
     options {
@@ -33,15 +41,6 @@ pipeline {
             steps {
                 echo "using git branch: ${env.BRANCH_NAME}"
                 echo "using clusterDomain: ${env.BRANCH_NAME}.local"
-                withCredentials([[$class: 'UsernamePasswordMultiBinding',
-                                  credentialsId: 'vault',
-                                  usernameVariable: 'VAULT_USER',
-                                  passwordVariable: 'VAULT_PASSWORD']]) {
-                    vault_token = sh(
-                        script: "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD",
-                        returnStdout: true
-                    ).trim()
-                }
                 sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
             }
         }
