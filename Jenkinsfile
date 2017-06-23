@@ -1,5 +1,11 @@
 #! /usr/bin/env groovy
 
+def git_branch = "${env.BRANCH_NAME}"
+def cluster_domain = "${env.BRANCH_NAME}.local"
+
+def vault_addr = 'https://http.vault.svc.${env.BRANCH_NAME}.local:8200'
+def vault_cacert = '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+def vault_token = ''
 
 pipeline {
     agent any
@@ -25,14 +31,18 @@ pipeline {
     stages {
         stage('Environment') {
             steps {
+                echo "using git branch: ${env.BRANCH_NAME}"
+                echo "using clusterDomain: ${env.BRANCH_NAME}.local"
                 withCredentials([[$class: 'UsernamePasswordMultiBinding',
                                   credentialsId: 'vault',
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
-                    echo "Setting environment branch: ${env.BRANCH_NAME}"
-                    echo "clusterDomain: ${env.BRANCH_NAME}.local"
-                    sh "export VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 && export VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt && vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD && sleep 2 && echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
+                    vault_token = sh (
+                        script: "VAULT_ADDR=$vault_addr VAULT_CACERT=$vault_cacert vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD",
+                        returnStdout: true
+                    ).trim()
                 }
+                sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
             }
         }
         stage('Test') {

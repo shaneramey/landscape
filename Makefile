@@ -34,12 +34,12 @@ all: environment test deploy verify report
 
 bootstrap:
 	./bin/env-install-prerequisites.sh
-
-environment:
 	./bin/init-vault-local.sh # create or start local dev-vault container
 	./bin/init-${PROVISIONER}.sh # start cluster
-	./bin/env-set-context-k8s.sh
 	./bin/env-add-repos-helm.sh
+
+environment:
+	./bin/env-set-context-k8s.sh
 	# FIXME: security hole. Create a more specific binding for Jenkins
 	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
