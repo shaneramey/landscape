@@ -58,7 +58,7 @@ function generate_envconsul_config {
     if [ -z ${VAULT_CACERT+x} ]; then
         VAULT_CACERT=""
     fi
-
+    VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
     # generate envconsul config
     $sed_cmd "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl \
         > envconsul-config.hcl
