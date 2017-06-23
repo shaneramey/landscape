@@ -44,7 +44,7 @@ pipeline {
                                   credentialsId: 'vault',
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
-                    sh 'vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD && export VAULT_TOKEN=$(vault read -field id auth/token/lookup-self) && make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy'
+                    sh "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD && export VAULT_TOKEN=\$(vault read -field id auth/token/lookup-self) && make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
                 }
                 sh 'sleep 999999'
             }
