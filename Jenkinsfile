@@ -51,10 +51,7 @@ pipeline {
                                   credentialsId: 'vault',
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
-                    sh(
-                        script: 'vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD',
-                        returnStdout: true
-                    ).trim()
+                    sh "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"
                 }
                 sh "echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
                 sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
