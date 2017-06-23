@@ -36,7 +36,7 @@ pipeline {
                 echo "using git branch: ${env.BRANCH_NAME}"
                 echo "using clusterDomain: ${env.BRANCH_NAME}.local"
                 sh "make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
-                sh(script: "vault auth -method=ldap username=\$VAULT_USER password=\$VAULT_PASSWORD", returnStdout: true).trim()
+                sh "vault auth -method=ldap username=\$VAULT_USER password=\$VAULT_PASSWORD"
             }
         }
         stage('Test') {
