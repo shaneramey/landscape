@@ -31,7 +31,7 @@ pipeline {
                                   passwordVariable: 'VAULT_PASSWORD']]) {
                     echo "Setting environment branch: ${env.BRANCH_NAME}"
                     echo "clusterDomain: ${env.BRANCH_NAME}.local"
-                    sh "export VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 && export VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt && vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD && sleep 2 && make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
+                    sh "export VAULT_ADDR=https://http.vault.svc.${env.BRANCH_NAME}.local:8200 && export VAULT_CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt && vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD && sleep 2 && echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} environment"
                 }
             }
         }
