@@ -40,6 +40,7 @@ bootstrap:
 
 environment:
 	./bin/env-set-context-k8s.sh
+	helm repo update
 	# FIXME: security hole. Create a more specific binding for Jenkins
 	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
