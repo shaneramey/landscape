@@ -3,17 +3,12 @@
 def git_branch     = "${env.BRANCH_NAME}"
 def cluster_domain = "${env.BRANCH_NAME}.local"
 
-def vault_addr   = 'https://http.vault.svc.${cluster_domain}:8200'
-def vault_cacert = '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
-
 pipeline {
     agent any
 
     environment {
         VAULT_ADDR     = "https://http.vault.svc.${env.BRANCH_NAME}.local:8200"
         VAULT_CACERT   = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-        VAULT_USER     = credentials('vault')
-        VAULT_PASSWORD = credentials('vault')
     }
 
     options {
@@ -49,10 +44,8 @@ pipeline {
                                   credentialsId: 'vault',
                                   usernameVariable: 'VAULT_USER',
                                   passwordVariable: 'VAULT_PASSWORD']]) {
-                    def vault_token = sh "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD 2>&1"
+                    sh "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD && make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
                 }
-                sh "echo make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
-                sh "VAULT_TOKEN=$vault_token make GIT_BRANCH=${env.BRANCH_NAME} PROVISIONER=${params.PROVISIONER} deploy"
                 sh 'sleep 999999'
             }
         }
