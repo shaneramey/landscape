@@ -17,10 +17,11 @@ pipeline {
                           credentialsId: 'vault',
                           usernameVariable: 'VAULT_USER',
                           passwordVariable: 'VAULT_PASSWORD']]) {
-        VAULT_TOKEN = sh(
-            script: "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD",
-            returnStdout: true
-        ).trim()
+            sh(
+                script: "vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD",
+                returnStdout: true
+            ).trim()
+        }
     }
 
     options {
