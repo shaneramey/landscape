@@ -1,22 +1,21 @@
 #! /usr/bin/env groovy
 
-def git_branch = "${env.BRANCH_NAME}"
+def git_branch     = "${env.BRANCH_NAME}"
 def cluster_domain = "${env.BRANCH_NAME}.local"
 
-def vault_addr = 'https://http.vault.svc.${env.BRANCH_NAME}.local:8200'
+def vault_addr   = 'https://http.vault.svc.${env.BRANCH_NAME}.local:8200'
 def vault_cacert = '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
-def vault_token = ''
+def vault_token  = ''
 
 pipeline {
     agent any
 
     environment {
-        VAULT_ADDR = "https://http.vault.svc.${env.BRANCH_NAME}.local:8200"
-        VAULT_CACERT = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-        withCredentials([[$class: 'UsernamePasswordMultiBinding',
-                          credentialsId: 'vault',
-                          usernameVariable: 'VAULT_USER',
-                          passwordVariable: 'VAULT_PASSWORD']]) { VAULT_TOKEN = sh(script: 'vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD', returnStdout: true).trim() }
+        VAULT_ADDR     = "https://http.vault.svc.${env.BRANCH_NAME}.local:8200"
+        VAULT_CACERT   = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        VAULT_USER     = credentials('vault')
+        VAULT_PASSWORD = credentials('vault')
+        VAULT_TOKEN = sh(script: 'vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD', returnStdout: true).trim()
     }
 
     options {
