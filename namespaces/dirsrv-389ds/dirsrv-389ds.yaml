@@ -1,7 +1,7 @@
 name: dirsrv-389ds
 release:
-  chart: charts.downup.us/dirsrv-389ds:0.1.34
-  version: 0.1.34
+  chart: charts.downup.us/dirsrv-389ds:0.1.35
+  version: 0.1.35
 configuration:
   clusterDomain: master.local
   directorySuffix: dc=master,dc=local
