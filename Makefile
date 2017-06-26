@@ -8,9 +8,7 @@ GIT_BRANCH := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 
 K8S_NAMESPACE := "__all_namespaces__"
 
-export VAULT_TOKEN=$(shell docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }')
-
-# FIXME: use https://github.com/shaneramey/vault-backup for backup/restore
+# TODO: use https://github.com/shaneramey/vault-backup for backup/restore
 WRITE_TO_VAULT_FROM_LASTPASS := false
 
 LASTPASS_USERNAME := "set_LASTPASS_USERNAME_in_env_var"
