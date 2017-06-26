@@ -1,5 +1,7 @@
 # Kubernetes desired-state configuration repo
 
+Note: master branch is in development. Use a release for stability.
+
 - Secrets pulled in from Hashicorp Vault
 - Can be applied locally (via minikube) or in GCE (via kops)
 - Use branches for different deployed apps / configs / secrets
