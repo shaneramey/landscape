@@ -7,6 +7,11 @@ Note: master branch is in development. Use a release for stability.
 - Use branches for different deployed apps / configs / secrets
 - anything in namespace that's not in landscaper will be deleted
 
+# quick start
+- clone this repo
+- `make bootstrap`
+- `make`
+
 ## Jenkins deployment
 see Jenkinsfile in repo
 
