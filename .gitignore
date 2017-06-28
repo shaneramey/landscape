@@ -1,4 +1,4 @@
 envconsul-config.hcl
 ca-pki-init/
-terraform.tfstate
-terraform.tfstate.backup
+*.tfstate
+*.tfstate.backup
