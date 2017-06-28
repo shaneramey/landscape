@@ -33,7 +33,7 @@ all: environment test deploy verify report
 bootstrap:
 	./bin/env-install-prerequisites.sh
 	./bin/init-vault-local.sh # create or start local dev-vault container
-	./bin/init-${PROVISIONER}.sh # start cluster
+	./bin/cluster-${PROVISIONER}.sh # start cluster
 
 environment:
 	./bin/env-set-context-k8s.sh
