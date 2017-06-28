@@ -53,7 +53,7 @@ data "vault_generic_secret" "deploy_gke" {
 
 # An example of how to connect two GCE networks with a VPN
 provider "google" {
-  credentials = "${data.vault_generic_secret.deploy_base.data["credentials"]}"
+  credentials  = "${data.vault_generic_secret.deploy_base.data["credentials"]}"
   project      = "${data.vault_generic_secret.deploy_base.data["project"]}"
   region       = "${data.vault_generic_secret.deploy_base.data["region"]}"
 }
