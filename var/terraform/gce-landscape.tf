@@ -32,19 +32,6 @@ variable "branch_name" {
   description = "The branch name. Used for Vault keys and k8s DNS domain"
 }
 
-# tfstate storage
-resource "google_storage_bucket" "terraform-remote-state" {
-  name     = "${data.vault_generic_secret.deploy_base.data["tfstate_bucket_name"]}"
-  location = "US"
-}
-
-resource "google_compute_backend_bucket" "foobar" {
-  name        = "terraform-state-bucket"
-  description = "Terraform state (GCS = non-locking)"
-  bucket_name = "${google_storage_bucket.image_bucket.name}"
-  enable_cdn  = true
-}
-
 terraform {
   backend "gcs" {
     bucket  = "specify-with--backend-config-bucket"
