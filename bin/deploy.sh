@@ -91,10 +91,11 @@ function apply_namespace {
     K8S_NAMESPACE=$1
 
     missing_secret_list=() # in case any secrets are missing
-    chart_errors=()
+    chart_errors=() # report any errors
 
+    CURRENT_CONTEXT=`kubectl config get-contexts | grep '^\*' | awk '{ print $2 }'`
     # Apply landscape
-    LANDSCAPER_COMMAND="landscaper apply -v --namespace=$K8S_NAMESPACE namespaces/$K8S_NAMESPACE/*.yaml"
+    LANDSCAPER_COMMAND="landscaper apply -v --context=$CURRENT_CONTEXT --namespace=$K8S_NAMESPACE namespaces/$K8S_NAMESPACE/*.yaml"
     echo
     echo "Running \`$LANDSCAPER_COMMAND\`"
     LANDSCAPER_OUTPUT=`$LANDSCAPER_COMMAND 2>&1`
