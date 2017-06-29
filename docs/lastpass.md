@@ -10,7 +10,7 @@ make PUSH_LASTPASS=true vault_backup_secrets_to_lastpass
 
 the `make` command will exit if secrets aren't pre-loaded into Vault, and guide you with the commands to set all needed secrets.
 
-lastpass_to_vault target expects a Folder in LastPass named 'k8s-landscaper'
+lastpass_to_vault target expects a Folder in LastPass named 'Shared-k8s/k8s-landscaper'
 with LastPass "Notes" named the git branch (e.g., "master").
 
 TODO: LastPass needs to be cleaned out for unused secrets to avoid cruft

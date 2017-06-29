@@ -1,5 +1,6 @@
 #! /usr/bin/env bash
-
+#
+# not tested
 CLOUD_PROVIDER=gke # or vsphere/aws
 kops create cluster --admin-access=`curl http://ipecho.net/plain`/32 \
   --associate-public-ip=true --authorization=RBAC --cloud=${CLOUD_PROVIDER} \

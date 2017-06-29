@@ -1,20 +1,23 @@
 #! /usr/bin/env bash
 
-# Deploys a Landscaper environment based on directory structure in this repo
-# Each branch deploys its own set of Helm charts
-# Expects `kubectl config get-contexts` to have the desired context selected
-# variables
-#  - GIT_BRANCH (auto-discovered)
-#  - vault_token passed in as argument, used for envconsul auth
-# assumes you've authed to vault
+# Deploys a Landscaper environment from namespaces/ subdir of repo
+
+# Requires:
+#  - this script run from within a git repo, so that GIT_BRANCH can be detected
+#  - `kubectl config get-contexts` to have the desired context selected
+#  - Vault authentication done before running this script (VAULT_TOKEN set)
+
 set -u
 
 GIT_BRANCH=$1
-namespace_arg=$2
+NAMESPACE_ARG=$2
+
+# Where secrets are loaded in lastpass
+LASTPASS_FOLDER="Shared-k8s/k8s-landscaper"
+
 # each branch has its own set of deployments
-PWD=`pwd`
-echo "CWD=${PWD}"
 echo "Using GIT_BRANCH ${GIT_BRANCH}"
+
 darwin=false; # MacOSX compatibility
 case "`uname`" in
     Darwin*) export sed_cmd=`which gsed` ;;
@@ -50,6 +53,7 @@ function generate_envconsul_config {
     echo "    - Using Vault prefix $V_PREFIX"
     echo "    - Writing envconsul-config.hcl (.gitignored)"
 
+    # generate envconsul template
     # are we using TLS or not?
     VAULT_SSL_ENABLED="false"
     if [[ $VAULT_ADDR == https* ]]; then
@@ -59,15 +63,22 @@ function generate_envconsul_config {
         VAULT_CACERT=""
     fi
     VAULT_TOKEN=$(vault read -field id auth/token/lookup-self)
-    # generate envconsul config
-    $sed_cmd "s/__GIT_BRANCH__/$GIT_BRANCH/g" envconsul-config.hcl.tmpl \
-        > envconsul-config.hcl
-    $sed_cmd -i "s^__VAULT_ADDR__^$VAULT_ADDR^g" envconsul-config.hcl
-    $sed_cmd -i "s^__VAULT_CACERT__^$VAULT_CACERT^g" envconsul-config.hcl
-    $sed_cmd -i "s/__VAULT_SSL_ENABLED__/$VAULT_SSL_ENABLED/g" envconsul-config.hcl
-    $sed_cmd -i "s/__VAULT_TOKEN__/$VAULT_TOKEN/g" envconsul-config.hcl
-    $sed_cmd -i "s/__K8S_NAMESPACE__/$K8S_NAMESPACE/g" envconsul-config.hcl
-    $sed_cmd -i "s/__HELM_CHART__/$CHART_NAME/g" envconsul-config.hcl
+
+    cp -f envconsul-config.hcl.tmpl envconsul-config.hcl
+    envconsul_vars=(
+        GIT_BRANCH
+        VAULT_ADDR
+        VAULT_CACERT
+        VAULT_SSL_ENABLED
+        VAULT_TOKEN
+        K8S_NAMESPACE
+        CHART_NAME
+    )
+    for envconsul_var in ${envconsul_vars[@]}; do
+        tag=__${envconsul_var}__ # e.g, __GIT_BRANCH__
+        envvar=${!envconsul_var}
+        $sed_cmd -i "s^${tag}^${envvar}^g" envconsul-config.hcl
+    done
 }
 
 function vault_to_env {
@@ -79,7 +90,8 @@ function vault_to_env {
     generate_envconsul_config $GIT_BRANCH $K8S_NAMESPACE $CHART_NAME
     # Read secrets from Vault
     ENVCONSUL_COMMAND="envconsul -config=./envconsul-config.hcl -secret="$V_PREFIX" -once -retry=1s -pristine -upcase env"
-    echo "Running ${ENVCONSUL_COMMAND}:"
+
+    echo "Running ${ENVCONSUL_COMMAND}"
     for envvar_kv in `$ENVCONSUL_COMMAND`; do
         envvar_k=`echo $envvar_kv | awk -F= '{ print $1}'`
         echo "  - setting secret $envvar_k"
@@ -94,16 +106,21 @@ function apply_namespace {
     chart_errors=() # report any errors
 
     CURRENT_CONTEXT=`kubectl config get-contexts | grep '^\*' | awk '{ print $2 }'`
+
     # Apply landscape
     LANDSCAPER_COMMAND="landscaper apply -v --context=$CURRENT_CONTEXT --namespace=$K8S_NAMESPACE namespaces/$K8S_NAMESPACE/*.yaml"
     echo
     echo "Running \`$LANDSCAPER_COMMAND\`"
     LANDSCAPER_OUTPUT=`$LANDSCAPER_COMMAND 2>&1`
     echo "$LANDSCAPER_OUTPUT"
+
+    # Landscaper error if secrets are missing (set upstream in landscaper repo)
+    LANDSCAPER_SECRET_ERROR='Secret\ not\ found\ in\ environment'
     while read -r line ; do
-        MISSING_SECRET=`echo $line | awk '{ print $NF }' | cut -d= -f2 | tr '-' '_'`
+        MISSING_SECRET=`echo $line | awk '{ print $NF }' \
+                        | cut -d= -f2 | tr '-' '_'`
         missing_secret_list+=("$MISSING_SECRET=${MISSING_SECRET}_value")
-    done < <(echo "$LANDSCAPER_OUTPUT" | grep 'Secret\ not\ found\ in\ environment')
+    done < <(echo "$LANDSCAPER_OUTPUT" | grep "$LANDSCAPER_SECRET_ERROR")
 
     # Print error if one exists
     while read -r line; do
@@ -113,17 +130,16 @@ function apply_namespace {
     if [[ ${#missing_secret_list[@]} -ge 1 ]]; then
         echo
         echo '### WARNING WARNING WARNING'
-        echo "It looks like you haven't set the secrets to provision this deployment."
-        echo "The below commands will remove any pre-existing secrets in Vault."
-        echo "They are to be used as a guide for initial provisioning of a deployment."
-        echo "Other tools will leave pre-existing secret keys in Vault without wiping them. Use those tools for merges."
-        echo
+        echo " Secrets are missing. Setting them with the below commands will"
+        echo "  wipe out any existing secrets. Be sure that's what you want"
+
         missing_secret_count=${#missing_secret_list[@]}
+        echo
         echo Vault is missing $missing_secret_count secrets.
         echo
         echo NOTE: If you have lastpass-cli installed, run:
         echo
-        echo "lpass show k8s-landscaper/$GIT_BRANCH --notes"
+        echo "lpass show $LASTPASS_FOLDER/$GIT_BRANCH --notes"
         echo
         echo First read existing secrets, and see if you want to replace them
         echo
@@ -149,7 +165,7 @@ function apply_namespace {
     helm status ${K8S_NAMESPACE}-${CHART_NAME}
 }
 
-if [ "$namespace_arg" == "__all_namespaces__" ]; then
+if [ "${NAMESPACE_ARG}" == "__all_namespaces__" ]; then
 	# Loop through namespace
     for NAMESPACE_W_DIR in namespaces/*; do
         if [ -d $NAMESPACE_W_DIR ]; then
@@ -163,7 +179,7 @@ if [ "$namespace_arg" == "__all_namespaces__" ]; then
             if [ $? -eq 0 ]; then
                 echo "    - Namespace $NAMESPACE already exists"
             else
-                echo -n "    - Namespace $NAMESPACE does not exist. Creating..."
+                echo -n "    - Namespace $NAMESPACE doesn't exist. Creating..."
                 kubectl create ns $NAMESPACE
                 echo " done."
             fi
@@ -178,27 +194,27 @@ if [ "$namespace_arg" == "__all_namespaces__" ]; then
         fi
     done
 else
-    if [ -d "namespaces/$namespace_arg" ]; then
+    if [ -d "namespaces/${NAMESPACE_ARG}" ]; then
         echo "###"
-        echo "# Namespace: $namespace_arg"
+        echo "# Namespace: ${NAMESPACE_ARG}"
         echo "###"
         echo
-        echo "Checking status of namespace $namespace_arg"
-        kubectl get ns $namespace_arg > /dev/null
+        echo "Checking status of namespace ${NAMESPACE_ARG}"
+        kubectl get ns ${NAMESPACE_ARG} > /dev/null
         if [ $? -eq 0 ]; then
-            echo "    - Namespace $namespace_arg already exists"
+            echo "    - Namespace ${NAMESPACE_ARG} already exists"
         else
-            echo -n "    - Namespace $namespace_arg does not exist. Creating..."
-            kubectl create ns $namespace_arg
+            echo -n "    - Namespace ${NAMESPACE_ARG} doesn't exist. Creating..."
+            kubectl create ns ${NAMESPACE_ARG}
             echo " done."
         fi
         echo
-        for CHART_YAML in namespaces/${namespace_arg}/*.yaml; do
+        for CHART_YAML in namespaces/${NAMESPACE_ARG}/*.yaml; do
         	CHART_NAME=`cat $CHART_YAML | grep '^name: ' | awk -F': ' '{ print $2 }'`
             echo "Chart $CHART_NAME: exporting Vault secrets to env vars"
-            vault_to_env $GIT_BRANCH $CHART_NAME $namespace_arg
+            vault_to_env $GIT_BRANCH $CHART_NAME ${NAMESPACE_ARG}
         done
         # run landscaper
-        apply_namespace $namespace_arg
+        apply_namespace ${NAMESPACE_ARG}
     fi
 fi

@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
 #
-# initializes a the following pki certs:
+# Currently unused
+#
+# initializes the following pki certs:
 # - root CA ("ca.[crt, key]" - key gets put in LastPass; not stored in Vault)
 # - intermediate CA used to sign everything ("intermediate.[crt, key]")
 # - cluster intermediate CA cert ("cluster.[crt, key]")

@@ -67,7 +67,7 @@ resource "google_compute_network" "networkA" {
 
 resource "google_compute_subnetwork" "gke_cluster1" {
   name       = "gke-${var.branch_name}"
-  ip_cidr_range = "${data.vault_generic_secret.deploy_gke.data["network1_ipv4_cidr"]}"
+  ip_cidr_range = "${data.vault_generic_secret.deploy_gke.data["gke_network1_ipv4_cidr"]}"
   network = "${google_compute_network.networkA.self_link}"
 }
 

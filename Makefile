@@ -3,54 +3,46 @@
 #
 # Deploy environment
 #  deploys to current branch to context in `kubectl config current-context`
+#
+# TODO: use https://github.com/shaneramey/vault-backup for backup/restore
+#
+#
+# Usage:
+#  make PROVISIONER=[ minikube | terraform ] [GCE_PROJECT=myproj-123456] deploy
+
+PROVISIONER := minikube
 
 GIT_BRANCH := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 
+# override for operations on a single namespace
 K8S_NAMESPACE := "__all_namespaces__"
 
-# TODO: use https://github.com/shaneramey/vault-backup for backup/restore
-WRITE_TO_VAULT_FROM_LASTPASS := false
-
-LASTPASS_USERNAME := "set_LASTPASS_USERNAME_in_env_var"
-
-# PROVISIONER can be minikube or kops. See also CLOUD_PROVIDER
-PROVISIONER := minikube
-
+# `make purge` options
+PURGE_NAMESPACE_ITSELF := false
 DELETE_ALL_DATA := false
 
-PURGE_NAMESPACE_ITSELF := false
+.PHONY: environment test deploy verify report purge # mostly Jenkinsfile stages
 
-.PHONY: bootstrap environment test deploy report purge # csr_approve
-
-ifeq ($(WRITE_TO_VAULT_FROM_LASTPASS),true)
-	lpass login $(LASTPASS_USERNAME)
-	# prints `vault write` commands
-	echo $(shell lpass show k8s-landscaper/$(GIT_BRANCH) --notes)
-endif
-
-all: environment test deploy verify report
-
-bootstrap:
-	./bin/env-install-prerequisites.sh
-	./bin/init-vault-local.sh # create or start local dev-vault container
-	./bin/cluster-${PROVISIONER}.sh # start cluster
+deploy: environment test
+	./bin/deploy.sh ${GIT_BRANCH} ${K8S_NAMESPACE}
 
 environment:
+	./bin/env-install-prerequisites.sh
+# populate local development secrets
+ifeq ($(PROVISIONER),minikube)
+	./bin/env-vault-local.sh
+endif
+	./bin/env-cluster-${PROVISIONER}.sh # start cluster
 	./bin/env-set-context-k8s.sh
 	./bin/env-add-repos-helm.sh
-	# FIXME: security hole. Create a more specific binding for Jenkins
-	#kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 
-test:
+test: environment
 	./bin/test.sh ${K8S_NAMESPACE}
 
 verify:
 	# need VPN connection if outside of Jenkins
 	#sleep 7 # wait for kubedns to come up
 	#./bin/verify.sh ${K8S_NAMESPACE}
-
-deploy:
-	./bin/deploy.sh ${GIT_BRANCH} ${K8S_NAMESPACE}
 
 report:
 	./bin/report.sh ${K8S_NAMESPACE}

@@ -14,4 +14,4 @@ terraform plan \
 terraform apply \
 	-var="branch_name=${GIT_BRANCH}" \
 	-state=${GIT_BRANCH}.tfstate \
-	var/terraform
+    var/terraform
