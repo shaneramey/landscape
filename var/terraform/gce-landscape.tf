@@ -47,9 +47,9 @@ resource "google_compute_backend_bucket" "foobar" {
 
 terraform {
   backend "gcs" {
-    bucket  = "${google_storage_bucket.terraform-remote-state.name}"
-    path    = "tfstate-${data.vault_generic_secret.deploy_base.data["project"]}/${var.branch_name}/terraform.tfstate"
-    project = "${data.vault_generic_secret.deploy_base.data["project"]}"
+    bucket  = "specify-with--backend-config-bucket"
+    path    = "specify-with--backend-config-path"
+    project = "specify-with--backend-config-project"
   }
 }
 

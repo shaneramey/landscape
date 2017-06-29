@@ -21,7 +21,8 @@ K8S_NAMESPACE := "__all_namespaces__"
 PURGE_NAMESPACE_ITSELF := false
 DELETE_ALL_DATA := false
 
-.PHONY: environment test deploy verify report purge # mostly Jenkinsfile stages
+# Jenkinsfile stages, plus other targets
+.PHONY: environment test deploy verify report purge csr_approve
 
 deploy: environment test
 	./bin/deploy.sh ${GIT_BRANCH} ${K8S_NAMESPACE}
@@ -40,16 +41,12 @@ test: environment
 	./bin/test.sh ${K8S_NAMESPACE}
 
 verify:
-	# need VPN connection if outside of Jenkins
+	# disable until functional/useful
 	#sleep 7 # wait for kubedns to come up
-	#./bin/verify.sh ${K8S_NAMESPACE}
+	# ./bin/verify.sh ${K8S_NAMESPACE}
 
 report:
 	./bin/report.sh ${K8S_NAMESPACE}
-
-# helper targets not usually used in deployments, but useful for troubleshooting
-#csr_approve:
-#	./bin/csr_approve.sh
 
 purge:
 ifeq ($(K8S_NAMESPACE),kube-system)
@@ -62,3 +59,7 @@ else
 	@echo "if you really want to purge, run \`make DELETE_ALL_DATA=true purge\`"
 	@exit 1
 endif
+
+# helper target not usually used in deployments, but useful for troubleshooting
+csr_approve:
+	./bin/csr_approve.sh

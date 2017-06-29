@@ -2,15 +2,17 @@
 
 Note: master branch is in development. Use a release for stability.
 
+## Features
 - Secrets pulled in from Hashicorp Vault
 - Can be applied locally (via minikube) or in GCE (via kops)
 - Use branches for different deployed apps / configs / secrets
 - anything in namespace that's not in landscaper will be deleted
+- deploys into a single project
 
 # quick start
 - clone this repo
-- `make bootstrap`
-- `make`
+- (minikube) run `make`
+- (gce) run `make PROVISIONER=terraform GCE_PROJECT=myproj-123456 deploy`
 
 ## Jenkins deployment
 see Jenkinsfile in repo
