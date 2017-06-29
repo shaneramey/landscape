@@ -237,3 +237,7 @@ resource "google_container_cluster" "cluster1" {
     ]
   }
 }
+
+output "get-credentials-command" {
+  value = "echo KUBECONFIG=$HOME/.kube/config-${data.vault_generic_secret.deploy_base.data["project"]} GOOGLE_CREDENTIALS='${data.vault_generic_secret.deploy_base.data["credentials"]}' gcloud --project=${data.vault_generic_secret.deploy_base.data["project"]} container clusters get-credentials ${var.branch_name} --zone=${data.vault_generic_secret.deploy_base.data["region"]}"
+}
