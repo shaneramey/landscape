@@ -25,17 +25,26 @@ DELETE_ALL_DATA := false
 .PHONY: environment test deploy verify report purge csr_approve
 
 deploy: environment test
-	./bin/deploy.sh ${GIT_BRANCH} ${K8S_NAMESPACE}
+ifeq($(K8S_NAMESPACE),__all_namespaces__)
+	./landscape/landscape.py deploy --all-namespaces
+else
+	./landscape/landscape.py deploy --namespace=$(K8S_NAMESPACE)
+endif
 
 environment:
+	./landscape/landscape.py install-prerequisites
 	./bin/env-install-prerequisites.sh
 # populate local development secrets
 ifeq ($(PROVISIONER),minikube)
-	./bin/env-vault-local.sh
+	./landscape/landscape.py initialize-local-vault
+	# ./bin/env-vault-local.sh
 endif
-	./bin/env-cluster-${PROVISIONER}.sh # start cluster
-	./bin/env-set-context-k8s.sh
-	./bin/env-add-repos-helm.sh
+    ./landscape/landscape.py cluster-converge --provisioner=minikube
+    ./landscape/landscape.py set-context --provisioner=minikube
+    ./landscape/landscape.py helm-add-repos
+	# ./bin/env-cluster-${PROVISIONER}.sh # start cluster
+	# ./bin/env-set-context-k8s.sh
+	# ./bin/env-add-repos-helm.sh
 
 test: environment
 	./bin/test.sh ${K8S_NAMESPACE}
