@@ -1,6 +1,0 @@
-name: nginx
-release:
-  chart: charts.downup.us/nginx:0.1.40
-  version: 0.1.40
-configuration:
-  clusterDomain: master.local
