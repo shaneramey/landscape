@@ -27,9 +27,6 @@ import sys
 from . import DEFAULT_OPTIONS
 from .cluster import provision_cluster
 from .landscaper import deploy_helm_charts
-from . import test
-from . import test
-from . import deploy
 from . import verify
 from . import report
 from . import purge
