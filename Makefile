@@ -25,29 +25,28 @@ DELETE_ALL_DATA := false
 .PHONY: environment test deploy verify report purge csr_approve
 
 deploy: environment test
-ifeq($(K8S_NAMESPACE),__all_namespaces__)
-	./landscape/landscape.py deploy --all-namespaces
+ifeq ($(K8S_NAMESPACE),__all_namespaces__)
+	landscape deploy --all-namespaces
 else
-	./landscape/landscape.py deploy --namespace=$(K8S_NAMESPACE)
+	landscape deploy --namespace=$(K8S_NAMESPACE)
 endif
 
 environment:
-	./landscape/landscape.py install-prerequisites
-	./bin/env-install-prerequisites.sh
+	landscape environment
 # populate local development secrets
 ifeq ($(PROVISIONER),minikube)
-	./landscape/landscape.py initialize-local-vault
+	# landscape initialize-local-vault
 	# ./bin/env-vault-local.sh
 endif
-    ./landscape/landscape.py cluster-converge --provisioner=minikube
-    ./landscape/landscape.py set-context --provisioner=minikube
-    ./landscape/landscape.py helm-add-repos
+	landscape deploy --provisioner=minikube
+	landscape set-context --provisioner=minikube
+	landscape helm-add-repos
 	# ./bin/env-cluster-${PROVISIONER}.sh # start cluster
 	# ./bin/env-set-context-k8s.sh
 	# ./bin/env-add-repos-helm.sh
 
 test: environment
-	./bin/test.sh ${K8S_NAMESPACE}
+	landscape test ${K8S_NAMESPACE}
 
 verify:
 	# disable until functional/useful
@@ -55,7 +54,7 @@ verify:
 	# ./bin/verify.sh ${K8S_NAMESPACE}
 
 report:
-	./bin/report.sh ${K8S_NAMESPACE}
+	landscape report ${K8S_NAMESPACE}
 
 purge:
 ifeq ($(K8S_NAMESPACE),kube-system)
@@ -63,12 +62,8 @@ ifeq ($(K8S_NAMESPACE),kube-system)
 endif
 
 ifeq ($(DELETE_ALL_DATA),true)
-	./bin/purge.sh ${K8S_NAMESPACE} $(PURGE_NAMESPACE_ITSELF)
+	landscape purge ${K8S_NAMESPACE} $(PURGE_NAMESPACE_ITSELF)
 else
 	@echo "if you really want to purge, run \`make DELETE_ALL_DATA=true purge\`"
 	@exit 1
 endif
-
-# helper target not usually used in deployments, but useful for troubleshooting
-csr_approve:
-	./bin/csr_approve.sh

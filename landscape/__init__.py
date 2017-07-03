@@ -13,17 +13,19 @@ DEFAULT_OPTIONS = {
         'folder': 'Shared-k8s/k8s-landscaper',
     },
     'minikube': {
-    	'init_cmd_template': 'echo minikube start \
-            --dns-domain={0} \
-            --vm-driver={1} \
-            --kubernetes-version=v1.6.6 \
-            --extra-config=apiserver.Authorization.Mode=RBAC \
-            --extra-config=controller-manager.ClusterSigningCertFile=/var/lib/localkube/certs/ca.crt \
-            --extra-config=controller-manager.ClusterSigningKeyFile=/var/lib/localkube/certs/ca.key \
-            --cpus=8 \
-            --disk-size=20g \
-            --memory=8192 \
-            -v=0'
+    	'init_cmd_template': 'minikube start ' + \
+            "--dns-domain={0} " + \
+            "--vm-driver={1} " + \
+            '--kubernetes-version=v1.6.6 ' + \
+            '--extra-config=apiserver.Authorization.Mode=RBAC ' + \
+            '--extra-config=controller-manager.ClusterSigningCertFile=' + \
+            '/var/lib/localkube/certs/ca.crt ' + \
+            '--extra-config=controller-manager.ClusterSigningKeyFile=' + \
+            '/var/lib/localkube/certs/ca.key ' + \
+            '--cpus=8 ' + \
+            '--disk-size=20g ' + \
+            '--memory=8192 ' + \
+            '-v=0'
     },
     'terraform': {
         'init_cmd_template': 'echo terraform validate \
