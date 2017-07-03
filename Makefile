@@ -25,28 +25,16 @@ DELETE_ALL_DATA := false
 .PHONY: environment test deploy verify report purge csr_approve
 
 deploy: environment test
-ifeq ($(K8S_NAMESPACE),__all_namespaces__)
-	landscape deploy --all-namespaces
-else
-	landscape deploy --namespace=$(K8S_NAMESPACE)
-endif
+	landscape deploy
 
 environment:
-	landscape environment
-# populate local development secrets
-ifeq ($(PROVISIONER),minikube)
-	# landscape initialize-local-vault
-	# ./bin/env-vault-local.sh
-endif
-	landscape deploy --provisioner=minikube
-	landscape set-context --provisioner=minikube
-	landscape helm-add-repos
-	# ./bin/env-cluster-${PROVISIONER}.sh # start cluster
-	# ./bin/env-set-context-k8s.sh
-	# ./bin/env-add-repos-helm.sh
+	# landscape set-context --provisioner=minikube
+	# landscape helm-add-repos
+	./bin/env-set-context-k8s.sh
+	./bin/env-add-repos-helm.sh
 
 test: environment
-	landscape test ${K8S_NAMESPACE}
+	landscape test
 
 verify:
 	# disable until functional/useful

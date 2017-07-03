@@ -16,7 +16,7 @@ DEFAULT_OPTIONS = {
     	'init_cmd_template': 'minikube start ' + \
             "--dns-domain={0} " + \
             "--vm-driver={1} " + \
-            '--kubernetes-version=v1.6.6 ' + \
+            '--kubernetes-version=v1.6.4 ' + \
             '--extra-config=apiserver.Authorization.Mode=RBAC ' + \
             '--extra-config=controller-manager.ClusterSigningCertFile=' + \
             '/var/lib/localkube/certs/ca.crt ' + \
@@ -25,7 +25,13 @@ DEFAULT_OPTIONS = {
             '--cpus=8 ' + \
             '--disk-size=20g ' + \
             '--memory=8192 ' + \
-            '-v=0'
+            '-v=0',
+        'minikube_status_cmd': 'minikube status ' + \
+                                '--format=\'{{.MinikubeStatus}}\'',
+        'minikube_addons_disable_cmd': 'minikube addons disable kube-dns && ' + \
+                                        'minikube addons enable default-storageclass && ' + \
+                                        'minikube addons enable ingress && ' + \
+                                        'minikube addons disable registry-creds'
     },
     'terraform': {
         'init_cmd_template': 'echo terraform validate \
@@ -36,5 +42,20 @@ DEFAULT_OPTIONS = {
     },
     'landscaper': {
         'apply_namespace_template': 'landscaper apply -v --context={0} --namespace={1} {2}/{1}/*.yaml'
+    },
+    'helm': {
+        'monitor_tiller_cmd': {
+            'kubectl get pod --namespace=kube-system ' + \
+                            '-l app=helm -l name=tiller ' + \
+                            '-o jsonpath=\'{.items[0].status.phase}\''
+        }
+    },
+    'kubernetes': {
+        'hack_clusterrolebinding_cmd': 'kubectl create clusterrolebinding ' + \
+                                    'permissive-binding ' + \
+                                    '--clusterrole=cluster-admin ' + \
+                                    '--user=admin ' + \
+                                    '--user=kubelet ' + \
+                                    '--group=system:serviceaccounts'
     }
 }
