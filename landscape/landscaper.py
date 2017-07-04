@@ -5,6 +5,7 @@ Deploy a cluster and its Helm charts
 defines Chart-Sets:
  - charts_core: applied to all Kubernetes clusters
  - charts_minikube: applied to minikube cluster
+ - charts_gke: applied to gke cluster
 
 """
 import subprocess as sp

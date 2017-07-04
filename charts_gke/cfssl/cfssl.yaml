@@ -1,0 +1,9 @@
+name: cfssl
+release:
+  chart: charts.downup.us/cfssl:0.1.93
+  version: 0.1.93
+configuration:
+  clusterDomain: master.local
+secrets:
+ - secret-postgresql-postgres-user
+ - secret-postgresql-postgres-password

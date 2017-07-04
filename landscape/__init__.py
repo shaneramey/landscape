@@ -34,11 +34,11 @@ DEFAULT_OPTIONS = {
                                         'minikube addons disable registry-creds'
     },
     'terraform': {
-        'init_cmd_template': 'echo terraform validate \
+        'init_cmd_template': 'terraform validate \
             && \
-            echo terraform plan -var="branch_name={0}" \
+            terraform plan -var="branch_name={0}" \
             && \
-            echo terraform apply -var="branch_name={0}"'
+            terraform apply -var="branch_name={0}"'
     },
     'landscaper': {
         'apply_namespace_template': 'landscaper apply -v --context={0} --namespace={1} {2}/{1}/*.yaml'

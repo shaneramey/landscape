@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 import os
+import re
 
 def provision_cluster(provisioner, dns_domain):
     """
@@ -19,8 +20,10 @@ def provision_cluster(provisioner, dns_domain):
     print("Converging cluster")
     # Start cluster
     if provisioner == 'minikube':
+        print('Applying minikube cluster')
         apply_minikube_cluster(provisioner, dns_domain)
     if provisioner == 'terraform':
+        print('Applying terraform cluster')
         apply_terraform_cluster(provisioner, dns_domain)
     # Provision Helm Tiller
     apply_tiller()
@@ -65,13 +68,42 @@ def apply_terraform_cluster(provisioner, dns_domain):
     Arguments:
      - provisioner: minikube or terraform
      - dns_domain: dns domain to use for cluster
-
+                   In GKE environment, must be cluster.local
     Returns: None
     """
-    apply_terraform_cmd = DEFAULT_OPTIONS['terraform']['init_cmd_template']
-    failed_to_apply_terraform = subprocess.call(apply_terraform_cmd, shell=True)
-    if failed_to_apply_terraform:
-        print('ERROR: failed to disable addons')
+    dns_check_succeeds = test_dns_domain(provisioner, dns_domain)
+    if dns_check_succeeds:
+        terraform_cmd_tmpl = DEFAULT_OPTIONS['terraform']['init_cmd_template']
+        terraform_cmd = terraform_cmd_tmpl.format(dns_domain)
+        print('  - running ' + apply_terraform_cmd)
+        failed_to_apply_terraform = subprocess.call(apply_terraform_cmd, shell=True)
+        if failed_to_apply_terraform:
+            print('ERROR: failed to disable addons')
+    else:
+        err_msg = "ERROR: DNS validation failed for {}".format(dns_domain)
+        sys.exit(err_msg)
+
+
+def test_dns_domain(k8s_provisioner, cluster_dns_domain):
+    """
+    Validate DNS domain.
+    GKE-only supports cluster.local for now, so enforce that
+
+    Returns:
+        True if domain validates
+        False if domain validation fails
+    """
+    if k8s_provisioner == 'terraform' and cluster_dns_domain != 'cluster.local':
+        return False
+    if valid_cluster_domain(cluster_dns_domain):
+        return True
+
+
+def valid_cluster_domain(domain):
+    """
+    Returns True if DNS domain validates
+    """
+    return re.match('[a-z]{1,63}\.local', domain)
 
 
 def minikube_disable_addons():

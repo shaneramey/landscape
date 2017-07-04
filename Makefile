@@ -14,12 +14,12 @@ PROVISIONER := minikube
 
 GIT_BRANCH := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 
-DNS_DOMAIN := minikube.local
+DNS_DOMAIN := cluster.local
 
 # override for operations on a single namespace
 K8S_NAMESPACE := "__all_namespaces__"
 
-# `make purge` options
+# `make purge` flags
 PURGE_NAMESPACE_ITSELF := false
 DELETE_ALL_DATA := false
 
