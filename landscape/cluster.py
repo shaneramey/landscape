@@ -41,14 +41,21 @@ def apply_minikube_cluster(provisioner, dns_domain):
     minikube_status = proc.stdout.read().rstrip()
 
     if not minikube_status == 'Running':
-        k8s_provision_command = start_command_for_provisioner(provisioner, dns_domain)
-        print('  - running ' + k8s_provision_command)
-        minikube_failed = subprocess.call(k8s_provision_command, shell=True)
-        print("minikube_failed={}".format(minikube_failed))
+        start_minikube(provisioner, dns_domain)
     else:
         print('  - minikube cluster previously provisioned. Re-using ')
     minikube_disable_addons()
     hack_wide_open_security() # FIXME: create ClusterRoles
+
+
+def start_minikube(provisioner, dns_domain):
+    """
+    Starts minikube. Prints an error if non-zero exit status
+    """
+    k8s_provision_command = start_command_for_provisioner(provisioner, dns_domain)
+    print('  - running ' + k8s_provision_command)
+    minikube_failed = subprocess.call(k8s_provision_command, shell=True)
+    print("minikube_failed={}".format(minikube_failed))
 
 
 def apply_terraform_cluster(provisioner, dns_domain):
