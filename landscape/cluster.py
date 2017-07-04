@@ -18,14 +18,17 @@ def provision_cluster(provisioner, dns_domain):
 
     print("Converging cluster")
     # Start cluster
-    apply_cluster(provisioner, dns_domain)
+    if provisioner == 'minikube':
+        apply_minikube_cluster(provisioner, dns_domain)
+    if provisioner == 'terraform':
+        apply_terraform_cluster(provisioner, dns_domain)
     # Provision Helm Tiller
     apply_tiller()
 
 
-def apply_cluster(provisioner, dns_domain):
+def apply_minikube_cluster(provisioner, dns_domain):
     """
-    applies the current desired-state configuration
+    creates or converges a minikube-provisioned cluster to its desired-state
 
     Arguments:
      - provisioner: minikube or terraform
@@ -46,6 +49,22 @@ def apply_cluster(provisioner, dns_domain):
         print('  - minikube cluster previously provisioned. Re-using ')
     minikube_disable_addons()
     hack_wide_open_security() # FIXME: create ClusterRoles
+
+
+def apply_terraform_cluster(provisioner, dns_domain):
+    """
+    creates or converges a terraform-provisioned cluster to its desired-state
+
+    Arguments:
+     - provisioner: minikube or terraform
+     - dns_domain: dns domain to use for cluster
+
+    Returns: None
+    """
+    apply_terraform_cmd = DEFAULT_OPTIONS['terraform']['init_cmd_template']
+    failed_to_apply_terraform = subprocess.call(apply_terraform_cmd, shell=True)
+    if failed_to_apply_terraform:
+        print('ERROR: failed to disable addons')
 
 
 def minikube_disable_addons():
@@ -72,7 +91,6 @@ def hack_wide_open_security():
 def apply_tiller():
     """
     Checks if Tiller is already installed. If not, install it.
-    TODO: Blocks until Tiller pod is ready
     """
     helm_provision_command = 'helm init'
     print('  - running ' + helm_provision_command)
@@ -81,8 +99,6 @@ def apply_tiller():
     print('  - waiting for tiller pod to be ready')
     tiller_pod_status = 'Unknown'
     tiller_pod_status_cmd = DEFAULT_OPTIONS['helm']['monitor_tiller_cmd']
-    
-
     devnull = open(os.devnull, 'w')
     while not tiller_pod_status == "Running":
         proc = subprocess.Popen(tiller_pod_status_cmd, stdout=subprocess.PIPE, stderr=devnull, shell=True)
@@ -96,6 +112,7 @@ def start_command_for_provisioner(provisioner_name, dns_domain_name):
     generate a command to start/converge a cluster
 
     """
+    print('Using provisioner: ' + provisioner_name)
     if provisioner_name in DEFAULT_OPTIONS:
         start_cmd_template = DEFAULT_OPTIONS[provisioner_name]['init_cmd_template']
     else:

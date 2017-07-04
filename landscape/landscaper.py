@@ -80,16 +80,16 @@ def landscaper_set_environment(git_branch, k8s_namespace, helm_chart_name, helm_
 	print '      - reading Vault subtree: ' + secret_item
 
 	vault_client = hvac.Client(token=os.environ['VAULT_TOKEN'])
-	chart_secrets = vault_client.read(secret_item)
-	if chart_secrets is not None:
-		secrets_for_chart = chart_secrets['data']
-		if not secrets_for_chart:
-			print("        - no chart secrets defined in Landscaper chart yaml")
+	vault_chart_secrets = vault_client.read(secret_item)
+	
+	if vault_chart_secrets is not None:
+		secrets_for_chart = vault_chart_secrets['data']
 		for key, value in secrets_for_chart.items():
-			print("        - applying secret item: {0}".format(key))
-			print("          - setting Landscaper-compatible environment variable")
 			landscaper_env_var = key.upper()
+			print("        - setting secret {0} in environment variable {1}: {0}".format(key, landscaper_env_var))
 			os.environ[landscaper_env_var] = value
+	else:
+		print("        - no chart secrets in vault")
 
 
 def landscaper_apply_dir(chart_set_directory, namespace_directory):
@@ -106,10 +106,10 @@ def landscaper_apply_dir(chart_set_directory, namespace_directory):
 		path_to_ls_yaml = chart_directory + '/' + chart_yaml
 		ls_yaml = read_landscaper_yaml(path_to_ls_yaml)
 		chart_name = ls_yaml['name']
+		print("    - Chart: {0}".format(chart_name))
+
 		if 'secrets' in ls_yaml:
 			chart_secrets = ls_yaml['secrets']
-			print("chart_secrets={0}".format(chart_secrets))
-			print("    - Chart: {0}".format(chart_name))
 			landscaper_set_environment(current_k8s_context, namespace_directory, chart_name, chart_secrets)
 
 	ls_apply_cmd = 'landscaper apply -v --namespace=' + namespace_directory + \

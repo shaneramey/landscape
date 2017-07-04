@@ -25,7 +25,7 @@ DELETE_ALL_DATA := false
 .PHONY: environment test deploy verify report purge csr_approve
 
 deploy: environment test
-	landscape deploy
+	landscape deploy --provisioner=$(PROVISIONER)
 
 environment:
 	# landscape set-context --provisioner=minikube
