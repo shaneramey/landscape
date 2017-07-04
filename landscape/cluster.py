@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Deploy a cluster and its Helm charts"""
+"""
+Deploy a cluster and its Helm charts
+
+Terraform GKE provider: uses git branch name as index and cluster name
+
+Limitations: git branch name stored in Vault as key.
+ This means only one GKE cluster with branch name for each GCE "Project"
+
+"""
 from . import DEFAULT_OPTIONS
 
 import subprocess
@@ -13,10 +21,9 @@ def provision_cluster(provisioner, dns_domain):
     initializes a cluster
 
     Arguments:
-      provisioner: 
+      provisioner: minikube or terraform
 
     """
-
     print("Converging cluster")
     # Start cluster
     if provisioner == 'minikube':
