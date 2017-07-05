@@ -3,7 +3,7 @@
 """landscape: deploy Helm charts
 
 Usage:
-  landscape deploy [--provisioner=<provisioner] [--cluster-domain=<domain>]
+  landscape deploy [--provisioner=<provisioner] [--cluster-domain=<domain>] [--gce-project-id=<gce_project_name>]
   landscape environment
   landscape test
   landscape verify
@@ -14,6 +14,7 @@ Usage:
 Options:
   --provisioner=<provisioner>             k8s provisioner [default: minikube].
   --cluster-domain=<domain>               Domain used for inside-cluster DNS [default: cluster.local]
+  --gce-project-id=<gce_project_name>     In GCE environment, which project ID to use
   --ns=<namespace>                        deploy charts in specified namespace
   --all-namespaces                        deploy charts in all namespaces
 
@@ -35,10 +36,11 @@ from . import csr
 
 def main():
     args = docopt.docopt(__doc__)
-    k8s_provisioner = args['--provisioner']
-    cluster_domain  = args['--cluster-domain']
+    k8s_provisioner  = args['--provisioner']
+    cluster_domain   = args['--cluster-domain']
+    gce_project_name = args['--gce-project-id']
     if args['deploy']:
-        provision_cluster(provisioner=k8s_provisioner, dns_domain=cluster_domain)
+        provision_cluster(provisioner=k8s_provisioner, dns_domain=cluster_domain, project_id=gce_project_name)
         deploy_helm_charts()
 if __name__ == "__main__":
     main()

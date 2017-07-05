@@ -9,14 +9,14 @@ Limitations: git branch name stored in Vault as key.
 
 """
 from . import DEFAULT_OPTIONS
-
+from .environment import set_gce_credentials
 import subprocess
 import sys
 import time
 import os
 import re
 
-def provision_cluster(provisioner, dns_domain):
+def provision_cluster(provisioner, dns_domain, project_id):
     """
     initializes a cluster
 
@@ -24,6 +24,7 @@ def provision_cluster(provisioner, dns_domain):
       provisioner: minikube or terraform
 
     """
+    tf_templates_dir = './var/terraform'
     print("Converging cluster")
     # Start cluster
     if provisioner == 'minikube':
@@ -31,7 +32,7 @@ def provision_cluster(provisioner, dns_domain):
         apply_minikube_cluster(provisioner, dns_domain)
     if provisioner == 'terraform':
         print('Applying terraform cluster')
-        apply_terraform_cluster(provisioner, dns_domain)
+        apply_terraform_cluster(provisioner, dns_domain, project_id, tf_templates_dir)
     # Provision Helm Tiller
     apply_tiller()
 
@@ -68,7 +69,7 @@ def start_minikube(provisioner, dns_domain):
     print("minikube_failed={}".format(minikube_failed))
 
 
-def apply_terraform_cluster(provisioner, dns_domain):
+def apply_terraform_cluster(provisioner, dns_domain, project_id, template_dir):
     """
     creates or converges a terraform-provisioned cluster to its desired-state
 
@@ -81,14 +82,32 @@ def apply_terraform_cluster(provisioner, dns_domain):
     dns_check_succeeds = test_dns_domain(provisioner, dns_domain)
     if dns_check_succeeds:
         terraform_cmd_tmpl = DEFAULT_OPTIONS['terraform']['init_cmd_template']
-        terraform_cmd = terraform_cmd_tmpl.format(dns_domain)
-        print('  - running ' + apply_terraform_cmd)
-        failed_to_apply_terraform = subprocess.call(apply_terraform_cmd, shell=True)
+        terraform_cmd = terraform_cmd_tmpl.format('master', project_id)
+        print('  - running ' + terraform_cmd)
+        failed_to_apply_terraform = subprocess.call(terraform_cmd, cwd=template_dir, shell=True)
         if failed_to_apply_terraform:
             print('ERROR: failed to disable addons')
     else:
         err_msg = "ERROR: DNS validation failed for {}".format(dns_domain)
         sys.exit(err_msg)
+
+
+def vault_load_gce_creds():
+    vault_client = hvac.Client(token=os.environ['VAULT_TOKEN'])
+
+    creds_item = "/secret/terraform/{0}/{1}".format(
+                                                    git_branch,
+                                                    project_id
+                                                   )
+    creds_vault_item = vault_client.read(creds_item)
+
+    # compare landscaper secrets with vault contents
+    # exit with list of secrets set in landscaper yaml but not in vault
+    if not creds_vault_item:
+        sys.exit('ERROR: credentials not loaded from Vault')
+    else:   
+        creds = creds_vault_item['data']
+        credentials_json = creds['credentials']
 
 
 def test_dns_domain(k8s_provisioner, cluster_dns_domain):
@@ -153,6 +172,7 @@ def apply_tiller():
         time.sleep(1)
     time.sleep(2) # need to give tiller a little time to warm up
 
+
 def start_command_for_provisioner(provisioner_name, dns_domain_name):
     """
     generate a command to start/converge a cluster
@@ -170,27 +190,7 @@ def start_command_for_provisioner(provisioner_name, dns_domain_name):
         start_cmd = start_cmd_template.format(dns_domain_name)
     return start_cmd
 
-def deploy_helm_charts():
-    """Deploy a cluster"""
 
 def deploy(provisioner='minikube'):
     """Deploy a cluster"""
     print("placeholder for breaking out minikube vs terraform")
-
-
-#! /usr/bin/env bash
-
-# initializes a terraform cluster.
-# 
-#
-# Requires tfstate storage backend
-# to create:
-# export GOOGLE_APPLICATION_CREDENTIALS=downloaded-serviceaccount.json
-#terraform init  -backend-config 'bucket=something-something-1234' \
-#                -backend-config 'path=tfstate-dev-123456/master.tfstate' \
-#                -backend-config 'project=dev-123456'
-# - or possibly set (https://github.com/google/google-auth-library-ruby/issues/65#issuecomment-198532641) 
-# GOOGLE_CLIENT_ID=
-# GOOGLE_CLIENT_EMAIL=
-# GOOGLE_ACCOUNT_TYPE=
-# GOOGLE_PRIVATE_KEY= ?

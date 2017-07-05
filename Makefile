@@ -16,6 +16,7 @@ GIT_BRANCH := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 
 DNS_DOMAIN := cluster.local
 
+GCE_PROJECT_ID := please_pass_gce_project_id
 # override for operations on a single namespace
 K8S_NAMESPACE := "__all_namespaces__"
 
@@ -27,7 +28,11 @@ DELETE_ALL_DATA := false
 .PHONY: environment test deploy verify report purge csr_approve
 
 deploy: environment test
+ifeq ($(PROVISIONER),terraform)
+	landscape deploy --provisioner=$(PROVISIONER) --cluster-domain=$(DNS_DOMAIN) --gce-project-id=$(GCE_PROJECT_ID)
+else
 	landscape deploy --provisioner=$(PROVISIONER) --cluster-domain=$(DNS_DOMAIN)
+endif
 
 environment:
 	# landscape set-context --provisioner=minikube

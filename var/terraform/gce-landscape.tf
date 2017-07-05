@@ -13,11 +13,11 @@
 # For use with https://github.com/shaneramey/landscaper/, first populate Vault:
 # Step 1
 # terraform GCE credentials json pulled from ServiceAccount in GCE IAM
-# vault write /secret/terraform/master/base \
+# vault write /secret/terraform/myproject-12345/master/base \
 #   credentials=@staging-b9af628162e8.json \
 #   project=myproject-12345 \
 #   region=us-west1 \
-#   branch_name=master
+#
 #
 # Step 2
 # run:
@@ -27,6 +27,10 @@
 # run:
 # terraform apply
 #
+
+variable "gce_project_id" {
+  description = "The GCE project name to apply these resources"
+}
 
 variable "branch_name" {
   description = "The branch name. Used for Vault keys and k8s DNS domain"
@@ -51,18 +55,18 @@ provider "vault" {
 
 # credentials, GCE project, region, branch to deploy
 data "vault_generic_secret" "deploy_base" {
-  path = "secret/terraform/${var.branch_name}/base"
+  path = "secret/terraform/${var.gce_project_id}/${var.branch_name}/base"
 }
 
 # GKE-specific (network for nodes, network for pods)
 data "vault_generic_secret" "deploy_gke" {
-  path = "secret/terraform/${var.branch_name}/gke"
+  path = "secret/terraform/${var.gce_project_id}/${var.branch_name}/gke"
 }
 
 # An example of how to connect two GCE networks with a VPN
 provider "google" {
   credentials  = "${data.vault_generic_secret.deploy_base.data["credentials"]}"
-  project      = "${data.vault_generic_secret.deploy_base.data["project"]}"
+  project      = "${var.gce_project_id}"
   region       = "${data.vault_generic_secret.deploy_base.data["region"]}"
 }
 
@@ -160,11 +164,11 @@ resource "google_compute_forwarding_rule" "fr2_udp4500" {
 }
 
 data "vault_generic_secret" "gce_vpn_vpn1" {
-  path = "secret/terraform/${var.branch_name}/vpn/vpn1"
+  path = "secret/terraform/${var.gce_project_id}/${var.branch_name}/vpn/vpn1"
 }
 
 data "vault_generic_secret" "gce_vpn_vpn2" {
-  path = "secret/terraform/${var.branch_name}/vpn/vpn2"
+  path = "secret/terraform/${var.gce_project_id}/${var.branch_name}/vpn/vpn2"
 }
 
 # Each tunnel is responsible for encrypting and decrypting traffic exiting
