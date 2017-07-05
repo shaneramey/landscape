@@ -14,7 +14,7 @@ import os
 import hvac
 import yaml
 
-from utils import kubernetes_get_context
+from .utils import kubernetes_get_context
 
 def deploy_helm_charts_for_namespace(namespace):
     print(
@@ -78,7 +78,7 @@ def landscaper_set_environment(git_branch, k8s_namespace, helm_chart_name, helm_
                                                     k8s_namespace,
                                                     helm_chart_name
                                                    )
-    print '        - reading Vault subtree: ' + secret_item
+    print('        - reading Vault subtree: ' + secret_item)
 
     vault_client = hvac.Client(token=os.environ['VAULT_TOKEN'])
     vault_chart_secrets_item = vault_client.read(secret_item)
@@ -103,7 +103,7 @@ def landscaper_set_environment(git_branch, k8s_namespace, helm_chart_name, helm_
                 os.environ[landscaper_env_var] = value
         else:
             for missing_secret in vault_missing_secrets:
-                print '        - missing secret ' + missing_secret
+                print('        - missing secret ' + missing_secret)
             sys.exit(1)
 
 def helm_secret_name_to_envvar_name(keyname):

@@ -86,7 +86,7 @@ def apply_terraform_cluster(provisioner, dns_domain, project_id, template_dir):
         print('  - running ' + terraform_cmd)
         failed_to_apply_terraform = subprocess.call(terraform_cmd, cwd=template_dir, shell=True)
         if failed_to_apply_terraform:
-            print('ERROR: failed to disable addons')
+            sys.exit('ERROR: failed to apply terraform')
     else:
         err_msg = "ERROR: DNS validation failed for {}".format(dns_domain)
         sys.exit(err_msg)
