@@ -1,4 +1,3 @@
-envconsul-config.hcl
 ca-pki-init/
 *.tfstate
 *.tfstate.backup
