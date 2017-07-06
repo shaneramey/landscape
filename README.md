@@ -11,8 +11,30 @@ Note: master branch is in development. Use a release for stability.
 
 # quick start
 - clone this repo
-- (minikube) run `make`
-- (gce) run `make PROVISIONER=terraform GCE_PROJECT_ID=staging-165617`
+- start local dev-vault container
+```
+docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault
+```
+- grab secrets with feed them into local vault
+```
+export VAULT_ADDR=http://127.0.0.1:8200
+# grab an environment's secrets
+# example: master branch (production) credentials
+lpass show Shared-k8s/k8s-landscaper/master --notes
+# copy above output and paste into your terminal
+```
+- install 'landscape' python tool (this repo)
+```
+cd landscape && pip install --upgrade landscape
+```
+- (minikube) run:
+```
+make PROVISIONER=minikube
+```
+- (gce) run:
+```
+make PROVISIONER=terraform GCE_PROJECT_ID=staging-123456
+```
 
 ## Jenkins deployment
 see Jenkinsfile in repo
@@ -21,7 +43,9 @@ see Jenkinsfile in repo
  - Compare branches to compare environments
  - Sign off on production changes using GitHub approve workflow
  - Cluster's name is the branch of the repo's deployment. master=production
-
+   example: landscaper deploys to staging-123456.
+            the first cluster name in project may be master, the second dev, etc.
+            each must be a separate branch of landscaper
 ## Core Charts
  - [common-chart](https://github.com/shaneramey/common-chart)
     defines templates that can be used by all charts

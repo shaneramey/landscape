@@ -14,7 +14,7 @@ import os
 import hvac
 import yaml
 
-from .utils import kubernetes_get_context
+from .kubernetes import kubernetes_get_context
 
 def deploy_helm_charts_for_namespace(namespace):
     print(
@@ -37,15 +37,15 @@ def create_namespace_if_needed(namespace):
             sys.exit("ERROR: failed to create namespace {}".format(namespace))
 
 
-def deploy_helm_charts():
+def deploy_helm_charts(git_branch):
     minikube_environment = True
     print("Deploying Landscaper charts")
-    deploy_chart_set('charts_core')
+    deploy_chart_set('charts_core', git_branch)
     if minikube_environment:
-        deploy_chart_set('charts_minikube')
+        deploy_chart_set('charts_minikube', git_branch)
 
 
-def deploy_chart_set(chart_set_dir):
+def deploy_chart_set(chart_set_dir, git_branch):
     """
     iterates over directories in a set of charts and runs landscaper on them
 
@@ -56,7 +56,7 @@ def deploy_chart_set(chart_set_dir):
     """
     print("Deploying Chart-Set directory {}".format(chart_set_dir))
     for namespace_of_charts in os.listdir(os.getcwd() + '/' + chart_set_dir):
-        landscaper_apply_dir(chart_set_dir, namespace_of_charts)
+        landscaper_apply_dir(chart_set_dir, namespace_of_charts, git_branch)
 
 def landscaper_set_environment(git_branch, k8s_namespace, helm_chart_name, helm_chart_secrets):
     """
@@ -116,7 +116,7 @@ def helm_secret_name_to_envvar_name(keyname):
     return keyname.replace('-', '_').upper()
 
 
-def landscaper_apply_dir(chart_set_directory, namespace_directory):
+def landscaper_apply_dir(chart_set_directory, namespace_directory, git_branch_id):
     """
     Reads current branch from environment
     """
@@ -138,7 +138,7 @@ def landscaper_apply_dir(chart_set_directory, namespace_directory):
         if 'secrets' in ls_yaml:
             print("      - Setting secrets")
             chart_secrets = ls_yaml['secrets']
-            landscaper_set_environment(current_k8s_context, namespace_directory, chart_name, chart_secrets)
+            landscaper_set_environment(git_branch_id, namespace_directory, chart_name, chart_secrets)
         else:
             print("      - No secrets defined")
     ls_apply_cmd = 'landscaper apply -v --namespace=' + namespace_directory + \

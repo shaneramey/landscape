@@ -29,7 +29,8 @@ import subprocess
 from . import DEFAULT_OPTIONS
 from .cluster import provision_cluster
 from .landscaper import deploy_helm_charts
-from .utils import (git_get_branch, kubernetes_set_context)
+from .utils import git_get_branch
+from .kubernetes import kubernetes_set_context
 # from .vault import gke_get_region_for_project_name
 from . import verify
 from . import report
@@ -58,8 +59,8 @@ def main():
         print("gce_project_name={0}".format(gce_project_name))
         provision_cluster(provisioner=k8s_provisioner, dns_domain=cluster_domain, project_id=gce_project_name, git_branch=git_branch_name)
 
-        kubernetes_set_context(kube_context)
-        deploy_helm_charts()
+        kubernetes_set_context(k8s_context)
+        deploy_helm_charts(git_branch_name)
 
 
 def get_k8s_context_for_provisioner(provisioner, project_name, git_branch_name):

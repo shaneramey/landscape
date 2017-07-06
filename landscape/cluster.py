@@ -121,6 +121,7 @@ def apply_tiller():
     tiller_pod_status = 'Unknown'
     tiller_pod_status_cmd = DEFAULT_OPTIONS['helm']['monitor_tiller_cmd']
     devnull = open(os.devnull, 'w')
+    print("monitoring tiller status command: {0}".format(tiller_pod_status_cmd))
     while not tiller_pod_status == "Running":
         proc = subprocess.Popen(tiller_pod_status_cmd, stdout=subprocess.PIPE, stderr=devnull, shell=True)
         tiller_pod_status = proc.stdout.read().rstrip()
