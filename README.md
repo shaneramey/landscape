@@ -12,7 +12,7 @@ Note: master branch is in development. Use a release for stability.
 # quick start
 - clone this repo
 - (minikube) run `make`
-- (gce) run `make PROVISIONER=terraform GCE_PROJECT=myproj-123456 deploy`
+- (gce) run `make PROVISIONER=terraform GCE_PROJECT_ID=staging-165617`
 
 ## Jenkins deployment
 see Jenkinsfile in repo
@@ -20,6 +20,7 @@ see Jenkinsfile in repo
 ## Features
  - Compare branches to compare environments
  - Sign off on production changes using GitHub approve workflow
+ - Cluster's name is the branch of the repo's deployment. master=production
 
 ## Core Charts
  - [common-chart](https://github.com/shaneramey/common-chart)

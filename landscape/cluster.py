@@ -16,7 +16,7 @@ import sys
 import time
 import os
 
-def provision_cluster(provisioner, dns_domain, project_id):
+def provision_cluster(provisioner, dns_domain, project_id, git_branch):
     """
     initializes a cluster
 
@@ -32,7 +32,8 @@ def provision_cluster(provisioner, dns_domain, project_id):
         apply_minikube_cluster(provisioner, dns_domain)
     if provisioner == 'terraform':
         print('Applying terraform cluster')
-        apply_terraform_cluster(provisioner, dns_domain, project_id, tf_templates_dir)
+        print("proj_id={0}".format(project_id))
+        apply_terraform_cluster(provisioner, dns_domain, project_id, tf_templates_dir, git_branch)
     # Provision Helm Tiller
     apply_tiller()
 

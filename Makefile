@@ -20,6 +20,9 @@ GCE_PROJECT_ID := please_pass_gce_project_id
 # override for operations on a single namespace
 K8S_NAMESPACE := "__all_namespaces__"
 
+# default command to deploy the cluster.
+# intention is to append to this command, based on the provisioner
+DEPLOY_CMD := landscape deploy --provisioner=$(PROVISIONER) --cluster-domain=$(DNS_DOMAIN)
 # `make purge` flags
 PURGE_NAMESPACE_ITSELF := false
 DELETE_ALL_DATA := false
@@ -29,9 +32,9 @@ DELETE_ALL_DATA := false
 
 deploy: environment test
 ifeq ($(PROVISIONER),terraform)
-	landscape deploy --provisioner=$(PROVISIONER) --cluster-domain=$(DNS_DOMAIN) --gce-project-id=$(GCE_PROJECT_ID)
+	${DEPLOY_CMD} --gce-project-id=$(GCE_PROJECT_ID)
 else
-	landscape deploy --provisioner=$(PROVISIONER) --cluster-domain=$(DNS_DOMAIN)
+	${DEPLOY_CMD}
 endif
 
 environment:

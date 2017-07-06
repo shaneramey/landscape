@@ -32,8 +32,8 @@ variable "gce_project_id" {
   description = "The GCE project name to apply these resources"
 }
 
-variable "branch_name" {
-  description = "The branch name. Used for Vault keys and k8s DNS domain"
+variable "gke_cluster1_name" {
+  description = "The first GKE cluster's name"
 }
 
 terraform {
@@ -227,7 +227,7 @@ resource "google_compute_route" "route2" {
 }
 
 resource "google_container_cluster" "cluster1" {
-  name               = "${var.branch_name}"
+  name               = "${var.gke_cluster1_name}"
   network            = "${google_compute_network.networkA.name}"
   subnetwork         = "${google_compute_subnetwork.gke_cluster1.name}"
   cluster_ipv4_cidr  = "${data.vault_generic_secret.deploy_gke.data["gke_cluster1_pod_ipv4_cidr"]}"
@@ -254,5 +254,5 @@ resource "google_container_cluster" "cluster1" {
 }
 
 output "get-credentials-command" {
-  value = "echo KUBECONFIG=$HOME/.kube/config-${var.gce_project_id} GOOGLE_CREDENTIALS='${data.vault_generic_secret.deploy_base.data["credentials"]}' gcloud --project=${data.vault_generic_secret.deploy_base.data["project"]} container clusters get-credentials ${var.branch_name} --zone=${data.vault_generic_secret.deploy_base.data["region"]}"
+  value = "echo KUBECONFIG=$HOME/.kube/config-${var.gce_project_id} GOOGLE_CREDENTIALS='${data.vault_generic_secret.deploy_base.data["credentials"]}' gcloud --project=${data.vault_generic_secret.deploy_base.data["project"]} container clusters get-credentials ${var.gke_cluster1_name} --zone=${data.vault_generic_secret.deploy_base.data["region"]}"
 }
