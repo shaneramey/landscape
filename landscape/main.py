@@ -47,6 +47,8 @@ def main():
     args = docopt.docopt(__doc__)
     k8s_provisioner  = args['--provisioner']
     gce_project_name = args['--gce-project-id']
+    # not useful for gke deployments; it's always cluster.local there
+    cluster_domain   = args['--cluster-domain']
 
     # gets branch of current working directory
     git_branch_name = git_get_branch()

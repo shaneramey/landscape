@@ -10,11 +10,11 @@ Limitations: git branch name stored in Vault as key.
 """
 from . import DEFAULT_OPTIONS
 from .environment import set_gce_credentials
+from .terraform import apply_terraform_cluster
 import subprocess
 import sys
 import time
 import os
-import re
 
 def provision_cluster(provisioner, dns_domain, project_id):
     """
@@ -69,29 +69,6 @@ def start_minikube(provisioner, dns_domain):
     print("minikube_failed={}".format(minikube_failed))
 
 
-def apply_terraform_cluster(provisioner, dns_domain, project_id, template_dir):
-    """
-    creates or converges a terraform-provisioned cluster to its desired-state
-
-    Arguments:
-     - provisioner: minikube or terraform
-     - dns_domain: dns domain to use for cluster
-                   In GKE environment, must be cluster.local
-    Returns: None
-    """
-    dns_check_succeeds = test_dns_domain(provisioner, dns_domain)
-    if dns_check_succeeds:
-        terraform_cmd_tmpl = DEFAULT_OPTIONS['terraform']['init_cmd_template']
-        terraform_cmd = terraform_cmd_tmpl.format('master', project_id)
-        print('  - running ' + terraform_cmd)
-        failed_to_apply_terraform = subprocess.call(terraform_cmd, cwd=template_dir, shell=True)
-        if failed_to_apply_terraform:
-            sys.exit('ERROR: failed to apply terraform')
-    else:
-        err_msg = "ERROR: DNS validation failed for {}".format(dns_domain)
-        sys.exit(err_msg)
-
-
 def vault_load_gce_creds():
     vault_client = hvac.Client(token=os.environ['VAULT_TOKEN'])
 
@@ -108,28 +85,6 @@ def vault_load_gce_creds():
     else:   
         creds = creds_vault_item['data']
         credentials_json = creds['credentials']
-
-
-def test_dns_domain(k8s_provisioner, cluster_dns_domain):
-    """
-    Validate DNS domain.
-    GKE-only supports cluster.local for now, so enforce that
-
-    Returns:
-        True if domain validates
-        False if domain validation fails
-    """
-    if k8s_provisioner == 'terraform' and cluster_dns_domain != 'cluster.local':
-        return False
-    if valid_cluster_domain(cluster_dns_domain):
-        return True
-
-
-def valid_cluster_domain(domain):
-    """
-    Returns True if DNS domain validates
-    """
-    return re.match('[a-z]{1,63}\.local', domain)
 
 
 def minikube_disable_addons():
