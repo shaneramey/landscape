@@ -1,0 +1,12 @@
+name: jenkins
+release:
+  chart: charts.downup.us/jenkins:0.6.269
+  version: 0.6.269
+configuration:
+  clusterDomain: cluster.local
+secrets:
+ - jenkins-admin-user
+ - jenkins-admin-password
+ - jenkins-github-access-token
+ - jenkins-vault-user
+ - jenkins-vault-password

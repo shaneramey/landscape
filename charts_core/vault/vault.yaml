@@ -1,0 +1,7 @@
+name: vault
+release:
+  chart: charts.downup.us/vault:0.1.120
+  version: 0.1.120
+configuration:
+  clusterDomain: cluster.local
+  directorySuffix: dc=cluster,dc=local
