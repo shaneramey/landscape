@@ -15,6 +15,7 @@ Usage:
       [--switch-to-cluster-context=<boolean>]
   landscape charts converge --context=<context_name>
       [--namespace=<namespace>] [--chart=<chart_name>]
+  landscape tools install
 
 Options:
   --context=<context_name>                     Operate on context, defined in Vault
@@ -45,6 +46,7 @@ from .charts import HelmChartSet
 from .client import kubectl_use_context
 from .kubernetes import kubernetes_get_context
 from .vault import (read_kubeconfig, write_kubeconfig)
+from .tools import install_tools
 
 def main():
     # branch is used to pull secrets from Vault, and to distinguish clusters
@@ -72,6 +74,7 @@ def main():
                 driver = args['--minikube-driver']
                 cluster_dns_domain = args['--cluster-dns-domain']
                 cluster = MinikubeCluster(k8s_version, driver, cluster_dns_domain)
+                cluster.converge()
             elif provisioner == 'terraform':
                 gce_project_id = args['--gce-project-id']
                 tf_templates_dir = args['--tf-templates-dir']
@@ -83,9 +86,8 @@ def main():
                 # switch local kubectl to use cluster context
                 if args['--switch-to-cluster-context'] == 'true':
                     kubectl_use_context(cluster.kubeconfig_context_name)
-
     # landscape charts
-    if args['charts']:
+    elif args['charts']:
         if args['--namespace'] is not None:
             namespaces = args['--namespace'].split(',')
         else:
@@ -94,10 +96,12 @@ def main():
         kubecontext = args['--context']
         if not kubecontext:
             kubecontext = kubernetes_get_context()
-        print("kubecontext={0}".format(kubecontext))
+        print("Using Kubernetes context {0}".format(kubecontext))
         chart_set = HelmChartSet('.', kubecontext, namespaces)
         chart_set.converge()
-
+    # landscape charts
+    elif args['tools'] and args['install']:
+        install_tools()
 
 if __name__ == "__main__":
     main()
