@@ -31,7 +31,7 @@ export VAULT_TOKEN=$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 
 4. Put the secrets from LastPass into your local Vault
 Copy and paste the output from this command:
 ```
-lpass show k8s-landscaper/master --notes
+lpass show Shared-k8s/k8s-landscaper/master --notes
 ```
 
 5. run `make`
