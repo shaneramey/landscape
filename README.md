@@ -7,14 +7,16 @@ deploy k8s clusters + apps to:
 Apps are deployed via Helm Charts, with secrets kept in Vault until deployment
 
 ## Getting started
-1. clone this repo
-2. install `landscape wrapper tool
+1. install landscape wrapper tool included in this repo
 ```
 python3 -m venv ~/venv && \
 source ~/venv/bin/activate && \
-pip install git+git://github.com/oreillymedia/landscape.git
+pip install git+ssh://git@github.com/oreillymedia/landscape.git
 
 ```
+
+2. clone this repo
+
 3. run `make`
 
 ## Prerequisites
