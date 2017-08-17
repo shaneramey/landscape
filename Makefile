@@ -41,14 +41,16 @@ ifneq ($(HELM_CHART_INSTALL),__all_charts__)
 endif
 
 # Jenkinsfile stages, plus other targets
-.PHONY: init deploy
-
-init:
-	helm init --client-only
-	helm repo add charts.downup.us http://charts.downup.us
-	helm repo update
+.PHONY: deploy init 
 
 deploy: init
 	$(DEPLOY_CLUSTER_CMD)
 	helm repo update
 	$(DEPLOY_CHARTS_CMD)
+
+init:
+	landscape tools install
+	helm init --client-only
+	helm repo add charts.downup.us http://charts.downup.us
+	helm repo update
+

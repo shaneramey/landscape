@@ -12,18 +12,19 @@ class MinikubeCluster():
         return 'minikube'
 
 
-    def converge(self):
-        self.start_cluster()
-        self.post_cluster_init_actions()
-
-
     def __init__(self, kubernetes_version, minikube_driver, dns_domain):
         self.kubernetes_version = kubernetes_version
         self.minikube_driver = minikube_driver
         self.dns_domain = dns_domain
-        print("kubernetes_version={0}".format(kubernetes_version))
-        print("minikube_driver={0}".format(minikube_driver))
-        print("dns_domain={0}".format(dns_domain))
+        print("Creating minikube cluster")
+        print(" - Kubernetes Version={0}".format(kubernetes_version))
+        print(" - Minikube Driver={0}".format(minikube_driver))
+        print(" - Cluster DNS Domain={0}".format(dns_domain))
+
+
+    def converge(self):
+        self.start_cluster()
+        self.post_cluster_init_actions()
 
 
     def start_cluster(self):

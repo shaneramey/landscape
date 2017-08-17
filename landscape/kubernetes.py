@@ -26,7 +26,6 @@ def kubectl_use_context(context):
 
 
 def provisioner_from_context_name(context):
-    print("context={0}".format(context))
     if context == 'minikube':
         return 'minikube'
     elif context.startswith('gke_'):

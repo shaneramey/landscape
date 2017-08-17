@@ -1,8 +1,12 @@
-# landscape: portable Kubernetes datacenter configuration
-deploy k8s clusters + apps to:
+# landscape: portable Kubernetes configuration
+
+## Features
+Deploy k8s clusters + apps (Helm Charts) to:
 - minikube
 - GKE
 - Any other Kubernetes cluster to which you have credentials
+
+It does this in a portable way, by abstracting cluster provisioning, and centralizing secrets in Vault
 
 Apps are deployed via Helm Charts, with secrets kept in Vault until deployment
 
@@ -17,31 +21,48 @@ pip install git+ssh://git@github.com/oreillymedia/landscape.git
 
 2. clone this repo
 
-3. run `make`
+3. start a local dev-vault server and update your environment variables, to point to it:
+```
+docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault
+export VAULT_ADDR=http://127.0.0.1:8200
+export VAULT_TOKEN=$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $3 }')
+```
+
+4. Put the secrets from LastPass into your local Vault
+Copy and paste the output from this command:
+```
+lpass show k8s-landscaper/master --notes
+```
+
+5. run `make`
+
+## Once cluster is up
+- Verify that the cluster is running by issuing the command:
+```
+kubectl version --context=minikube
+```
+
+- generate OpenVPN profile to connect to the cluster
+```
+helm status openvpn-openvpn | grep -v '^.*#' | sed -e '1,/generate_openvpn_profile:/d'
+```
+
+Copy and paste the output into a shell to generate a Viscosity profile setup
+
+Navigate to the directory you ran the command from, and double-click the .ovpn file to import it
 
 ## Prerequisites
 Should be installed automatically, if missing
+- kubectl
+- vault
 - helm
 - vault
 - minikube
 - landscaper
-- google cloud tools
+
+You may also want to download the [Google Cloud SDK](https://cloud.google.com/sdk/)
 
 ## Credentials
-
-Terraform Credentials needed (envvars):
-
- GOOGLE_CREDENTIALS (json): Authenticate with GCS for Terraform state storage.
- 	- automatically pulled from Hashicorp Vault /secrets/terraform/$(GCE_PROJECT_ID)
-
- VAULT_ADDR: URL of the Vault server
- 	- must be set in environment or specified on command line
-
- VAULT_CACERT: TLS CA cert to verify Vault server cert against
- 	- must be set in environment or specified on command line
-
- VAULT_TOKEN: Authentication token to Vault
- 	- added via vault auth -method=ldap username=admin
 
 populating a base Vault secret-set in the future will be done with `landscape environment --read-lastpass`
 
