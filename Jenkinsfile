@@ -7,7 +7,7 @@
 def getVaultAddr() {
     // in-cluster default vault server address; can be overridden below
     def vault_address = 'https://http.vault.svc.cluster.local:8200'
-    environment_configured_vault_addr = System.getenv("VAULT_ADDR")
+    environment_configured_vault_addr = "${env.VAULT_ADDR}"
     if(environment_configured_vault_addr) {
         vault_address = environment_configured_vault_addr
     }
@@ -17,7 +17,7 @@ def getVaultAddr() {
 def getVaultCacert() {
     // in-cluster default vault ca certificate; can be overridden below
     def vault_cacertificate = '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
-    environment_configured_vault_cacert = System.getenv("VAULT_CACERT")
+    environment_configured_vault_cacert = "${env.VAULT_CACERT}"
     if(environment_configured_vault_cacert) {
         vault_cacertificate = environment_configured_vault_cacert
     }
