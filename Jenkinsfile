@@ -31,13 +31,13 @@ def getVaultToken() {
         def vault_addr = getVaultAddr()
         def vault_cacert = getVaultCacert()
         println("Attempting auth with parameters:")
-        println(" - username: $VAULT_USER")
         println(" - VAULT_ADDR: " + vault_addr)
         println(" - VAULT_CACERT: " + vault_cacert)
 
         def token_auth_cmd = ['sh', '-c', "VAULT_ADDR=${vault_addr} VAULT_CACERT=${vault_cacert} vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"]
-        sout = token_auth_cmd.execute().text.split("\n")[3].split(" ")[1].toString()
-        return sout
+        sout = token_auth_cmd.execute().text
+        auth_token = sout.split("\n")[3].split(" ")[1].toString()
+        return auth_token
     }
 }
  
