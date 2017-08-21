@@ -3,11 +3,11 @@
 // - context parameter on master
 // - kubeconfig on docker-jnlp-slave
 
-def getVaultCacert() {
+def getDefaultVaultCacert() {
     return '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
 }
 
-def getVaultAddr() {
+def getDefaultVaultAddr() {
     return 'https://http.vault.svc.cluster.local:8200'
 }
 
@@ -16,8 +16,10 @@ def getVaultToken() {
                       credentialsId: 'vault',
                       usernameVariable: 'VAULT_USER',
                       passwordVariable: 'VAULT_PASSWORD']]) {
-        def vault_addr = getVaultAddr()
-        def vault_cacert = getVaultCacert()
+        def vault_addr = params.vault_address
+        def vault_cacert = params.vault_cacertificate
+        println("vault_addr: " + vault_addr)
+        println("vault_cacert: " + vault_cacert)
 
         def token_auth_cmd = ['sh', '-c', "VAULT_ADDR=${vault_addr} VAULT_CACERT=${vault_cacert} vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"]
         sout = token_auth_cmd.execute().text.split("\n")[3].split(" ")[1].toString()
@@ -29,8 +31,8 @@ def getTargets() {
 // gets provisioner targets from Vault 
 // returns a list used for dynamic Jenkinsfile parameters
     def vaultVars = []
-    vaultVars.add('VAULT_ADDR=' +  getVaultAddr())
-    vaultVars.add('VAULT_CACERT=' + getVaultCacert())
+    vaultVars.add('VAULT_ADDR=' +  params.vault_address)
+    vaultVars.add('VAULT_CACERT=' + params.vault_cacertificate)
     vaultVars.add('VAULT_TOKEN=' + getVaultToken())
     targets_list_cmd = "landscape cluster list"
     println("Running command: " + targets_list_cmd)
@@ -59,7 +61,11 @@ def executeOrReportErrors(command_string, env_vars=[], working_dir='/') {
     return cmd_stdout
 }
 
-properties([parameters([choice(choices: getTargets(), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')])])
+properties([parameters([
+    string(name: vault_address, description: 'Vault URL', defaultValue: getDefaultVaultAddr()),
+    string(name: vault_cacertificate, description: 'Vault CA cert path on filesystem', defaultValue: getDefaultVaultCacert()),
+    choice(choices: getTargets(), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')
+])])
 
 
 node('landscape') {
