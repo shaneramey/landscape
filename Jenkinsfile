@@ -36,6 +36,7 @@ def getVaultToken() {
 
         def token_auth_cmd = ['sh', '-c', "VAULT_ADDR=${vault_addr} VAULT_CACERT=${vault_cacert} vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"]
         sout = token_auth_cmd.execute().text
+        println("sout: " + sout)
         auth_token = sout.split("\n")[3].split(" ")[1].toString()
         return auth_token
     }
