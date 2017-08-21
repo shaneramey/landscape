@@ -33,7 +33,7 @@ def getVaultToken() {
         println("Attempting auth with parameters:")
         println(" - VAULT_ADDR: " + vault_addr)
         println(" - VAULT_CACERT: " + vault_cacert)
-
+        println(" - PATH: ${env.PATH}")
         def token_auth_cmd = ['sh', '-c', "VAULT_ADDR=${vault_addr} VAULT_CACERT=${vault_cacert} vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"]
         sout = token_auth_cmd.execute().text
         println("sout: " + sout)
