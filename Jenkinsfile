@@ -4,11 +4,21 @@
 // - kubeconfig on docker-jnlp-slave
 
 def getVaultCacert() {
-    return '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+    environment_configured_vault_cacert = System.getenv("VAULT_CACERT")
+    if(environment_configured_vault_cacert) {
+        return environment_configured_vault_cacert
+    } else {
+        return '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+    }
 }
 
 def getVaultAddr() {
-    return 'https://http.vault.svc.cluster.local:8200'
+    environment_configured_vault_addr = System.getenv("VAULT_ADDR")
+    if(environment_configured_vault_addr) {
+        return environment_configured_vault_addr
+    } else {
+        return 'https://http.vault.svc.cluster.local:8200'
+    }
 }
 
 def getVaultToken() {
