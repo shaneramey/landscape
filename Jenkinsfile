@@ -4,6 +4,7 @@
 //  - VAULT_CACERT: CA cert that signed TLS cert on Vault server
 //  if those are not set, fall back to in-cluster defaults
 
+
 def getVaultAddr() {
     // in-cluster default vault server address; can be overridden below
     def vault_address = 'https://http.vault.svc.cluster.local:8200'
