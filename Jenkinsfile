@@ -28,16 +28,14 @@ def getVaultToken() {
                       credentialsId: 'vault',
                       usernameVariable: 'VAULT_USER',
                       passwordVariable: 'VAULT_PASSWORD']]) {
-        withEnv(['PATH=/usr/local/bin:/usr/bin']) {
-            def vault_addr = getVaultAddr()
-            def vault_cacert = getVaultCacert()
-            def token_auth_cmd = ['sh', '-c', "VAULT_ADDR=${vault_addr} VAULT_CACERT=${vault_cacert} /usr/local/bin/vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"]
-            println("Attempting auth with command: " + token_auth_cmd)
-            sout = executeOrReportErrors(token_auth_cmd)
-            println("command output: " + sout)
-            auth_token = sout.split("\n")[3].split(" ")[1].toString()
-            return auth_token
-        }
+        def vault_addr = getVaultAddr()
+        def vault_cacert = getVaultCacert()
+        def token_auth_cmd = ['sh', '-c', "PATH=/usr/bin VAULT_ADDR=${vault_addr} VAULT_CACERT=${vault_cacert} /usr/local/bin/vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"]
+        println("Attempting auth with command: " + token_auth_cmd)
+        sout = executeOrReportErrors(token_auth_cmd)
+        println("command output: " + sout)
+        auth_token = sout.split("\n")[3].split(" ")[1].toString()
+        return auth_token
     }
 }
  
