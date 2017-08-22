@@ -99,7 +99,7 @@ class TerraformCluster():
 
     def start_cluster(self):
         """
-        Checks if a minikube cluster is already running
+        Checks if a terraform cluster is already running
         Initializes it if not yet running
 
         Returns:
