@@ -30,7 +30,7 @@ def getVaultToken() {
                       passwordVariable: 'VAULT_PASSWORD']]) {
         def vault_addr = getVaultAddr()
         def vault_cacert = getVaultCacert()
-        def token_auth_cmd = ['sh', '-c', "VAULT_ADDR=${vault_addr} VAULT_CACERT=${vault_cacert} /usr/local/bin/vault auth -method=ldap username=$VAULT_USER password=$VAULT_PASSWORD"]
+        def token_auth_cmd = ['sh', '-c', "echo $PATH"]
         println("Attempting auth with command: " + token_auth_cmd)
         sout = executeOrReportErrors(token_auth_cmd)
         println("command output: " + sout)
