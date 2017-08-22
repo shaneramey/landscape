@@ -30,7 +30,7 @@ def getVaultToken() {
                       passwordVariable: 'VAULT_PASSWORD']]) {
         def vault_addr = getVaultAddr()
         def vault_cacert = getVaultCacert()
-        def token_auth_cmd = ['sh', '-c', "echo $PATH"]
+        def token_auth_cmd = ['sh', '-c', "echo ${env.PATH}"]
         println("Attempting auth with command: " + token_auth_cmd)
         sout = executeOrReportErrors(token_auth_cmd)
         println("command output: " + sout)
