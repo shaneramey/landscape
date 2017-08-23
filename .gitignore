@@ -1,3 +1,5 @@
+.cache/
+__pycache__/
 ca-pki-init/
 *.tfstate
 *.tfstate.backup

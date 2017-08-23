@@ -4,15 +4,17 @@
 landscape: Provisions Kubernetes clusters and Helm charts, with secrets in Hashicorp Vault
 
 Usage:
-  landscape cluster list
-  landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
-  landscape cluster (create|converge) --context=<cluster_name> 
+  landscape cloud list [--provisioner=<cloud_provisioner>]
+  landscape cloud converge [--project=<cloud_project>]
+  landscape cluster list [--provisioner=<cloud_provisioner>]
+  landscape cluster converge --context=<cluster_name> 
       [--provisioner=<provisioner>]
       [--gce-project-id=<gce_project_id>] [--minikube-driver=<driver>]
       [--kubernetes-version=<k8s_version>] [--cluster-dns-domain=<dns_domain>]
       [--landscaper-git-branch=<git_branch>]
       [--tf-templates-dir=<tf_templates_dir> ] [--debug]
       [--switch-to-cluster-context=<boolean>]
+  landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
   landscape charts converge --context=<context_name>
       [--namespace=<namespace>] [--chart=<chart_name>]
   landscape tools install
@@ -22,10 +24,9 @@ Options:
   --write-kubeconfig                           Write ~/.kube/config with contents from Vault
   --read-kubeconfig                           Read ~/.kube/config and put its contents in Vault
   --kubeconfig-file=<kubecfg>                  Specify path to KUBECONFIG [default: ~/.kube/config-landscaper].
-  --provisioner=<provisioner>                  k8s provisioner [default: minikube].
-  --gce-project-id=<gce_project_id>            in GCE environment, which project ID to use
+  --provisioner=<cloud_provisioner>            k8s cloud provisioner.
+  --project=<gce_project_id>                   in GCE environment, which project ID to use. [default: minikube].
   --kubernetes-version=<k8s_version>           in GCE environment, which project ID to use [default: 1.7.0].
-  --kubernetes-domain=<gce_project_id>         in GCE environment, which project ID to use
   --cluster-dns-domain=<dns_domain>            DNS domain used for inside-cluster DNS [default: cluster.local].
   --minikube-driver=<driver>                   (minikube only) driver type (virtualbox|xhyve) [default: virtualbox].
   --switch-to-cluster-context=<boolean>        switch to kubernetes context after cluster converges [default: true].
@@ -39,6 +40,7 @@ Provisioner can be one of minikube, terraform.
 import docopt
 import os
 
+from .cloud import CloudCollection
 from .cluster import LandscapeCluster
 from .minikube import MinikubeCluster
 from .terraform import TerraformCluster
@@ -49,10 +51,13 @@ from .vault import (read_kubeconfig, write_kubeconfig)
 from .tools import install_tools
 
 def main():
+    clouds = CloudCollection()
     # branch is used to pull secrets from Vault, and to distinguish clusters
     args = docopt.docopt(__doc__)
     provisioner = args['--provisioner']
-    if args['cluster']:
+    if args['cloud']:
+        print(clouds.list(provisioner))
+    elif args['cluster']:
         context_in_vault = args['--context']
         # landscape cluster list
         if args['list']:

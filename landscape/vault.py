@@ -261,12 +261,13 @@ class VaultClient(object):
                                     verify=vault_cacert)
 
 
-    def dump_vault_from_prefix(self, path_prefix):
+    def dump_vault_from_prefix(self, path_prefix, strip_root_key=False):
         """
         Dump Vault data at prefix into dict
 
         Arguments:
          - path_prefix (str): The prefix which to dump
+         - strip_root_key (bool): Strip the root key from return value
 
         Returns: data from Vault at prefix (dict)
         """
@@ -283,6 +284,9 @@ class VaultClient(object):
                 prefixed_key = path_prefix + '/' + subkey
                 all_values_at_prefix[prefix_keyname].update(self.dump_vault_from_prefix(prefixed_key))
         else:
-            print(self.__vault_client.read(path_prefix)['data'])
             all_values_at_prefix[prefix_keyname].update(self.__vault_client.read(path_prefix)['data'])
-        return all_values_at_prefix
+        if strip_root_key == True:
+            retval = all_values_at_prefix[prefix_keyname]
+        else:
+            retval = all_values_at_prefix
+        return retval
