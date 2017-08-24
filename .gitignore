@@ -1,4 +1,7 @@
+.cache/
+__pycache__/
 ca-pki-init/
+.terraform/
 *.tfstate
 *.tfstate.backup
 ve/

@@ -76,6 +76,12 @@ Until then, `vault write` statements are shared in the LastPass folder "Shared-k
 
 /secret/landscape/$(GIT_BRANCH): Helm secrets, deployed via Landscaper
 
+## Secrets set up
+
+### minikube secrets
+
+### terraform secrets (for GCE/GKE)
+
 ## Troubleshooting
 
 - Error messages

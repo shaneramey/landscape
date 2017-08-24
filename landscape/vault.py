@@ -249,3 +249,44 @@ def read_kubeconfig(cfg_path):
         print("client_auth_key={0}".format(client_auth_key))
 
     raise "read_kubeconfig not implemented"
+
+
+class VaultClient(object):
+    def __init__(self):
+        vault_addr = os.environ.get('VAULT_ADDR')
+        vault_cacert = os.environ.get('VAULT_CACERT')
+        vault_token = os.environ.get('VAULT_TOKEN')
+        self.__vault_client = hvac.Client(url=vault_addr,
+                                    token=vault_token,
+                                    verify=vault_cacert)
+
+
+    def dump_vault_from_prefix(self, path_prefix, strip_root_key=False):
+        """
+        Dump Vault data at prefix into dict
+
+        Arguments:
+         - path_prefix (str): The prefix which to dump
+         - strip_root_key (bool): Strip the root key from return value
+
+        Returns: data from Vault at prefix (dict)
+        """
+        all_values_at_prefix = {}
+        subkeys_at_prefix = self.__vault_client.list(path_prefix)
+
+        # use last vault key (delimited by '/') as dict index
+        prefix_keyname = path_prefix.split('/')[-1]
+        if not prefix_keyname in all_values_at_prefix:
+            all_values_at_prefix[prefix_keyname] = {}
+
+        if subkeys_at_prefix:
+            for subkey in subkeys_at_prefix['data']['keys']:
+                prefixed_key = path_prefix + '/' + subkey
+                all_values_at_prefix[prefix_keyname].update(self.dump_vault_from_prefix(prefixed_key))
+        else:
+            all_values_at_prefix[prefix_keyname].update(self.__vault_client.read(path_prefix)['data'])
+        if strip_root_key == True:
+            retval = all_values_at_prefix[prefix_keyname]
+        else:
+            retval = all_values_at_prefix
+        return retval
