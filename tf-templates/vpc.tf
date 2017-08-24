@@ -63,24 +63,18 @@ provider "vault" {
   #  - TERRAFORM_VAULT_MAX_TTL
 }
 
-# GCE auth information:
+# GCE secrets:
 # - credentials
-# - project
 # - region
-data "vault_generic_secret" "deploy_base" {
-  path = "secret/terraform/${var.gce_project_id}/auth"
-}
-
-# GKE-specific (network for nodes, network for pods)
-data "vault_generic_secret" "deploy_gke" {
-  path = "secret/terraform/${var.gce_project_id}/gke/master"
+data "vault_generic_secret" "gce_project_secrets" {
+  path = "secret/landscape/clouds/${var.gce_project_id}"
 }
 
 # An example of how to connect two GCE networks with a VPN
 provider "google" {
   project      = "${var.gce_project_id}"
-  region       = "${data.vault_generic_secret.deploy_base.data["region"]}"
-  credentials  = "${data.vault_generic_secret.deploy_base.data["credentials"]}"
+  region       = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
+  credentials  = "${data.vault_generic_secret.gce_project_secrets.data["google_credentials"]}"
 }
 
 # Create the two networks we want to join. They must have separate, internal
@@ -92,7 +86,7 @@ resource "google_compute_network" "networkA" {
 
 resource "google_compute_subnetwork" "gke_cluster1" {
   name       = "gke-master"
-  ip_cidr_range = "${data.vault_generic_secret.deploy_gke.data["gke_network1_ipv4_cidr"]}"
+  ip_cidr_range = "${data.vault_generic_secret.gce_project_secrets.data["gke_network1_ipv4_cidr"]}"
   network = "${google_compute_network.networkA.self_link}"
 }
 
@@ -100,31 +94,31 @@ resource "google_compute_subnetwork" "gke_cluster1" {
 resource "google_compute_vpn_gateway" "target_gateway1" {
   name    = "vpn1"
   network = "${google_compute_network.networkA.self_link}"
-  region  = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region  = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
 }
 
 resource "google_compute_vpn_gateway" "target_gateway2" {
   name    = "vpn2"
   network = "${google_compute_network.networkA.self_link}"
-  region  = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region  = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
 }
 
 # Create an outward facing static IP for each VPN that will be used by the
 # other VPN to connect.
 resource "google_compute_address" "vpn_static_ip1" {
   name   = "vpn-static-ip1"
-  region = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
 }
 
 resource "google_compute_address" "vpn_static_ip2" {
   name   = "vpn-static-ip2"
-  region = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
 }
 
 # Forward IPSec traffic coming into our static IP to our VPN gateway.
 resource "google_compute_forwarding_rule" "fr1_esp" {
   name        = "fr1-esp"
-  region      = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region      = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
   ip_protocol = "ESP"
   ip_address  = "${google_compute_address.vpn_static_ip1.address}"
   target      = "${google_compute_vpn_gateway.target_gateway1.self_link}"
@@ -132,7 +126,7 @@ resource "google_compute_forwarding_rule" "fr1_esp" {
 
 resource "google_compute_forwarding_rule" "fr2_esp" {
   name        = "fr2-esp"
-  region      = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region      = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
   ip_protocol = "ESP"
   ip_address  = "${google_compute_address.vpn_static_ip2.address}"
   target      = "${google_compute_vpn_gateway.target_gateway2.self_link}"
@@ -142,7 +136,7 @@ resource "google_compute_forwarding_rule" "fr2_esp" {
 # protocol
 resource "google_compute_forwarding_rule" "fr1_udp500" {
   name        = "fr1-udp500"
-  region      = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region      = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
   ip_protocol = "UDP"
   port_range  = "500"
   ip_address  = "${google_compute_address.vpn_static_ip1.address}"
@@ -151,7 +145,7 @@ resource "google_compute_forwarding_rule" "fr1_udp500" {
 
 resource "google_compute_forwarding_rule" "fr2_udp500" {
   name        = "fr2-udp500"
-  region      = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region      = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
   ip_protocol = "UDP"
   port_range  = "500"
   ip_address  = "${google_compute_address.vpn_static_ip2.address}"
@@ -160,7 +154,7 @@ resource "google_compute_forwarding_rule" "fr2_udp500" {
 
 resource "google_compute_forwarding_rule" "fr1_udp4500" {
   name        = "fr1-udp4500"
-  region      = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region      = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
   ip_protocol = "UDP"
   port_range  = "4500"
   ip_address  = "${google_compute_address.vpn_static_ip1.address}"
@@ -169,31 +163,23 @@ resource "google_compute_forwarding_rule" "fr1_udp4500" {
 
 resource "google_compute_forwarding_rule" "fr2_udp4500" {
   name        = "fr2-udp4500"
-  region      = "${data.vault_generic_secret.deploy_base.data["region"]}"
+  region      = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
   ip_protocol = "UDP"
   port_range  = "4500"
   ip_address  = "${google_compute_address.vpn_static_ip2.address}"
   target      = "${google_compute_vpn_gateway.target_gateway2.self_link}"
 }
 
-data "vault_generic_secret" "gce_vpn_vpn1" {
-  path = "secret/terraform/${var.gce_project_id}/vpn/vpn1"
-}
-
-data "vault_generic_secret" "gce_vpn_vpn2" {
-  path = "secret/terraform/${var.gce_project_id}/vpn/vpn2"
-}
-
 # Each tunnel is responsible for encrypting and decrypting traffic exiting
 # and leaving its associated gateway
 resource "google_compute_vpn_tunnel" "tunnel1" {
   name               = "tunnel1"
-  region             = "${data.vault_generic_secret.deploy_base.data["region"]}"
-  peer_ip            = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_remote_ip"]}"
-  shared_secret      = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_secret_key"]}"
+  region             = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
+  peer_ip            = "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn1_ipsec_remote_ip"]}"
+  shared_secret      = "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn1_ipsec_secret_key"]}"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway1.self_link}"
   local_traffic_selector  = ["${google_compute_subnetwork.gke_cluster1.ip_cidr_range}", "${google_container_cluster.cluster1.cluster_ipv4_cidr}"]
-  remote_traffic_selector = ["${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_tunneled_net1"]}"]
+  remote_traffic_selector = ["${data.vault_generic_secret.gce_project_secrets.data["gce_vpn1_ipsec_tunneled_net1"]}"]
   ike_version        = "1"
 
   depends_on = ["google_compute_forwarding_rule.fr1_udp500",
@@ -204,12 +190,12 @@ resource "google_compute_vpn_tunnel" "tunnel1" {
 
 resource "google_compute_vpn_tunnel" "tunnel2" {
   name               = "tunnel2"
-  region             = "${data.vault_generic_secret.deploy_base.data["region"]}"
-  peer_ip            = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_remote_ip"]}"
-  shared_secret      = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_secret_key"]}"
+  region             = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
+  peer_ip            = "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn2_ipsec_remote_ip"]}"
+  shared_secret      = "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn2_ipsec_secret_key"]}"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway2.self_link}"
   local_traffic_selector  = ["${google_compute_subnetwork.gke_cluster1.ip_cidr_range}", "${google_container_cluster.cluster1.cluster_ipv4_cidr}"]
-  remote_traffic_selector = ["${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_tunneled_net1"]}"]
+  remote_traffic_selector = ["${data.vault_generic_secret.gce_project_secrets.data["gce_vpn2_ipsec_tunneled_net1"]}"]
   ike_version        = "1"
 
   depends_on = ["google_compute_forwarding_rule.fr2_udp500",
@@ -224,7 +210,7 @@ resource "google_compute_route" "route1" {
   name                = "route1"
   network             = "${google_compute_network.networkA.name}"
   next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel1.self_link}"
-  dest_range          = "${data.vault_generic_secret.gce_vpn_vpn1.data["ipsec_tunneled_net1"]}"
+  dest_range          = "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn1_ipsec_tunneled_net1"]}"
   priority            = 1000
 }
 
@@ -232,7 +218,7 @@ resource "google_compute_route" "route2" {
   name                = "route2"
   network             = "${google_compute_network.networkA.name}"
   next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel2.self_link}"
-  dest_range          = "${data.vault_generic_secret.gce_vpn_vpn2.data["ipsec_tunneled_net1"]}"
+  dest_range          = "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn2_ipsec_tunneled_net1"]}"
   priority            = 1000
 }
 
@@ -240,11 +226,11 @@ resource "google_container_cluster" "cluster1" {
   name               = "${var.gke_cluster1_name}"
   network            = "${google_compute_network.networkA.name}"
   subnetwork         = "${google_compute_subnetwork.gke_cluster1.name}"
-  cluster_ipv4_cidr  = "${data.vault_generic_secret.deploy_gke.data["gke_cluster1_pod_ipv4_cidr"]}"
-  zone               = "${data.vault_generic_secret.deploy_base.data["region"]}-a"
+  cluster_ipv4_cidr  = "${data.vault_generic_secret.gce_project_secrets.data["gke_cluster1_pod_ipv4_cidr"]}"
+  zone               = "${data.vault_generic_secret.gce_project_secrets.data["region"]}-a"
   additional_zones = [
-    "${data.vault_generic_secret.deploy_base.data["region"]}-b",
-    "${data.vault_generic_secret.deploy_base.data["region"]}-c",
+    "${data.vault_generic_secret.gce_project_secrets.data["region"]}-b",
+    "${data.vault_generic_secret.gce_project_secrets.data["region"]}-c",
   ]
   initial_node_count = 1
 # node_version doesn't work on initial clujster creation
@@ -252,8 +238,8 @@ resource "google_container_cluster" "cluster1" {
 # node_version       = "${var.gke_cluster1_version}"
 
   master_auth {
-    username = "${data.vault_generic_secret.deploy_gke.data["master_auth_username"]}"
-    password = "${data.vault_generic_secret.deploy_gke.data["master_auth_password"]}"
+    username = "${data.vault_generic_secret.gce_project_secrets.data["gke_cluster1_master_auth_username"]}"
+    password = "${data.vault_generic_secret.gce_project_secrets.data["gke_cluster1_master_auth_password"]}"
   }
 
   node_config {
@@ -267,9 +253,9 @@ resource "google_container_cluster" "cluster1" {
 }
 
 output "get-credentials-command" {
-  value = "gcloud --project=${var.gce_project_id} container clusters get-credentials ${var.gke_cluster1_name} --zone=${data.vault_generic_secret.deploy_base.data["region"]}-a && kubectl config use-context gke_${var.gce_project_id}_${data.vault_generic_secret.deploy_base.data["region"]}-a_${var.gke_cluster1_name}"
+  value = "gcloud --project=${var.gce_project_id} container clusters get-credentials ${var.gke_cluster1_name} --zone=${data.vault_generic_secret.gce_project_secrets.data["region"]}-a && kubectl config use-context gke_${var.gce_project_id}_${data.vault_generic_secret.gce_project_secrets.data["region"]}-a_${var.gke_cluster1_name}"
 }
 
 output "creds" {
-  value = "${data.vault_generic_secret.deploy_base.data["credentials"]}"
+  value = "${data.vault_generic_secret.gce_project_secrets.data["google_credentials"]}"
 }

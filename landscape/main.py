@@ -5,7 +5,7 @@ landscape: Provisions Kubernetes clusters and Helm charts, with secrets in Hashi
 
 Usage:
   landscape cloud list [--provisioner=<cloud_provisioner>]
-  landscape cloud converge [--project=<cloud_project>]
+  landscape cloud converge [--cloud=<cloud_project>]
   landscape cluster list [--provisioner=<cloud_provisioner>]
   landscape cluster converge --context=<cluster_name> 
       [--provisioner=<provisioner>]
@@ -24,7 +24,7 @@ Options:
   --write-kubeconfig                           Write ~/.kube/config with contents from Vault
   --read-kubeconfig                           Read ~/.kube/config and put its contents in Vault
   --kubeconfig-file=<kubecfg>                  Specify path to KUBECONFIG [default: ~/.kube/config-landscaper].
-  --provisioner=<cloud_provisioner>            k8s cloud provisioner.
+  --cloud=<cloud_project>                      k8s cloud provisioner.
   --project=<gce_project_id>                   in GCE environment, which project ID to use. [default: minikube].
   --kubernetes-version=<k8s_version>           in GCE environment, which project ID to use [default: 1.7.0].
   --cluster-dns-domain=<dns_domain>            DNS domain used for inside-cluster DNS [default: cluster.local].
@@ -40,7 +40,7 @@ Provisioner can be one of minikube, terraform.
 import docopt
 import os
 
-from .cloud import CloudCollection
+from .cloudcollection import CloudCollection
 from .cluster import LandscapeCluster
 from .minikube import MinikubeCluster
 from .terraform import TerraformCluster
@@ -55,8 +55,17 @@ def main():
     # branch is used to pull secrets from Vault, and to distinguish clusters
     args = docopt.docopt(__doc__)
     provisioner = args['--provisioner']
-    if args['cloud']:
-        print(clouds.list(provisioner))
+    # landscape cloud list
+    if args['cloud'] and args['list']:
+        for cloud_name in clouds.list(provisioner):
+            print(cloud_name)
+    # landscape cloud converge
+    elif args['cloud'] and args['converge']:
+        cloud_selection = args['--cloud']
+        # terraform_templates_dir
+        #
+        clouds[cloud_selection].terraform_dir = args['--tf-templates-dir']
+        clouds[cloud_selection].converge()
     elif args['cluster']:
         context_in_vault = args['--context']
         # landscape cluster list
