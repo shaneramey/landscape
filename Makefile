@@ -8,28 +8,35 @@
 #
 #
 # Usage:
-#  make PROVISIONER=[ minikube | terraform ] [GCE_PROJECT=myproj-123456] deploy
+#  make CLOUD_NAME=[ minikube | <GCE Project ID> ] deploy
 SHELL := /bin/bash
 
+CLOUD_NAME := minikube
 CONTEXT_NAME := minikube
 MINIKUBE_DRIVER := xhyve
 
-# required for Terraform GCE deployments
-GCE_PROJECT := ""
-
 # override these settings on command-line for operations on a single namespace
+K8S_CLUSTER = __all_clusters__
 K8S_NAMESPACE = __all_namespaces__
 HELM_CHART_INSTALL = __all_charts__
 
 DEBUG := false
+# default command to deploy the cloud.
+DEPLOY_CLOUD_CMD = landscape cloud converge --cloud=$(CLOUD_NAME)
 # default command to deploy the cluster.
-DEPLOY_CLUSTER_CMD = landscape cluster converge --context=$(CONTEXT_NAME)
+DEPLOY_CLUSTER_CMD = landscape cluster converge --cloud=$(CLOUD_NAME)
 # helm charts deployment
-DEPLOY_CHARTS_CMD = landscape charts converge --context=$(CONTEXT_NAME)
+DEPLOY_CHARTS_CMD = landscape charts converge --cloud=$(CLOUD_NAME) --context=$(CONTEXT_NAME)
 
 ifeq ($(DEBUG),true)
+	DEPLOY_CLOUD_CMD += --debug
 	DEPLOY_CLUSTER_CMD += --debug
 	DEPLOY_CHARTS_CMD += --debug
+endif
+
+# Which Kubernetes clusters to converge
+ifneq ($(K8S_CLUSTER),__all_clusters__)
+	DEPLOY_CLUSTER_CMD += --cluster=$(K8S_CLUSTER)
 endif
 
 # Options for Helm Charts
@@ -44,6 +51,7 @@ endif
 .PHONY: deploy init 
 
 deploy: init
+	$(DEPLOY_CLOUD_CMD)
 	$(DEPLOY_CLUSTER_CMD)
 	helm repo update
 	$(DEPLOY_CHARTS_CMD)

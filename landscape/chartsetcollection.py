@@ -20,7 +20,7 @@ from .kubernetes import provisioner_from_context_name
 from .helm import helm_repo_update
 
 
-class HelmChartSet(object):
+class ChartSetCollection(object):
 
     def __init__(self, top_chart_dir, context_id, select_namespaces=[]):
         self.top_chart_dir = top_chart_dir

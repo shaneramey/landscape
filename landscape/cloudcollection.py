@@ -1,4 +1,3 @@
-import hvac
 from .vault import VaultClient
 from .cloud_minikube import MinikubeCloud
 from .cloud_terraform import TerraformCloud

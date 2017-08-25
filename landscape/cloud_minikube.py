@@ -2,7 +2,6 @@ import subprocess
 import sys
 
 from .cloud import Cloud
-from .helm import apply_tiller
 
 class MinikubeCloud(Cloud):
     """
@@ -12,7 +11,7 @@ class MinikubeCloud(Cloud):
 
     def converge(self):
         """
-        Checks if a minikube cluster is already running
+        Checks if a minikube cloud is already running
         Initializes it if not yet running
 
         Returns:
@@ -20,15 +19,15 @@ class MinikubeCloud(Cloud):
         """
         status_cmd = 'minikube status --format=\'{{.MinikubeStatus}}\''
         proc = subprocess.Popen(status_cmd, stdout=subprocess.PIPE, shell=True)
-        self.cluster_status = proc.stdout.read().rstrip().decode()
-        if self.cluster_status == 'Running':
-            print('  - cluster previously provisioned. Re-using')
+        self.cloud_status = proc.stdout.read().rstrip().decode()
+        if self.cloud_status == 'Running':
+            print('  - cloud previously provisioned. Re-using')
         else:
-            print('  - initializing cluster')
-            self.initialize_cluster()
+            print('  - initializing cloud')
+            self.initialize_cloud()
 
 
-    def initialize_cluster(self):
+    def initialize_cloud(self):
         start_cmd_tmpl = 'minikube start ' + \
                     '--kubernetes-version=v{0} ' + \
                     "--vm-driver={1} " + \
@@ -50,5 +49,5 @@ class MinikubeCloud(Cloud):
         print("start_cmd={0}".format(start_cmd))
         minikube_start_failed = subprocess.call(start_cmd, shell=True)
         if minikube_start_failed:
-            sys.exit('ERROR: minikube initialization failure')
+            sys.exit('ERROR: minikube cloud initialization failure')
 

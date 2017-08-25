@@ -2,7 +2,7 @@ import subprocess
 import platform
 import os.path
 
-def install_tools():
+def install_prerequisites():
     """
     Installs prerequisites for the landscape CLI tool
 

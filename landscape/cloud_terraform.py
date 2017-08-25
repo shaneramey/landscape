@@ -46,7 +46,7 @@ class TerraformCloud(Cloud):
                                     '1.7.0')
     def converge(self):
         """
-        Checks if a terraform cluster is already running
+        Checks if a terraform cloud is already running
         Initializes it if not yet running
 
         Returns: None
@@ -73,7 +73,7 @@ class TerraformCloud(Cloud):
 
     def init_terraform(self):
         """
-        initializes a terraform cluster
+        initializes a terraform cloud
         """
         tf_init_cmd_tmpl = 'terraform init ' + \
                         '-backend-config "bucket=tfstate-{0}" ' + \
