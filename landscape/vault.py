@@ -256,6 +256,16 @@ class VaultClient(object):
         vault_addr = os.environ.get('VAULT_ADDR')
         vault_cacert = os.environ.get('VAULT_CACERT')
         vault_token = os.environ.get('VAULT_TOKEN')
+
+        # Raise error if VAUT_ environment variables not set
+        missing_fmt_string = '{0} missing in environment'
+        if not vault_addr:
+            raise ValueError(missing_fmt_string.format('VAULT_ADDR'))
+        if not vault_token:
+            raise ValueError(missing_fmt_string.format('VAULT_TOKEN'))
+        if vault_addr.startswith('https://') and not vault_cacert:
+            raise ValueError(missing_fmt_string.format('VAULT_CACERT'))
+
         self.__vault_client = hvac.Client(url=vault_addr,
                                     token=vault_token,
                                     verify=vault_cacert)

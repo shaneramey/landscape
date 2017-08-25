@@ -16,6 +16,7 @@ Usage:
       [--tf-templates-dir=<tf_templates_dir> ] [--debug]
       [--switch-to-cluster-context=<boolean>]
   landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
+  landscape charts list [--provisioner=<cloud_provisioner>]
   landscape charts converge --cluster=<cluster_name>
       [--namespace=<namespace>] [--chart=<chart_name>] [--converge-cluster] [--converge-cloud]
   landscape prerequisites install
@@ -44,8 +45,6 @@ import os
 from .cloudcollection import CloudCollection
 from .clustercollection import ClusterCollection
 from .chartsetcollection import ChartSetCollection
-from .minikube import MinikubeCluster
-from .terraform import TerraformCluster
 from .client import kubectl_use_context
 from .kubernetes import kubernetes_get_context
 from .vault import (read_kubeconfig, write_kubeconfig)
@@ -86,9 +85,12 @@ def main():
         # print("clusters={0}".format(clusters))
     # landscape charts
     elif args['charts']:
-        chart_sets = ChartSetCollection('notworking', 'notworking')
-        cluster_selection = args['--cluster']
-        chart_sets.converge()
+        chart_sets = ChartSetCollection()
+        if args['list']:
+            for chart_set in chart_sets.list(provisioner):
+                print("chart_set={0}".format(chart_set))
+        # cluster_selection = args['--cluster']
+        # chart_sets.converge()
     # landscape prerequisites install
     elif args['prerequisites'] and args['install']:
         install_prerequisites()
