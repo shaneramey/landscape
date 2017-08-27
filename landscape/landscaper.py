@@ -18,6 +18,7 @@ class LandscaperDirCollection(object):
         print("path_to_chartset_root_dir={0}".format(path_to_chartset_root_dir))
         for chart_set in os.listdir(path_to_chartset_root_dir):
             print("chart_set={0}".format(chart_set))
+            chart_sets[chart_set] = {}
             path_to_namespace_dir = path_to_chartset_root_dir + '/' + chart_set
             for namespace in os.listdir(path_to_namespace_dir):
                 namespace_dir = path_to_namespace_dir + '/' + namespace 
@@ -25,8 +26,8 @@ class LandscaperDirCollection(object):
                     path_to_chart_def = namespace_dir + '/' + chart_definition
                     with open(path_to_chart_def) as f:
                         chart_info = yaml.load(f)
-                        chart_sets[chart_definition] = chart_info
-        return chart_info
+                        chart_sets[chart_set][chart_definition] = chart_info
+        return chart_sets
 
                     # print("chart_definition={0}".format(chart_definition))
                 # landscaper_chart_def = chart_set_containing_namespaces + '/' + chart_set_dir + '/' + namespace_dir + '/' + landscaper_yaml

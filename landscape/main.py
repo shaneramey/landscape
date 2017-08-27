@@ -16,7 +16,7 @@ Usage:
       [--tf-templates-dir=<tf_templates_dir> ] [--debug]
       [--switch-to-cluster-context=<boolean>]
   landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
-  landscape charts list [--provisioner=<cloud_provisioner>]
+  landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>]
   landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
       [--namespaces=<namespace>] [--charts=<chart_name>] [--converge-cluster] [--converge-cloud]
   landscape prerequisites install
@@ -57,9 +57,14 @@ def main():
     clouds = CloudCollection()
     # branch is used to pull secrets from Vault, and to distinguish clusters
     args = docopt.docopt(__doc__)
+    cloud_selection = args['--cloud']
+    cluster_selection = args['--cluster']
     provisioner = args['--provisioner']
     namespaces = args['--namespaces']
     charts = args['--charts']
+    chart_definition_root = args['--chart-dir']
+    terraform_definition_root = args['--tf-templates-dir']
+    also_converge_cloud = args['--converge-cloud']
     # landscape cloud
     if args['cloud']:
         # landscape cloud list
@@ -68,35 +73,32 @@ def main():
                 print(cloud_name)
         # landscape cloud converge
         elif args['converge']:
-            cloud_selection = args['--cloud']
-            clouds[cloud_selection].terraform_dir = args['--tf-templates-dir']
+            clouds[cloud_selection].terraform_dir = terraform_definition_root
             clouds[cloud_selection].converge()
     # landscape cluster
     elif args['cluster']:
         # landscape cloud list
-        cloud_selection = args['--cloud']
         clusters = ClusterCollection()
         if args['list']:
             for cluster_name in clusters.list(cloud_selection):
                 print(cluster_name)
         elif args['converge']:
-            cluster_selection = args['--cluster']
-            if args['--converge-cloud']:
+            if also_converge_cloud:
                 parent_cloud_id = clusters[cluster_selection]['cloud_id']
                 parent_cloud = clouds[parent_cloud_id]
-                parent_cloud.terraform_dir = args['--tf-templates-dir']
+                parent_cloud.terraform_dir = terraform_definition_root
                 parent_cloud.converge()
             clusters[cluster_selection].converge()
         # print("clusters={0}".format(clusters))
     # landscape charts
     elif args['charts']:
-        chart_definition_root = args['--chart-dir']
-        chart_sets = ChartsCollection(chart_provisioner='landscaper', root=chart_definition_root)
+        all_chart_sets = ChartsCollection(chart_provisioner='landscaper', root=chart_definition_root)
+        my_chart_sets = all_chart_sets.charts_for('minikube', [], [])
         if args['list']:
-            for chart_set in chart_sets.list():
+            for chart_set in my_chart_sets:
                 print(chart_set)
         elif args['converge']:
-            chart_sets.converge(namespaces, charts)
+            my_chart_sets.converge(namespaces, charts)
 
     elif args['prerequisites'] and args['install']:
         install_prerequisites()

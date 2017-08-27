@@ -15,7 +15,8 @@ class ChartsCollection(object):
         charts_root_dir = self.__root_chart_deploy_dir
         if self.__provisioner == 'landscaper':
             print("AAAX={0}".format(self.__root_chart_deploy_dir))
-            charts_for_provisioner = LandscaperDirCollection(charts_root_dir)
+            landscaper_files = LandscaperDirCollection(charts_root_dir)
+            charts_for_provisioner = landscaper_files.chart_sets
         elif self.__provisioner == 'terraform':
             raise NotImplementedError()
         print("charts_for_provisioner={0}".format(charts_for_provisioner))
@@ -29,10 +30,12 @@ class ChartsCollection(object):
 
 
     def charts_for(self, k8s_provisioner, select_namespaces, select_charts):
+        print("CHARTS_FOR={0}".format(self.__chart_sets))
         return self.__chart_sets
 
 
     def converge(self, namespaces=[], charts=[]):
-        for chart_definiton in self.__chart_sets:
-            chart = Chart(chart_definition)
+        print("chart_sets={0}".format(self.__chart_sets))
+        # for chart_definiton in self.__chart_sets:
+        #     chart = Chart(chart_definition)
             # chart.converge()
