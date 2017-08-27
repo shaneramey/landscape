@@ -17,8 +17,8 @@ Usage:
       [--switch-to-cluster-context=<boolean>]
   landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
   landscape charts list [--provisioner=<cloud_provisioner>]
-  landscape charts converge --cluster=<cluster_name>
-      [--namespace=<namespace>] [--chart=<chart_name>] [--converge-cluster] [--converge-cloud]
+  landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
+      [--namespaces=<namespace>] [--charts=<chart_name>] [--converge-cluster] [--converge-cloud]
   landscape prerequisites install
 
 Options:
@@ -32,9 +32,11 @@ Options:
   --cluster-dns-domain=<dns_domain>            DNS domain used for inside-cluster DNS [default: cluster.local].
   --minikube-driver=<driver>                   (minikube only) driver type (virtualbox|xhyve) [default: virtualbox].
   --switch-to-cluster-context=<boolean>        switch to kubernetes context after cluster converges [default: true].
-  --namespace=<namespace>                      install only charts under specified namespace.
+  --namespaces=<namespace>                     install only charts under specified namespaces (comma-separated).
+  --charts=<charts>                            install only named charts (comma-separated).
   --fetch-lastpass                             Fetches values from Lastpass and puts them in Vault
   --tf-templates-dir=<tf_templates_dir>        Terraform templates directory [default: ./tf-templates].
+  --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
   --debug                                      Run in debug mode.
 Provisioner can be one of minikube, terraform.
 """
@@ -44,17 +46,20 @@ import os
 
 from .cloudcollection import CloudCollection
 from .clustercollection import ClusterCollection
-from .chartsetcollection import ChartSetCollection
+from .chartscollection import ChartsCollection
 from .client import kubectl_use_context
 from .kubernetes import kubernetes_get_context
 from .vault import (read_kubeconfig, write_kubeconfig)
 from .prerequisites import install_prerequisites
 
 def main():
+
     clouds = CloudCollection()
     # branch is used to pull secrets from Vault, and to distinguish clusters
     args = docopt.docopt(__doc__)
     provisioner = args['--provisioner']
+    namespaces = args['--namespaces']
+    charts = args['--charts']
     # landscape cloud
     if args['cloud']:
         # landscape cloud list
@@ -85,13 +90,14 @@ def main():
         # print("clusters={0}".format(clusters))
     # landscape charts
     elif args['charts']:
-        chart_sets = ChartSetCollection()
+        chart_definition_root = args['--chart-dir']
+        chart_sets = ChartsCollection(chart_provisioner='landscaper', root=chart_definition_root)
         if args['list']:
-            for chart_set in chart_sets.list(provisioner):
-                print("chart_set={0}".format(chart_set))
-        # cluster_selection = args['--cluster']
-        # chart_sets.converge()
-    # landscape prerequisites install
+            for chart_set in chart_sets.list():
+                print(chart_set)
+        elif args['converge']:
+            chart_sets.converge(namespaces, charts)
+
     elif args['prerequisites'] and args['install']:
         install_prerequisites()
 
