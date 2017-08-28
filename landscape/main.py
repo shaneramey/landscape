@@ -98,7 +98,6 @@ def main():
     # branch is used to pull secrets from Vault, and to distinguish clusters
     namespaces_selection = args['--namespaces']
     cloud_selection = args['--cloud']
-    charts_selection = args['--charts']
     also_converge_cloud = args['--converge-cloud']
     also_converge_cluster = args['--converge-cluster']
     # landscape cloud
