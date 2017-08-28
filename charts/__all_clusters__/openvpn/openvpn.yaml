@@ -1,4 +1,5 @@
 name: openvpn
+namespace: openvpn
 release:
   chart: charts.downup.us/openvpn:0.1.242
   version: 0.1.242

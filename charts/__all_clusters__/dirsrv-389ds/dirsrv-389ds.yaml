@@ -1,4 +1,5 @@
 name: dirsrv-389ds
+namespace: dirsrv-389ds
 release:
   chart: charts.downup.us/dirsrv-389ds:0.1.36
   version: 0.1.36

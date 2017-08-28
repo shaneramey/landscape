@@ -1,4 +1,5 @@
 name: vault
+namespace: vault
 release:
   chart: charts.downup.us/vault:0.1.120
   version: 0.1.120

@@ -1,4 +1,5 @@
 name: cfssl
+namespace: cfssl
 release:
   chart: charts.downup.us/cfssl:0.1.100
   version: 0.1.100
