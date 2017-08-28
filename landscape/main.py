@@ -92,8 +92,6 @@ def main():
     terraform_definition_root = args['--tf-templates-dir']
     clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
     clusters = ClusterCollection(clouds)
-    print("clouds={0}".format(clouds))
-    print("clusters={0}".format(clusters))
     chart_definition_root = args['--chart-dir']
     cluster_selection = args['--cluster']
     cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)

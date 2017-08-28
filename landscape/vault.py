@@ -282,6 +282,7 @@ class VaultClient(object):
         Returns: data from Vault at prefix (dict)
         """
         all_values_at_prefix = {}
+        print(" - reading vault subkeys at {0}".format(path_prefix))
         subkeys_at_prefix = self.__vault_client.list(path_prefix)
 
         # use last vault key (delimited by '/') as dict index

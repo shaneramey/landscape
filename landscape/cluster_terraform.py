@@ -1,4 +1,6 @@
 import subprocess
+import json
+import os
 
 from .cluster import Cluster
 
@@ -6,12 +8,16 @@ class TerraformCluster(Cluster):
     """
     vault write /secret/landscape/clusters/minikube cloud_id=minikube
     vault write /secret/landscape/clouds/minikube provisioner=minikube
+    vault write /secret/landscape/clusters/gke_staging-165617_us-west1-a_master cloud_id=staging-165617 gke_cluster_name=master
     """
     pass
 
     def __init__(self, **kwargs):
-        self.google_credentials = kwargs['google_credentials']
         super(TerraformCluster, self).__init__(**kwargs)
+        self.google_credentials = kwargs['google_credentials']
+        self.cluster_name = kwargs['gke_cluster_name']
+        self.gcloud_auth_jsonfile = os.getcwd() + '/serviceaccount.json'
+
 
     def cluster_setup(self):
         """
@@ -21,37 +27,41 @@ class TerraformCluster(Cluster):
         Returns:
 
         """
+        self.write_gcloud_keyfile_json()
         gce_auth_cmd = "gcloud auth activate-service-account " + \
-                        "landscape@staging-165617.iam.gserviceaccount.com " + \
-                        "--key-file=/Users/sramey/Downloads/staging-f68d7bef83ba.json"
+                        self.service_account_email() + \
+                        " --key-file=" + self.gcloud_auth_jsonfile
+        print("running command {0}".format(gce_auth_cmd))
         return gce_auth_cmd
 
 
-    def write_gcloud_keyfile_json():
-        
+    def gce_envvars(self):
+        return os.environ.update({
+            'GOOGLE_CREDENTIALS': self.gcloud_auth_jsonfile,
+        })
+
+    def service_account_email(self):
+        gce_creds = json.loads(self.google_credentials)
+        return gce_creds['client_email']
+
+
+    def write_gcloud_keyfile_json(self):
+        f = open(self.gcloud_auth_jsonfile, "w")
+        f.write(self.google_credentials)
+        f.close()
+
+
     def configure_kubectl(self):
+        get_creds_cmd = "gcloud --project={0} container clusters get-credentials {1}".format(self.cloud_id, self.cluster_name)
+        envvars = self.gce_envvars()
+        print("running command {0}".format(get_creds_cmd))
+        get_creds_failed = subprocess.call(get_creds_cmd, env=envvars, shell=True)
+        if get_creds_failed:
+            sys.exit("ERROR: non-zero retval for {}".format(get_creds_cmd))
 
-        # self.gce_project = gce_project
-        # self.terraform_templates_dir = tf_templates_dir
+        configure_kubectl_cmd = "kubectl config use-context {0}".format(self.name)
+        print("running command {0}".format(configure_kubectl_cmd))
+        configure_kubectl_failed = subprocess.call(configure_kubectl_cmd, env=envvars, shell=True)
+        if configure_kubectl_failed:
+            sys.exit("ERROR: non-zero retval for {}".format(configure_kubectl_cmd))
 
-        # vault_path_to_creds = '/secret/terraform/{0}/auth'.format(gce_project)
-        # creds = self.read_vault_path_item(vault_path_to_creds, 'credentials')
-
-        # encoded_creds_with_newlines = creds.encode('utf-8')
-        # encoded_creds = re.sub(r"\n", " ", encoded_creds_with_newlines)
-        # os.environ['GOOGLE_CREDENTIALS'] = encoded_creds
-
-        gke_cluster_name = "master"
-        gce_zone = "us-west1-a"
-        configure_kubecfg_cmd = "gcloud --project={0} " + \
-                                "container clusters get-credentials {1} " + \
-                                "--zone={2} && " + \
-                                "kubectl config use-context {3}".format(self.cloud_id,
-                                                                        gke_cluster_name,
-                                                                        gce_zone,
-                                                                        self.name
-                                    )
-        print("configure_kubecfg_cmd={0}".format(configure_kubecfg_cmd))
-        configure_kubectl_failed = subprocess.call(configure_kubecfg_cmd, shell=True)
-        if create_failed:
-            sys.exit("ERROR: non-zero retval for {}".format(configure_kubecfg_cmd))

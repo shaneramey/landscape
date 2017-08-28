@@ -23,7 +23,6 @@ class Cluster(object):
         Override this method in your subclass
         """
         self.cluster_setup()
-        self.configure_kubectl()
         self.switch_to_cluster_context()
         apply_tiller()
 
@@ -34,5 +33,5 @@ class Cluster(object):
     def configure_kubectl(self):
         raise NotImplementedError('Must be overridden in subclass')
 
-    def switch_to_cluster_context():
+    def switch_to_cluster_context(self):
         kubectl_use_context(self.name)

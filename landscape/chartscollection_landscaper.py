@@ -66,7 +66,6 @@ class LandscaperChartsCollection(ChartsCollection):
                             print('        - missing secret ' + missing_secret)
                         sys.exit(1)
             landscaper_env = self.set_landscaper_envvars(namespace_secrets)
-            print("LENV={0}".format(landscaper_env))
             ls_apply_cmd = 'landscaper apply -v --namespace=' + namespace + \
                                 ' ' + ' '.join(yaml_files)
             print("    - executing: " + ls_apply_cmd)

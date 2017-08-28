@@ -5,3 +5,4 @@ ca-pki-init/
 *.tfstate
 *.tfstate.backup
 ve/
+serviceaccount.json
