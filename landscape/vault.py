@@ -245,8 +245,6 @@ def read_kubeconfig(cfg_path):
                     client_auth_key = yaml.load(stream)
                 except yaml.YAMLError as exc:
                     print(exc)
-        print("client_auth_cert={0}".format(client_auth_cert))
-        print("client_auth_key={0}".format(client_auth_key))
 
     raise "read_kubeconfig not implemented"
 

@@ -12,6 +12,7 @@ class TerraformCluster(Cluster):
     """
     pass
 
+
     def __init__(self, **kwargs):
         super(TerraformCluster, self).__init__(**kwargs)
         self.google_credentials = kwargs['google_credentials']

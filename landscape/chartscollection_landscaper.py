@@ -25,6 +25,7 @@ class LandscaperChartsCollection(ChartsCollection):
     def __str__(self):
         return self.chartset_root_dir
 
+
     def __load_chart_sets(self):
         path_to_chartset_root_dir = self.chartset_root_dir
         chart_sets = {}
@@ -92,6 +93,7 @@ class LandscaperChartsCollection(ChartsCollection):
             envvar_key = self.helm_secret_name_to_envvar_name(secret_key)
             envvar_list.update({envvar_key: secret_value})
         return envvar_list
+
 
     def helm_secret_name_to_envvar_name(self, keyname):
         """

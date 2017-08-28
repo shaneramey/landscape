@@ -18,6 +18,7 @@ class Cluster(object):
     def __str__(self):
         return self.name
 
+
     def converge(self):
         """
         Override this method in your subclass
@@ -30,8 +31,10 @@ class Cluster(object):
     def cluster_setup(self):
         raise NotImplementedError('Must be overridden in subclass')
 
+
     def configure_kubectl(self):
         raise NotImplementedError('Must be overridden in subclass')
+
 
     def switch_to_cluster_context(self):
         kubectl_use_context(self.name)
