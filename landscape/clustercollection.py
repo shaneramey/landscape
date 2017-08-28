@@ -15,8 +15,7 @@ class ClusterCollection(object):
 
 
     def __getitem__(self, cluster_name):
-        retval = [d for d in self.__clusters if d['name'] == cluster_name][0]
-        return retval
+        return self.__clusters[cluster_name]
 
     def __clusters_in_vault(self):
         """ Only retrieve clusters referencing a cloud in self.__clouds"""
@@ -35,6 +34,8 @@ class ClusterCollection(object):
                 if cloud_provisioner == 'minikube':
                     cluster_db[k8s_context_name] = MinikubeCluster(**cluster_parameters)
                 elif cloud_provisioner == 'terraform':
+                    # pass google credentials to terraform
+                    cluster_parameters.update({'google_credentials': cloud_for_cluster.gce_creds })
                     cluster_db[k8s_context_name] = TerraformCluster(**cluster_parameters)
                 else:
                     raise("Unknown provisioner found in Vault: {0}".format())

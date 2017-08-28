@@ -1,7 +1,6 @@
 import subprocess
 
 from .cluster import Cluster
-from .helm import apply_tiller
 
 class MinikubeCluster(Cluster):
     """
@@ -10,7 +9,7 @@ class MinikubeCluster(Cluster):
     """
     pass
 
-    def converge(self):
+    def cluster_setup(self):
         """
         Checks if a minikube cloud is already running
         Initializes it if not yet running
@@ -32,4 +31,7 @@ class MinikubeCluster(Cluster):
             check_cmd_failed = subprocess.call(addon_cmd, shell=True)
             if check_cmd_failed:
                 print("ERROR: failed to run command".format(addon_cmd))
-        apply_tiller()
+
+    def configure_kubectl(self):
+        print("Using minikube's pre-configured KUBECONFIG entry")
+

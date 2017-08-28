@@ -41,25 +41,6 @@ class ChartSetCollection(object):
                 self.apply_charts_to_namespace(self.kubernetes_context, namespace, chart_yaml_files, 'master')
 
 
-    def all_chart_files(self):
-        top_chart_dir = self.top_chart_dir
-        all_charts = {}
-        # all directories starting with "charts_"
-        landscaper_chart_collections = self.chart_dirs()
-        for chart_collection in landscaper_chart_collections:
-            all_charts[chart_collection] = {}
-            path_to_chart_collection = "{0}/{1}".format(top_chart_dir, chart_collection)
-            namespace_dirpaths = self.namespace_dirpaths_in_landscaper_directory(chart_collection)
-            for namespace_dirpath in namespace_dirpaths:
-                namespace_of_chart = self.last_directory_name(namespace_dirpath)
-                all_charts[chart_collection][namespace_of_chart] = {}
-                chart_in_namespace = self.charts_in_namespace_dirpath(namespace_dirpath)
-                for chart_yaml in chart_in_namespace:
-                    chart_name = self.chart_name_in_landscaper_yaml(chart_yaml)
-                    all_charts[chart_collection][namespace_of_chart].update({ chart_name : { 'file': chart_yaml }})
-        return all_charts
-
-
     def chart_sets_for_provisioner(self, chart_supersets, provisioner_name):
         chartsets = self.chart_dirs_for_provisioner(provisioner_name)
         selection = {}
@@ -100,32 +81,6 @@ class ChartSetCollection(object):
         charts = os.listdir(namespace_dirpath)
         return ['{0}/{1}/{2}'.format(self.top_chart_dir, namespace_dirpath, chart) for chart in charts]
 
-
-    def last_directory_name(self, relative_path_to_directory):
-        filepath_parts = relative_path_to_directory.split('/')
-        return [filepart for filepart in filepath_parts if filepart.strip()][-1]
-
-
-    def chart_dirs(self):
-        """ Returns directory for namespace (str) """
-        chart_dirs = glob.glob('charts_*')
-        return chart_dirs
-
-
-    def chart_dirs_for_provisioner(self, provisioner):
-        """
-        Auths to Vault first
-
-        Arguments:
-          provisioner: what provisioner to use
-
-        Returns: directory of provisioner-specific charts (str)
-        """
-        chart_sets = {
-            'minikube': 'charts_minikube',
-            'terraform': 'charts_gke',
-        }
-        return ['charts_core', chart_sets[provisioner]]
 
 
     def helm_secret_name_to_envvar_name(self, keyname):
@@ -228,12 +183,3 @@ class ChartSetCollection(object):
                     print('        - missing secret ' + missing_secret)
                 sys.exit(1)
         return env_vars_for_namespace
-
-
-    def read_landscaper_yaml(self, landscaper_yaml_filename):
-        """
-        Opens a landscaper yaml file definition and returns chart name
-        """
-        with open(landscaper_yaml_filename, 'r') as fh:
-            yml = yaml.load(fh.read())
-        return yml

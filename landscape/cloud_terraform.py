@@ -13,6 +13,7 @@ class TerraformCloud(Cloud):
         Cloud.__init__(self, **kwargs)
         self.tf_templates_dir = '.'
         self.gce_creds = kwargs['google_credentials']
+        self.terraform_dir = kwargs['terraform_templates_dir']
 
 
     @property

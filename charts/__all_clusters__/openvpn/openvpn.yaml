@@ -7,4 +7,3 @@ configuration:
   gitBranch: master
   clusterDomain: cluster.local
   directorySuffix: "dc=cluster,dc=local"
-secrets:

@@ -1,10 +1,12 @@
+from .kubernetes import kubectl_use_context
+from .helm import apply_tiller
+
 class Cluster(object):
     """
     vault write /secret/landscape/clusters/minikube cloud_id=minikube
     """
 
     def __init__(self, **kwargs):
-        print("kwargs={0}".format(kwargs))
         self.name = kwargs['context_id']
         self.cloud_id = kwargs['cloud_id']
 
@@ -20,5 +22,17 @@ class Cluster(object):
         """
         Override this method in your subclass
         """
-        raise NotImplementedError()
+        self.cluster_setup()
+        self.configure_kubectl()
+        self.switch_to_cluster_context()
+        apply_tiller()
 
+
+    def cluster_setup(self):
+        raise NotImplementedError('Must be overridden in subclass')
+
+    def configure_kubectl(self):
+        raise NotImplementedError('Must be overridden in subclass')
+
+    def switch_to_cluster_context():
+        kubectl_use_context(self.name)

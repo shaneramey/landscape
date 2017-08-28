@@ -3,8 +3,9 @@ from .cloud_minikube import MinikubeCloud
 from .cloud_terraform import TerraformCloud
 
 class CloudCollection(object):
-    def __init__(self, cloud_provisioner):
+    def __init__(self, cloud_provisioner, tf_root):
         self.__provisioner = cloud_provisioner
+        self.tf_root = tf_root
         self.__vault = VaultClient()
         self.__clouds = self.__clouds_in_vault()
 
@@ -29,6 +30,7 @@ class CloudCollection(object):
                 if cloud_in_vault_provisioner == 'minikube':
                     cloud_db[cloud_id] = MinikubeCloud(**cloud_parameters)
                 elif cloud_in_vault_provisioner == 'terraform':
+                    cloud_parameters.update({'terraform_templates_dir': self.tf_root})
                     cloud_db[cloud_id] = TerraformCloud(**cloud_parameters)
                 else:
                     raise("Unknown provisioner found in Vault: {0}".format())

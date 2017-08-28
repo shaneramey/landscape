@@ -22,12 +22,13 @@ Usage:
   landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
   landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>]
   landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
-      [--namespaces=<namespace>] [--charts=<chart_name>] [--converge-cluster] [--converge-cloud]
+      [--namespaces=<namespace>] [--charts=<chart_name>] [--converge-cluster] [--converge-cloud] [--git-branch=<branch_name>]
   landscape prerequisites install
 
 Options:
   --cloud-provisioner=<cloud_provisioner>      Cloud provisioner ("terraform" or "minikube")
   --cluster=<context_name>                     Operate on cluster context, defined in Vault
+  --git-branch=<branch_name>                   Git branch to use for secrets lookup
   --write-kubeconfig                           Write ~/.kube/config with contents from Vault
   --read-kubeconfig                            Read ~/.kube/config and put its contents in Vault
   --kubeconfig-file=<kubecfg>                  Specify path to KUBECONFIG [default: ~/.kube/config-landscaper].
@@ -48,10 +49,11 @@ Provisioner can be one of minikube, terraform.
 
 import docopt
 import os
+import subprocess
 
 from .cloudcollection import CloudCollection
 from .clustercollection import ClusterCollection
-from .chartscollection import ChartsCollection
+from .chartscollection_landscaper import LandscaperChartsCollection
 from .client import kubectl_use_context
 from .kubernetes import kubernetes_get_context
 from .vault import (read_kubeconfig, write_kubeconfig)
@@ -72,26 +74,39 @@ def list_charts(chart_collection):
     for chart_name in chart_collection.list():
         print(chart_name)
 
+
 def cloud_for_cluster(cloud_collection, cluster_collection, cluster_selection):
     parent_cloud_id = cluster_collection[cluster_selection]['cloud_id']
     parent_cloud = cloud_collection[parent_cloud_id]
     return parent_cloud
 
+def git_branch():
+    git_branch_cmd = "git branch | grep \* | cut -d ' ' -f2"
+    proc = subprocess.Popen(git_branch_cmd, stdout=subprocess.PIPE, shell=True)
+    current_branch = proc.stdout.read().rstrip().decode()
+    return current_branch
 
 def main():
     args = docopt.docopt(__doc__)
     cloud_provisioner = args['--cloud-provisioner']
-    clouds = CloudCollection(cloud_provisioner)
+    terraform_definition_root = args['--tf-templates-dir']
+    clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
     clusters = ClusterCollection(clouds)
+    print("clouds={0}".format(clouds))
+    print("clusters={0}".format(clusters))
     chart_definition_root = args['--chart-dir']
     cluster_selection = args['--cluster']
-    charts = ChartsCollection(cluster_selection, chart_provisioner='landscaper', root=chart_definition_root)
+    cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
+    git_branchname = args['--git-branch']
+    if not git_branchname:
+        git_branchname = git_branch()
+    charts = LandscaperChartsCollection(chart_definition_root, git_branchname, cluster_cloud['provisioner'])
     # branch is used to pull secrets from Vault, and to distinguish clusters
-    cloud_selection = args['--cloud']
     namespaces_selection = args['--namespaces']
+    cloud_selection = args['--cloud']
     charts_selection = args['--charts']
-    terraform_definition_root = args['--tf-templates-dir']
     also_converge_cloud = args['--converge-cloud']
+    also_converge_cluster = args['--converge-cluster']
     # landscape cloud
     if args['cloud']:
         # landscape cloud list
@@ -99,7 +114,6 @@ def main():
             list_clouds(clouds)
         # landscape cloud converge
         elif args['converge']:
-            clouds[cloud_selection].terraform_dir = terraform_definition_root
             clouds[cloud_selection].converge()
     # landscape cluster
     elif args['cluster']:
@@ -108,19 +122,18 @@ def main():
             list_clusters(clusters)
         elif args['converge']:
             if also_converge_cloud:
-                parent_cloud_id = cloud_for_cluster(clouds, clusters, cluster_selection)
-                print("parent_cloud_id={0}".format(parent_cloud_id))
-                parent_cloud = clouds[parent_cloud_id]
-                parent_cloud.terraform_dir = terraform_definition_root
-                parent_cloud.converge()
+                cluster_cloud.converge()
             clusters[cluster_selection].converge()
-        # print("clusters={0}".format(clusters))
     # landscape charts
     elif args['charts']:
         if args['list']:
             list_charts(charts)
         elif args['converge']:
-            charts.converge(namespaces_selection, charts_selection)
+            if also_converge_cloud:
+                cluster_cloud.converge()
+            if also_converge_cluster:
+                clusters[cluster_selection].converge()
+            charts.converge()
 
     elif args['prerequisites'] and args['install']:
         install_prerequisites()
