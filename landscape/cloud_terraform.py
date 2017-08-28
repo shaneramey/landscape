@@ -6,7 +6,7 @@ from .cloud import Cloud
 
 class TerraformCloud(Cloud):
     """
-    vault write /secret/landscape/clouds/staging-165617 provisioner=terraform \
+    vault write /secret/landscape/clouds/staging-123456 provisioner=terraform \
         google_credentials=
     """
     def __init__(self, **kwargs):

@@ -8,7 +8,7 @@ class TerraformCluster(Cluster):
     """
     vault write /secret/landscape/clusters/minikube cloud_id=minikube
     vault write /secret/landscape/clouds/minikube provisioner=minikube
-    vault write /secret/landscape/clusters/gke_staging-165617_us-west1-a_master cloud_id=staging-165617 gke_cluster_name=master
+    vault write /secret/landscape/clusters/gke_staging-123456_us-west1-a_master cloud_id=staging-123456 gke_cluster_name=master
     """
     pass
 

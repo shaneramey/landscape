@@ -3,6 +3,7 @@ import os
 import sys
 import yaml
 import base64
+import logging
 
 def kubeconfig_context_entry(context_name):
     """
@@ -254,6 +255,7 @@ class VaultClient(object):
         vault_addr = os.environ.get('VAULT_ADDR')
         vault_cacert = os.environ.get('VAULT_CACERT')
         vault_token = os.environ.get('VAULT_TOKEN')
+        self.logger = logging.getLogger(__name__)
 
         # Raise error if VAUT_ environment variables not set
         missing_fmt_string = '{0} missing in environment'
@@ -280,7 +282,7 @@ class VaultClient(object):
         Returns: data from Vault at prefix (dict)
         """
         all_values_at_prefix = {}
-        print(" - reading vault subkeys at {0}".format(path_prefix))
+        logging.info(" - reading vault subkeys at {0}".format(path_prefix))
         subkeys_at_prefix = self.__vault_client.list(path_prefix)
 
         # use last vault key (delimited by '/') as dict index

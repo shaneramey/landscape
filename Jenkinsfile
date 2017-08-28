@@ -96,7 +96,7 @@ node('landscape') {
     }
     stage('Deploy') {
         withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            sh "make CONTEXT_NAME=${CONTEXT} deploy"
+            sh "make CLUSTER_NAME=${CONTEXT} deploy"
         }
     }
     stage('Verify') {

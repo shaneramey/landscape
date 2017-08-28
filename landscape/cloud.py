@@ -1,6 +1,6 @@
 class Cloud(object):
     """
-    vault write /secret/landscape/clouds/staging-165617 provisioner=terraform
+    vault write /secret/landscape/clouds/staging-123456 provisioner=terraform
     vault write /secret/landscape/clouds/minikube provisioner=minikube
     """
 

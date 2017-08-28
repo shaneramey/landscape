@@ -6,7 +6,7 @@ landscape: Provisions Kubernetes clusters and Helm charts, with secrets in Hashi
 Operates on a single cloud, minikube, or GCE project at a time
 
 A "cloud" is a single GCE project, or minikube
-
+A "cluster" is a Kubernetes cluster
 There may be multiple kubernetes "clusters" within a cloud
 
 Usage:
@@ -14,15 +14,11 @@ Usage:
   landscape cloud converge [--cloud=<cloud_project>]
   landscape cluster list [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>]
   landscape cluster converge --cluster=<cluster_name> [--converge-cloud]
-      [--provisioner=<provisioner>]
-      [--gce-project-id=<gce_project_id>] [--minikube-driver=<driver>] [--kubernetes-version=<k8s_version>] [--cluster-dns-domain=<dns_domain>]
-      [--landscaper-git-branch=<git_branch>]
       [--tf-templates-dir=<tf_templates_dir> ] [--debug]
-      [--switch-to-cluster-context=<boolean>]
   landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
   landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>]
   landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
-      [--namespaces=<namespace>] [--charts=<chart_name>] [--converge-cluster] [--converge-cloud] [--git-branch=<branch_name>]
+      [--namespaces=<namespace>] [--converge-cluster] [--converge-cloud] [--git-branch=<branch_name>]
   landscape prerequisites install
 
 Options:
@@ -39,7 +35,6 @@ Options:
   --minikube-driver=<driver>                   (minikube only) driver type (virtualbox|xhyve) [default: virtualbox].
   --switch-to-cluster-context=<boolean>        switch to kubernetes context after cluster converges [default: true].
   --namespaces=<namespace>                     install only charts under specified namespaces (comma-separated).
-  --charts=<charts>                            install only named charts (comma-separated).
   --fetch-lastpass                             Fetches values from Lastpass and puts them in Vault
   --tf-templates-dir=<tf_templates_dir>        Terraform templates directory [default: ./tf-templates].
   --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
@@ -93,12 +88,13 @@ def main():
     clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
     clusters = ClusterCollection(clouds)
     chart_definition_root = args['--chart-dir']
-    cluster_selection = args['--cluster']
-    cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
     git_branchname = args['--git-branch']
     if not git_branchname:
         git_branchname = git_branch()
-    charts = LandscaperChartsCollection(chart_definition_root, git_branchname, cluster_cloud['provisioner'])
+    cluster_selection = args['--cluster']
+    if cluster_selection:
+        cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
+        charts = LandscaperChartsCollection(chart_definition_root, git_branchname, cluster_cloud['provisioner'])
     # branch is used to pull secrets from Vault, and to distinguish clusters
     namespaces_selection = args['--namespaces']
     cloud_selection = args['--cloud']
@@ -124,15 +120,17 @@ def main():
             clusters[cluster_selection].converge()
     # landscape charts
     elif args['charts']:
+        # landscape charts list
         if args['list']:
             list_charts(charts)
+        # landscape charts converge
         elif args['converge']:
             if also_converge_cloud:
                 cluster_cloud.converge()
             if also_converge_cluster:
                 clusters[cluster_selection].converge()
             charts.converge()
-
+    # landscape prerequisites install
     elif args['prerequisites'] and args['install']:
         install_prerequisites()
 

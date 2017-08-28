@@ -10,7 +10,7 @@ from .helm import apply_tiller
 
 class LandscaperChartsCollection(ChartsCollection):
     """ Loads up a directory of chart yaml for use by Landscaper
-    vault write /secret/landscape/clouds/staging-165617 provisioner=terraform
+    vault write /secret/landscape/clouds/staging-123456 provisioner=terraform
     vault write /secret/landscape/clouds/minikube provisioner=minikube
     """
     def __init__(self, root_dir, gitbranch, cloud_specific_subset):
