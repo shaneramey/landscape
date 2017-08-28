@@ -3,6 +3,7 @@ import os
 import sys
 import yaml
 import base64
+import logging
 
 def kubeconfig_context_entry(context_name):
     """
@@ -245,7 +246,58 @@ def read_kubeconfig(cfg_path):
                     client_auth_key = yaml.load(stream)
                 except yaml.YAMLError as exc:
                     print(exc)
-        print("client_auth_cert={0}".format(client_auth_cert))
-        print("client_auth_key={0}".format(client_auth_key))
 
     raise "read_kubeconfig not implemented"
+
+
+class VaultClient(object):
+    def __init__(self):
+        vault_addr = os.environ.get('VAULT_ADDR')
+        vault_cacert = os.environ.get('VAULT_CACERT')
+        vault_token = os.environ.get('VAULT_TOKEN')
+        self.logger = logging.getLogger(__name__)
+
+        # Raise error if VAUT_ environment variables not set
+        missing_fmt_string = '{0} missing in environment'
+        if not vault_addr:
+            raise ValueError(missing_fmt_string.format('VAULT_ADDR'))
+        if not vault_token:
+            raise ValueError(missing_fmt_string.format('VAULT_TOKEN'))
+        if vault_addr.startswith('https://') and not vault_cacert:
+            raise ValueError(missing_fmt_string.format('VAULT_CACERT'))
+
+        self.__vault_client = hvac.Client(url=vault_addr,
+                                    token=vault_token,
+                                    verify=vault_cacert)
+
+
+    def dump_vault_from_prefix(self, path_prefix, strip_root_key=False):
+        """
+        Dump Vault data at prefix into dict
+
+        Arguments:
+         - path_prefix (str): The prefix which to dump
+         - strip_root_key (bool): Strip the root key from return value
+
+        Returns: data from Vault at prefix (dict)
+        """
+        all_values_at_prefix = {}
+        logging.info(" - reading vault subkeys at {0}".format(path_prefix))
+        subkeys_at_prefix = self.__vault_client.list(path_prefix)
+
+        # use last vault key (delimited by '/') as dict index
+        prefix_keyname = path_prefix.split('/')[-1]
+        if not prefix_keyname in all_values_at_prefix:
+            all_values_at_prefix[prefix_keyname] = {}
+
+        if subkeys_at_prefix:
+            for subkey in subkeys_at_prefix['data']['keys']:
+                prefixed_key = path_prefix + '/' + subkey
+                all_values_at_prefix[prefix_keyname].update(self.dump_vault_from_prefix(prefixed_key))
+        else:
+            all_values_at_prefix[prefix_keyname].update(self.__vault_client.read(path_prefix)['data'])
+        if strip_root_key == True:
+            retval = all_values_at_prefix[prefix_keyname]
+        else:
+            retval = all_values_at_prefix
+        return retval

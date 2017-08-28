@@ -1,9 +1,0 @@
-name: openvpn
-release:
-  chart: charts.downup.us/openvpn:0.1.242
-  version: 0.1.242
-configuration:
-  gitBranch: master
-  clusterDomain: cluster.local
-  directorySuffix: "dc=cluster,dc=local"
-secrets:

@@ -1,7 +1,0 @@
-name: auto-approve-csrs
-release:
-  chart: charts.downup.us/auto-approve-csrs:0.1.7
-  version: 0.1.7
-configuration:
-  clusterDomain: cluster.local
-

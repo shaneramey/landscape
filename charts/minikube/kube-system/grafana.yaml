@@ -1,0 +1,7 @@
+name: grafana
+namespace: kube-system
+release:
+  chart: charts.downup.us/grafana:0.3.8
+  version: 0.3.8
+configuration:
+  clusterDomain: cluster.local

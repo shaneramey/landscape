@@ -1,0 +1,7 @@
+name: prom
+namespace: prom
+release:
+  chart: charts.downup.us/prometheus:3.0.16
+  version: 3.0.16
+configuration:
+  clusterDomain: cluster.local

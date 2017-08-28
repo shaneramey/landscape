@@ -1,0 +1,12 @@
+name: cfssl
+namespace: cfssl
+release:
+  chart: charts.downup.us/cfssl:0.1.100
+  version: 0.1.100
+configuration:
+  postgresql:
+    secretsRef: "cfssl-cfssl"
+  clusterDomain: cluster.local
+secrets:
+ - secret-postgresql-postgres-user
+ - secret-postgresql-postgres-password

@@ -1,0 +1,8 @@
+name: kube-dns
+namespace: kube-system
+release:
+  chart: charts.downup.us/kube-dns:0.1.30
+  version: 0.1.30
+configuration:
+  clusterDomain: cluster.local
+

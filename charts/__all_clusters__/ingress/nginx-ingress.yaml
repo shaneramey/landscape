@@ -1,0 +1,7 @@
+name: nginx-ingress
+namespace: ingress
+release:
+  chart: charts.downup.us/nginx-ingress:0.7.2
+  version: 0.7.2
+configuration:
+  clusterDomain: cluster.local
