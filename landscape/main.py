@@ -5,10 +5,14 @@ landscape: Provisions Kubernetes clusters and Helm charts, with secrets in Hashi
 
 Operates on a single cloud, minikube, or GCE project at a time
 
+A "cloud" is a single GCE project, or minikube
+
+There may be multiple kubernetes "clusters" within a cloud
+
 Usage:
-  landscape cloud list [--provisioner=<cloud_provisioner>]
+  landscape cloud list [--cloud-provisioner=<cloud_provisioner>]
   landscape cloud converge [--cloud=<cloud_project>]
-  landscape cluster list [--cloud=<cloud_project>]
+  landscape cluster list [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>]
   landscape cluster converge --cluster=<cluster_name> [--converge-cloud]
       [--provisioner=<provisioner>]
       [--gce-project-id=<gce_project_id>] [--minikube-driver=<driver>] [--kubernetes-version=<k8s_version>] [--cluster-dns-domain=<dns_domain>]
@@ -22,6 +26,7 @@ Usage:
   landscape prerequisites install
 
 Options:
+  --cloud-provisioner=<cloud_provisioner>      Cloud provisioner ("terraform" or "minikube")
   --cluster=<context_name>                     Operate on cluster context, defined in Vault
   --write-kubeconfig                           Write ~/.kube/config with contents from Vault
   --read-kubeconfig                            Read ~/.kube/config and put its contents in Vault
@@ -52,25 +57,46 @@ from .kubernetes import kubernetes_get_context
 from .vault import (read_kubeconfig, write_kubeconfig)
 from .prerequisites import install_prerequisites
 
-def main():
 
-    clouds = CloudCollection()
-    # branch is used to pull secrets from Vault, and to distinguish clusters
+def list_clouds(cloud_collection):
+    for cloud_name in cloud_collection.list():
+        print(cloud_name)
+
+
+def list_clusters(cluster_collection):
+    for cluster_name in cluster_collection.list():
+        print(cluster_name)
+
+
+def list_charts(chart_collection):
+    for chart_name in chart_collection.list():
+        print(chart_name)
+
+def cloud_for_cluster(cloud_collection, cluster_collection, cluster_selection):
+    parent_cloud_id = cluster_collection[cluster_selection]['cloud_id']
+    parent_cloud = cloud_collection[parent_cloud_id]
+    return parent_cloud
+
+
+def main():
     args = docopt.docopt(__doc__)
-    cloud_selection = args['--cloud']
-    cluster_selection = args['--cluster']
-    provisioner = args['--provisioner']
-    namespaces = args['--namespaces']
-    charts = args['--charts']
+    cloud_provisioner = args['--cloud-provisioner']
+    clouds = CloudCollection(cloud_provisioner)
+    clusters = ClusterCollection(clouds)
     chart_definition_root = args['--chart-dir']
+    cluster_selection = args['--cluster']
+    charts = ChartsCollection(cluster_selection, chart_provisioner='landscaper', root=chart_definition_root)
+    # branch is used to pull secrets from Vault, and to distinguish clusters
+    cloud_selection = args['--cloud']
+    namespaces_selection = args['--namespaces']
+    charts_selection = args['--charts']
     terraform_definition_root = args['--tf-templates-dir']
     also_converge_cloud = args['--converge-cloud']
     # landscape cloud
     if args['cloud']:
         # landscape cloud list
         if args['list']:
-            for cloud_name in clouds.list(provisioner):
-                print(cloud_name)
+            list_clouds(clouds)
         # landscape cloud converge
         elif args['converge']:
             clouds[cloud_selection].terraform_dir = terraform_definition_root
@@ -78,13 +104,12 @@ def main():
     # landscape cluster
     elif args['cluster']:
         # landscape cloud list
-        clusters = ClusterCollection()
         if args['list']:
-            for cluster_name in clusters.list(cloud_selection):
-                print(cluster_name)
+            list_clusters(clusters)
         elif args['converge']:
             if also_converge_cloud:
-                parent_cloud_id = clusters[cluster_selection]['cloud_id']
+                parent_cloud_id = cloud_for_cluster(clouds, clusters, cluster_selection)
+                print("parent_cloud_id={0}".format(parent_cloud_id))
                 parent_cloud = clouds[parent_cloud_id]
                 parent_cloud.terraform_dir = terraform_definition_root
                 parent_cloud.converge()
@@ -92,13 +117,10 @@ def main():
         # print("clusters={0}".format(clusters))
     # landscape charts
     elif args['charts']:
-        all_chart_sets = ChartsCollection(chart_provisioner='landscaper', root=chart_definition_root)
-        my_chart_sets = all_chart_sets.charts_for('minikube', [], [])
         if args['list']:
-            for chart_set in my_chart_sets:
-                print(chart_set)
+            list_charts(charts)
         elif args['converge']:
-            my_chart_sets.converge(namespaces, charts)
+            charts.converge(namespaces_selection, charts_selection)
 
     elif args['prerequisites'] and args['install']:
         install_prerequisites()

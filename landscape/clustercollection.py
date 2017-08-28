@@ -1,13 +1,17 @@
-from .cloudcollection import CloudCollection
 from .cluster import Cluster
 from .vault import VaultClient
 from .cluster_minikube import MinikubeCluster
 from .cluster_terraform import TerraformCluster
 
 class ClusterCollection(object):
-    def __init__(self):
+    def __init__(self, cloud_collection):
+        self.__clouds = cloud_collection
         self.__vault = VaultClient()
         self.__clusters = self.__clusters_in_vault()
+
+
+    def __str__(self):
+        return '\n'.join(self.__clusters)
 
 
     def __getitem__(self, cluster_name):
@@ -15,28 +19,26 @@ class ClusterCollection(object):
         return retval
 
     def __clusters_in_vault(self):
+        """ Only retrieve clusters referencing a cloud in self.__clouds"""
         vault_cluster_prefix = '/secret/landscape/clusters'
         clusters_in_vault = self.__vault.dump_vault_from_prefix(vault_cluster_prefix, strip_root_key=True)
-        cluster_db = []
-        for cluster_id in clusters_in_vault.keys():
-            cluster_parameters = clusters_in_vault[cluster_id]
-            cluster_parameters.update({'context_id': cluster_id})
-            print("cluster_parameters={0}".format(cluster_parameters))
-            cloud_hosting_cluster = cluster_parameters['cloud_id']
-            clouds = CloudCollection()
-            cloud_provisioner = clouds[cloud_hosting_cluster]['provisioner']
-            if cloud_provisioner == 'minikube':
-                cluster_db.append(MinikubeCluster(**cluster_parameters))
-            elif cloud_provisioner == 'terraform':
-                cluster_db.append(TerraformCluster(**cluster_parameters))
-            else:
-                raise("Unknown provisioner found in Vault: {0}".format())
+        cluster_db = {}
+        for k8s_context_name in clusters_in_vault.keys():
+            cluster_candidate = clusters_in_vault[k8s_context_name]
+            cloud_id_for_cluster = cluster_candidate['cloud_id']
+            if cluster_candidate['cloud_id'] in self.__clouds.list():
+                # What provisioned the cloud? e.g., terraform, minikube
+                cloud_for_cluster = self.__clouds[cloud_id_for_cluster]
+                cluster_parameters = clusters_in_vault[k8s_context_name]
+                cluster_parameters.update({'context_id': k8s_context_name})
+                cloud_provisioner = cloud_for_cluster['provisioner']
+                if cloud_provisioner == 'minikube':
+                    cluster_db[k8s_context_name] = MinikubeCluster(**cluster_parameters)
+                elif cloud_provisioner == 'terraform':
+                    cluster_db[k8s_context_name] = TerraformCluster(**cluster_parameters)
+                else:
+                    raise("Unknown provisioner found in Vault: {0}".format())
         return cluster_db
 
-    def list(self, cloud_id_selector=None):
-        clusters = self.__clusters
-        if cloud_id_selector:
-            retval = [d for d in clusters if d['cloud_id'] == cloud_id_selector]
-        else:
-            retval = clusters
-        return retval
+    def list(self):
+        return self.__clusters
