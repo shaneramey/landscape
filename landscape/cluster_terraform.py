@@ -27,14 +27,16 @@ class TerraformCluster(Cluster):
         Checks if a terraform cloud is already running
         Initializes it if not yet running
 
-        Returns:
+        Returns: None
 
         """
         gce_auth_cmd = "gcloud auth activate-service-account " + \
                         self.service_account_email() + \
                         " --key-file=" + self.gcloud_auth_jsonfile
         print("running command {0}".format(gce_auth_cmd))
-        return gce_auth_cmd
+        gce_auth_failed = subprocess.call(gce_auth_cmd, env=envvars, shell=True)
+        if gce_auth_failed:
+            sys.exit("ERROR: non-zero retval for {}".format(gce_auth_cmd))
 
 
     def gce_envvars(self):
@@ -57,7 +59,7 @@ class TerraformCluster(Cluster):
 
 
     def configure_kubectl(self):
-        get_creds_cmd = "gcloud --project={0} container clusters get-credentials --zone={1} {2}".format(self.cloud_id, self.cluster_zone, self.cluster_name)
+        get_creds_cmd = "gcloud container clusters get-credentials --project={0} --zone={1} {2}".format(self.cloud_id, self.cluster_zone, self.cluster_name)
         envvars = self.gce_envvars()
         print("running command {0}".format(get_creds_cmd))
         get_creds_failed = subprocess.call(get_creds_cmd, env=envvars, shell=True)
