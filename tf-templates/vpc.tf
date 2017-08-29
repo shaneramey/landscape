@@ -73,7 +73,6 @@ data "vault_generic_secret" "gce_project_secrets" {
 # An example of how to connect two GCE networks with a VPN
 provider "google" {
   project      = "${var.gce_project_id}"
-  region       = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
 }
 
 # Create the two networks we want to join. They must have separate, internal
