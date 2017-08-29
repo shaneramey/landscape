@@ -86,8 +86,9 @@ resource "google_compute_network" "networkA" {
 
 resource "google_compute_subnetwork" "gke_cluster1" {
   name       = "gke-master"
-  ip_cidr_range = "${data.vault_generic_secret.gce_project_secrets.data["gke_network1_ipv4_cidr"]}"
   network = "${google_compute_network.networkA.self_link}"
+  region  = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
+  ip_cidr_range = "${data.vault_generic_secret.gce_project_secrets.data["gke_network1_ipv4_cidr"]}"
 }
 
 # Attach a VPN gateway to each network.
