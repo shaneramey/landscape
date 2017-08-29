@@ -87,10 +87,6 @@ node('landscape') {
         }
     }
     stage('Environment') {
-        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            sh "landscape cluster environment --write-kubeconfig --kubeconfig-file=/home/jenkins/.kube/config"
-        }
-        sh "kubectl config use-context ${CONTEXT}"
     }
     stage('Test') {
     }
