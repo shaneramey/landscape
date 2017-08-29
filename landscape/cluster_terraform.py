@@ -30,6 +30,7 @@ class TerraformCluster(Cluster):
         Returns: None
 
         """
+        envvars = self.gce_envvars()
         gce_auth_cmd = "gcloud auth activate-service-account " + \
                         self.service_account_email() + \
                         " --key-file=" + self.gcloud_auth_jsonfile
