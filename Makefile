@@ -39,7 +39,7 @@ deploy: init
 	$(DEPLOY_CHARTS_CMD)
 
 init:
-	landscape prerequisites install
+# landscape prerequisites install
 	helm init --client-only
 	helm repo add charts.downup.us http://charts.downup.us
 	helm repo update
