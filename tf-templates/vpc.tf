@@ -251,7 +251,3 @@ resource "google_container_cluster" "cluster1" {
     ]
   }
 }
-
-output "get-credentials-command" {
-  value = "gcloud --project=${var.gce_project_id} container clusters get-credentials ${var.gke_cluster1_name} --zone=${data.vault_generic_secret.gce_project_secrets.data["region"]}-a && kubectl config use-context gke_${var.gce_project_id}_${data.vault_generic_secret.gce_project_secrets.data["region"]}-a_${var.gke_cluster1_name}"
-}
