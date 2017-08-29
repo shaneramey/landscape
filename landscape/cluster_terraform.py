@@ -40,7 +40,7 @@ class TerraformCluster(Cluster):
 
     def gce_envvars(self):
         return os.environ.update({
-            'GOOGLE_CREDENTIALS': self.gcloud_auth_jsonfile,
+            'GOOGLE_APPLICATION_CREDENTIALS': self.gcloud_auth_jsonfile,
         })
 
     def service_account_email(self):
