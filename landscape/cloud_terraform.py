@@ -34,7 +34,7 @@ class TerraformCloud(Cloud):
 
     def envvars(self):
         return os.environ.update({
-            'GOOGLE_APPLICATION_CREDENTIALS': self.gcloud_auth_jsonfile,
+            'GOOGLE_CREDENTIALS': self.gcloud_auth_jsonfile,
             'TF_LOG': 'DEBUG'
         })
 
