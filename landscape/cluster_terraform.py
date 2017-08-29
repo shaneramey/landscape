@@ -1,6 +1,7 @@
 import subprocess
 import json
 import os
+import sys
 
 from .cluster import Cluster
 
@@ -17,7 +18,8 @@ class TerraformCluster(Cluster):
         super(TerraformCluster, self).__init__(**kwargs)
         self.google_credentials = kwargs['google_credentials']
         self.cluster_name = kwargs['gke_cluster_name']
-        self.gcloud_auth_jsonfile = os.getcwd() + '/serviceaccount.json'
+        self.cluster_zone = kwargs['gke_cluster_zone']
+        self.gcloud_auth_jsonfile = os.getcwd() + '/cluster-serviceaccount.json'
 
 
     def cluster_setup(self):
@@ -38,7 +40,7 @@ class TerraformCluster(Cluster):
 
     def gce_envvars(self):
         return os.environ.update({
-            'GOOGLE_CREDENTIALS': self.gcloud_auth_jsonfile,
+            'GOOGLE_APPLICATION_CREDENTIALS': self.gcloud_auth_jsonfile,
         })
 
     def service_account_email(self):
@@ -53,7 +55,7 @@ class TerraformCluster(Cluster):
 
 
     def configure_kubectl(self):
-        get_creds_cmd = "gcloud --project={0} container clusters get-credentials {1}".format(self.cloud_id, self.cluster_name)
+        get_creds_cmd = "gcloud --project={0} container clusters get-credentials --zone={1} {2}".format(self.cloud_id, self.cluster_zone, self.cluster_name)
         envvars = self.gce_envvars()
         print("running command {0}".format(get_creds_cmd))
         get_creds_failed = subprocess.call(get_creds_cmd, env=envvars, shell=True)

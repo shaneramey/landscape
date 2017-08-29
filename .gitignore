@@ -5,4 +5,5 @@ ca-pki-init/
 *.tfstate
 *.tfstate.backup
 ve/
-serviceaccount.json
+cloud-serviceaccount.json
+cluster-serviceaccount.json

@@ -14,7 +14,8 @@ class TerraformCloud(Cloud):
         self.tf_templates_dir = '.'
         self.gce_creds = kwargs['google_credentials']
         self.terraform_dir = kwargs['terraform_templates_dir']
-
+        self.gcloud_auth_jsonfile = os.getcwd() + '/cloud-serviceaccount.json'
+        self.write_gcloud_keyfile_json()
 
     @property
     def gce_project(self):
@@ -33,10 +34,19 @@ class TerraformCloud(Cloud):
 
     def envvars(self):
         return os.environ.update({
-            'GOOGLE_CREDENTIALS': self.gce_creds,
+            'GOOGLE_APPLICATION_CREDENTIALS': self.gcloud_auth_jsonfile,
             'TF_LOG': 'DEBUG'
         })
 
+    def service_account_email(self):
+        gce_creds = json.loads(self.gce_creds)
+        return gce_creds['client_email']
+
+
+    def write_gcloud_keyfile_json(self):
+        f = open(self.gcloud_auth_jsonfile, "w")
+        f.write(self.gce_creds)
+        f.close()
 
     def tf_varstr(self):
         tf_vars_args  = '-var="gce_project_id={0}" ' + \
