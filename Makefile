@@ -13,14 +13,14 @@ SHELL := /bin/bash
 
 # override these settings on command-line to override default behavior
 DEBUG := false
-GIT_BRANCH := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
+BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 CLUSTER_NAME := minikube
 # namespaces can be comma-separated
 K8S_NAMESPACES = __all_namespaces__
 
 # helm charts deployment
 # also converges cluster (GKE/minikube) and cloud (GCE/minikube)
-DEPLOY_CHARTS_CMD = landscape charts converge --git-branch=$(GIT_BRANCH) --cluster=$(CLUSTER_NAME) --converge-cluster --converge-cloud
+DEPLOY_CHARTS_CMD = landscape charts converge --git-branch=$(BRANCH_NAME) --cluster=$(CLUSTER_NAME) --converge-cluster --converge-cloud
 
 ifeq ($(DEBUG),true)
 	DEPLOY_CHARTS_CMD += --debug
