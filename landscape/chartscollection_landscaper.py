@@ -1,5 +1,5 @@
 import os
-import glob
+import fnmatch
 import yaml
 import subprocess
 import sys
@@ -31,7 +31,10 @@ class LandscaperChartsCollection(ChartsCollection):
         chart_sets = {}
         for chart_set in os.listdir(path_to_chartset_root_dir):
             if chart_set in self.chart_collections:
-                chart_set_charts = [file for file in glob.glob(path_to_chartset_root_dir + '/' + chart_set + '/**/*.yaml', recursive=True)]
+                chart_set_charts = []
+                for root, dirnames, filenames in os.walk(path_to_chartset_root_dir + '/' + chart_set):
+                    for filename in fnmatch.filter(filenames, '*.yaml'):
+                        chart_set_charts.append(os.path.join(root, filename))
                 for landscaper_yaml in chart_set_charts:
                     with open(landscaper_yaml) as f:
                         chart_info = yaml.load(f)
