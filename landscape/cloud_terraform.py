@@ -44,6 +44,9 @@ class TerraformCloud(Cloud):
 
 
     def write_gcloud_keyfile_json(self):
+        google_application_creds_file = self.gcloud_auth_jsonfile
+        print("Writing GOOGLE_APPLICATION_CREDENTIALS to {0}".format(google_application_creds_file))
+        f = open(google_application_creds_file, "w")
         f = open(self.gcloud_auth_jsonfile, "w")
         f.write(self.gce_creds)
         f.close()

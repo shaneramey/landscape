@@ -20,7 +20,7 @@ class TerraformCluster(Cluster):
         self.cluster_name = kwargs['gke_cluster_name']
         self.cluster_zone = kwargs['gke_cluster_zone']
         self.gcloud_auth_jsonfile = os.getcwd() + '/cluster-serviceaccount.json'
-
+        self.write_gcloud_keyfile_json()
 
     def cluster_setup(self):
         """
@@ -30,7 +30,6 @@ class TerraformCluster(Cluster):
         Returns:
 
         """
-        self.write_gcloud_keyfile_json()
         gce_auth_cmd = "gcloud auth activate-service-account " + \
                         self.service_account_email() + \
                         " --key-file=" + self.gcloud_auth_jsonfile
@@ -49,6 +48,9 @@ class TerraformCluster(Cluster):
 
 
     def write_gcloud_keyfile_json(self):
+        gce_creds_file = self.gcloud_auth_jsonfile
+        print("Writing GOOGLE_APPLICATION_CREDENTIALS to {0}".format(gce_creds_file))
+        f = open(gce_creds_file, "w")
         f = open(self.gcloud_auth_jsonfile, "w")
         f.write(self.google_credentials)
         f.close()
