@@ -74,7 +74,6 @@ data "vault_generic_secret" "gce_project_secrets" {
 provider "google" {
   project      = "${var.gce_project_id}"
   region       = "${data.vault_generic_secret.gce_project_secrets.data["region"]}"
-  credentials  = "${data.vault_generic_secret.gce_project_secrets.data["google_credentials"]}"
 }
 
 # Create the two networks we want to join. They must have separate, internal
