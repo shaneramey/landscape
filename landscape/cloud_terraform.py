@@ -14,7 +14,7 @@ class TerraformCloud(Cloud):
         self.tf_templates_dir = '.'
         self.gce_creds = kwargs['google_credentials']
         self.terraform_dir = kwargs['terraform_templates_dir']
-        self.gcloud_auth_jsonfile = os.getcwd() + '/cloud-serviceaccount.json'
+        self.gcloud_auth_jsonfile = os.getcwd() + '/cloud-serviceaccount-' + self.name + '.json'
         self.write_gcloud_keyfile_json()
 
     @property

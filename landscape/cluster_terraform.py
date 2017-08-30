@@ -19,7 +19,7 @@ class TerraformCluster(Cluster):
         self.google_credentials = kwargs['google_credentials']
         self.cluster_name = kwargs['gke_cluster_name']
         self.cluster_zone = kwargs['gke_cluster_zone']
-        self.gcloud_auth_jsonfile = os.getcwd() + '/cluster-serviceaccount.json'
+        self.gcloud_auth_jsonfile = os.getcwd() + '/cluster-serviceaccount-' + self.name + '.json'
         self.write_gcloud_keyfile_json()
 
     def cluster_setup(self):
