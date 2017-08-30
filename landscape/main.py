@@ -49,33 +49,88 @@ import subprocess
 from .cloudcollection import CloudCollection
 from .clustercollection import ClusterCollection
 from .chartscollection_landscaper import LandscaperChartsCollection
-from .client import kubectl_use_context
-from .kubernetes import kubernetes_get_context
+from .kubernetes import (kubernetes_get_context, kubectl_use_context)
 from .vault import (read_kubeconfig, write_kubeconfig)
 from .prerequisites import install_prerequisites
 
 
 def list_clouds(cloud_collection):
+    """Prints a list of cloud names for a given CloudCollection
+
+    Args:
+        cloud_collection (CloudCollection): a set of Cloud objects
+
+    Returns:
+        None
+    """
     for cloud_name in cloud_collection.list():
         print(cloud_name)
 
 
 def list_clusters(cluster_collection):
+    """Prints a list of cluster names for a given ClusterCollection
+
+    Args:
+        cluster_collection (ClusterCollection): a set of Cluster objects
+
+    Returns:
+        None
+    """
     for cluster_name in cluster_collection.list():
         print(cluster_name)
 
 
 def list_charts(chart_collection):
+    """Prints a list of cluster names for a given ClusterCollection
+
+    Args:
+        cluster_collection (ClusterCollection): a set of Cluster objects
+
+    Returns:
+        None
+    """
     for chart_name in chart_collection.list():
         print(chart_name)
 
 
 def cloud_for_cluster(cloud_collection, cluster_collection, cluster_selection):
+    """Finds and returns the Cloud given a cluster's name
+
+    Takes a collection containing Cloud objects (CloudCollection), a collection
+    containing Cluster objects (ClusterCollection) - then looks up the cluster
+    name based on the passed cluster_selection inside of the ClusterCollection,
+    and returns it
+
+    Args:
+        cloud_collection (CloudCollection): A set Cloud objects
+        cluster_collection (ClusterCollection): A set of Cluster objects
+        cluster_selection (str): Another optional variable, that has a much
+            longer name than the other args, and which does nothing.
+
+    Returns:
+        Cloud that contains the Cluster with the given name
+    """
     parent_cloud_id = cluster_collection[cluster_selection]['cloud_id']
     parent_cloud = cloud_collection[parent_cloud_id]
     return parent_cloud
 
 def git_branch():
+    """Gets the git branch of the current working directory
+
+    Takes a collection containing Cloud objects (CloudCollection), a collection
+    containing Cluster objects (ClusterCollection) - then looks up the cluster
+    name based on the passed cluster_selection inside of the ClusterCollection,
+    and returns it
+
+    Args:
+        cloud_collection (CloudCollection): A set Cloud objects
+        cluster_collection (ClusterCollection): A set of Cluster objects
+        cluster_selection (str): Another optional variable, that has a much
+            longer name than the other args, and which does nothing.
+
+    Returns:
+        git branch of current directory (str)
+    """
     git_branch_cmd = "git branch | grep \* | cut -d ' ' -f2"
     proc = subprocess.Popen(git_branch_cmd, stdout=subprocess.PIPE, shell=True)
     current_branch = proc.stdout.read().rstrip().decode()

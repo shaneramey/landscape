@@ -7,3 +7,8 @@ ca-pki-init/
 ve/
 cloud-serviceaccount.json
 cluster-serviceaccount.json
+landscape.egg-info/
+.eggs/
+.tox/
+.coverage
+htmlcov

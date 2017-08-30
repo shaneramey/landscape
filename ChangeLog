@@ -1,0 +1,71 @@
+CHANGES
+=======
+
+* fix: (terraform) add region and credentials (via Vault) back to google provider
+* feat: terraform trace debug
+* fix: (terraform) use GOOGLE\_REGION instead of in-Vault setting
+* fix: (terraform) use GOOGLE\_APPLICATION\_CREDENTIALS instead of in-Vault credentials
+* fix: (terraform) add region to google\_compute\_subnetwork gke\_cluster1
+* fix: set envvars on cluster gcloud auth activate-service-account command
+* fix: execute gcloud auth activate-service-account
+* Revert "fix: add region to terraform google\_compute\_subnetwork"
+* fix: add region to terraform google\_compute\_subnetwork
+* fix: write gcloud auth json in terraform cluster init
+* fix: use GOOGLE\_APPLICATION\_CREDENTIALS instead of GOOGLE\_CREDENTIALS for path to json auth file
+* fix: use GOOGLE\_CREDENTIALS instead of GOOGLE\_APPLICATION\_CREDENTIALS
+* fix: add GCE and GKE credentials via GOOGLE\_APPLICATION\_CREDENTIALS env var
+* fix: remove terraform output for gke credentials (#4)
+* fix: pass env var BRANCH\_NAME from Jenkinsfile to make
+* fix: Makefile use Jenkinsfile-override-capable BRANCH\_NAME variable
+* fix: python3.4-compatible landscaper chart collection
+* fix: remove install prerequisites from Makefile
+* feat: upgrade jenkins containers
+* Jenkinsfile: use inherent kubeconfig
+* fix: remove unused --charts parameter
+* fix: merge conflicts
+* feat: landscape cluster converge / Makefile
+* style: clean up formatting
+* feat: landscape cluster converge --cluster=<gke\_cluster>
+* feat: landscape cluster converge --cluster
+* feat: chart deployment based on cluster type
+* fix: add namespace to each landscaper chart deploy definition
+* fix: correct charts set for cloud provisioner
+* feat: landscape charts
+* fix: rename helm chart directories
+* feat: landscape charts list
+* feat: landscape cluster converge
+* landscape cloud command (#2)
+* fix: remove terraform provider cache
+* fix: remove sensitive credentials from terraform output
+* refactor: terraform cluster creation
+* feat: add landscape cloud subcommand
+* feat: vault dump\_vault\_from\_prefix method
+* test: provisioner\_from\_context\_name, kubeconfig\_context\_entry
+* docs: formatting
+* fix: trigger Jenkinsfile
+* fix: add PATH to Jenkinsfile
+* fix: add PATH to Jenkinsfile
+* fix: add PATH to Jenkinsfile
+* fix: add PATH to Jenkinsfile
+* fix: add PATH to Jenkinsfile
+* fix: test PATH
+* fix: test PATH
+* fix: formatting
+* fix: use executeOrReportErrors() for vault auth in Jenkinsfile
+* fix: formatting
+* fix: formatting
+* fix: add debug to show vault output in Jenkinsfile
+* fix: specify full path to vault binary in Jenkinsfile
+* fix: output PATH variable in Jenkinsfile
+* fix: output text on vault auth command
+* fix: output text on vault auth command
+* fix: VAULT\_ settings informational output
+* fix: pull VAULT\_ settings in via env.SETTING
+* fix: identify VAULT\_ settings with verbose output
+* chore: pull in VAULT\_ADDR and VAULT\_CACERT from environment
+* chore: pull in VAULT\_ADDR and VAULT\_CACERT from environment
+* chore: parameterize VAULT\_ADDR and VAULT\_CACERT
+* fix lastpass command
+* feat: auto-install prerequisites
+* docs: update pip install command
+* first commit
