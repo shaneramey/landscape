@@ -252,3 +252,22 @@ resource "google_container_cluster" "cluster1" {
     ]
   }
 }
+
+resource "google_storage_bucket" "helm-charts" {
+  name     = "helm-charts-${var.gce_project_id}"
+  location = "US"
+
+  website {
+    main_page_suffix = "index.html"
+    not_found_page   = "404.html"
+  }
+}
+
+resource "google_storage_bucket_acl" "helm-charts-acl" {
+  bucket = "${google_storage_bucket.helm-charts.name}"
+
+  role_entity = [
+    "READER:AllUsers",
+  ]
+}
+
