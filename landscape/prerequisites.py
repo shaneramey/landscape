@@ -1,6 +1,7 @@
-import subprocess
+import subprocess as sp
 import platform
 import os.path
+
 
 def install_prerequisites():
     """
@@ -16,6 +17,7 @@ def install_prerequisites():
     install_helm(os_platform)
     install_landscaper(os_platform)
     install_terraform(os_platform)
+    install_helm_plugins()
 
 
 def install_minikube(os_platform):
@@ -27,7 +29,7 @@ def install_minikube(os_platform):
     }
     dst = '/usr/local/bin/minikube'
     if not os.path.isfile(dst):
-        subprocess.call(install_cmds[os_platform], shell=True)
+        sp.call(install_cmds[os_platform], shell=True)
     else:
         print("minikube already installed in {0}".format(dst))
 
@@ -39,7 +41,7 @@ def install_lastpass(os_platform):
     }
     dst = '/usr/local/bin/lpass'
     if not os.path.isfile(dst):
-        subprocess.call(install_cmds[os_platform], shell=True)
+        sp.call(install_cmds[os_platform], shell=True)
     else:
         print("lastpass already installed in {0}".format(dst))
 
@@ -53,7 +55,7 @@ def install_vault(os_platform):
     }
     dst = '/usr/local/bin/vault'
     if not os.path.isfile(dst):
-        subprocess.call(install_cmds[os_platform], shell=True)
+        sp.call(install_cmds[os_platform], shell=True)
     else:
         print("vault already installed in {0}".format(dst))
 
@@ -67,7 +69,7 @@ def install_kubectl(os_platform):
     }
     dst = '/usr/local/bin/kubectl'
     if not os.path.isfile(dst):
-        subprocess.call(install_cmds[os_platform], shell=True)
+        sp.call(install_cmds[os_platform], shell=True)
     else:
         print("kubectl already installed in {0}".format(dst))
 
@@ -83,7 +85,7 @@ def install_helm(os_platform):
     }
     dst = '/usr/local/bin/helm'
     if not os.path.isfile(dst):
-        subprocess.call(install_cmds[os_platform], shell=True)
+        sp.call(install_cmds[os_platform], shell=True)
     else:
         print("helm already installed in {0}".format(dst))
 
@@ -98,7 +100,7 @@ def install_landscaper(os_platform):
     }
     dst = '/usr/local/bin/landscaper'
     if not os.path.isfile(dst):
-        subprocess.call(install_cmds[os_platform], shell=True)
+        sp.call(install_cmds[os_platform], shell=True)
     else:
         print("landscaper already installed in {0}".format(dst))
 
@@ -112,7 +114,20 @@ def install_terraform(os_platform):
     }
     dst = '/usr/local/bin/terraform'
     if not os.path.isfile(dst):
-        subprocess.call(install_cmds[os_platform], shell=True)
+        sp.call(install_cmds[os_platform], shell=True)
     else:
         print("terraform already installed in {0}".format(dst))
 
+
+def install_helm_plugins():
+    """Install helm plugins. Requires helm to be installed"""
+    plugins = {
+        'https://github.com/technosophos/helm-gpg': '0.1.0',
+        'https://github.com/technosophos/helm-template': '2.4.1+2',
+    }
+    for plugin_url, version in plugins.items():
+        install_cmd = "helm plugin install {0} --version={1}".format(
+                                                    plugin_url,
+                                                    version)
+        print("installing helm plugin with command: {0}".format(install_cmd))
+        sp.call(install_cmd, shell=True)
