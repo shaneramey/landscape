@@ -88,8 +88,15 @@ lpass show Shared-k8s/k8s-landscaper/master --notes
 ## Cluster-specific provisioning
 
 ### minikube
+
+- Converge cluster and charts
 ```
 make
+```
+
+- Import minikube ca.crt into your MacOS keychain
+```
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.minikube/ca.crt
 ```
 
 ### GKE
