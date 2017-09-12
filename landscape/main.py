@@ -3,10 +3,15 @@
 """
 landscape: Provisions Kubernetes clusters and Helm charts, with secrets in Hashicorp Vault.
 
-Operates on a single cloud, minikube, or GCE project at a time
 
-A "cloud" is a single GCE project, or minikube
-A "cluster" is a Kubernetes cluster
+A "cloud" is a single GCE Project ID, or minikube. Currently, only one cloud can be operated on at a time.
+
+A "cluster" is a Kubernetes cluster running within a cloud
+
+"charts" represent a sub-set of charts specific to a cluster
+
+"localmachine" commands operate on the local machine
+
 There may be multiple kubernetes "clusters" within a cloud
 
 Usage:
@@ -19,7 +24,8 @@ Usage:
   landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>]
   landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
       [--namespaces=<namespace>] [--converge-cluster] [--converge-cloud] [--git-branch=<branch_name>]
-  landscape prerequisites install
+  landscape localmachine setup
+  landscape localmachine post-converge-actions
 
 Options:
   --cloud-provisioner=<cloud_provisioner>      Cloud provisioner ("terraform" or "minikube")
@@ -49,10 +55,9 @@ import subprocess
 from .cloudcollection import CloudCollection
 from .clustercollection import ClusterCollection
 from .chartscollection_landscaper import LandscaperChartsCollection
+from .localmachine import Localmachine
 from .kubernetes import (kubernetes_get_context, kubectl_use_context)
 from .vault import (read_kubeconfig, write_kubeconfig)
-from .prerequisites import install_prerequisites
-
 
 def list_clouds(cloud_collection):
     """Prints a list of cloud names for a given CloudCollection
@@ -185,8 +190,12 @@ def main():
                 clusters[cluster_selection].converge()
             charts.converge()
     # landscape prerequisites install
-    elif args['prerequisites'] and args['install']:
-        install_prerequisites()
+    elif args['localmachine']:
+        localmachine = Localmachine()
+        if args['setup']:
+            localmachine.pre_converge()
+        if args['post-converge-actions']:
+            localmachine.post_converge()
 
 if __name__ == "__main__":
     main()

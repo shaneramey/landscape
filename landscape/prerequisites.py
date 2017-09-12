@@ -3,13 +3,12 @@ import platform
 import os.path
 
 
-def install_prerequisites():
+def install_prerequisites(os_platform):
     """
     Installs prerequisites for the landscape CLI tool
 
     Returns: None
     """
-    os_platform = platform.system()
     install_minikube(os_platform)
     install_lastpass(os_platform)
     install_vault(os_platform)
