@@ -16,6 +16,7 @@ class Localmachine(object):
         Override this method in your subclass
         """
         print('TODO: (minikube) import CA')
+        print('TODO: helm add repos (pulled from where? Vault?)')
         print('TODO: Download OpenVPN profile')
 
     def pre_converge(self):
