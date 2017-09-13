@@ -23,7 +23,10 @@ Usage:
   landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
   landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>]
   landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
-      [--namespaces=<namespace>] [--converge-cluster] [--converge-cloud] [--git-branch=<branch_name>]
+      [--namespaces=<namespaces>] [--charts=<chart_names>] [--converge-cluster]
+      [--converge-cloud] [--git-branch=<branch_name>]
+  landscape secrets export
+  landscape secrets import
   landscape localmachine setup
   landscape localmachine post-converge-actions
 
