@@ -9,10 +9,11 @@ def kubeconfig_context_entry(context_name):
     """
     Generates a kubeconfig context entry
 
-    Arguments:
-     - context_name (str): The Kubernetes context
+    Args:
+        context_name (str): The Kubernetes context
 
-    Returns: context entry for kubeconfig file (dict)
+    Returns:
+        context entry for kubeconfig file (dict)
     """
     context_entry = {
         'name': context_name,
@@ -28,10 +29,10 @@ def kubeconfig_cluster_entry(context_name, k8s_server, ca_cert):
     """
     Generates a kubeconfig cluster entry
 
-    Arguments:
-     - context_name (str): The Kubernetes context
-     - k8s_server (str): The URL of the Kubernetes API server
-     - client_key (str): The PEM-encoded CA certificate to verify against
+    Args:
+        context_name (str): The Kubernetes context
+        k8s_server (str): The URL of the Kubernetes API server
+        client_key (str): The PEM-encoded CA certificate to verify against
 
     Returns: cluster entry for kubeconfig file (dict)
     """
@@ -51,10 +52,10 @@ def kubeconfig_user_entry(context_name, client_cert, client_key):
     """
     Generates a kubeconfig user entry
 
-    Arguments:
-     - context_name (str): The Kubernetes context
-     - client_cert (str): The PEM-encoded client cert
-     - client_key (str): The PEM-encoded client key
+    Args:
+        context_name (str): The Kubernetes context
+        client_cert (str): The PEM-encoded client cert
+        client_key (str): The PEM-encoded client key
 
     Returns: user entry for kubeconfig file (dict)
     """
@@ -83,10 +84,11 @@ def write_kubeconfig(cfg_path):
         client_key='client_key_value' \
         api_server='https://kubernetes.default.svc.cluster.local'
     
-    Arguments:
-     - cfg_path (str): Path to the kubeconfig file being written
+    Args:
+        cfg_path (str): Path to the kubeconfig file being written
 
-    Returns: None
+    Returns:
+        None
     """
     vault_root = '/secret/k8s_contexts'
     vault_addr = os.environ.get('VAULT_ADDR')
@@ -138,12 +140,12 @@ def gen_k8sconf(k8s_context=None, api_server=None, ca_cert=None,
     """
     Generate a kubeconfig object
 
-    Arguments:
-     - k8s_context (str):
-     - api_server (str):
-     - ca_cert (str):
-     - client_auth_cert (str):
-     - client_auth_key (str):
+    Args:
+        k8s_context (str):
+        api_server (str):
+        ca_cert (str):
+        client_auth_cert (str):
+        client_auth_key (str):
 
     Returns: kubeconfig data (dict)
     """
@@ -251,6 +253,12 @@ def read_kubeconfig(cfg_path):
 
 
 class VaultClient(object):
+    """Connects to and authenticates with Vault
+
+    Attributes:
+        __vault_client (hvac.Client): Client connected to Vault
+
+    """
     def __init__(self):
         vault_addr = os.environ.get('VAULT_ADDR')
         vault_cacert = os.environ.get('VAULT_CACERT')
@@ -273,13 +281,17 @@ class VaultClient(object):
 
     def dump_vault_from_prefix(self, path_prefix, strip_root_key=False):
         """
-        Dump Vault data at prefix into dict
+        Dump Vault data at prefix into dict.
 
-        Arguments:
-         - path_prefix (str): The prefix which to dump
-         - strip_root_key (bool): Strip the root key from return value
+        strip_root_key argument used for recursive path-stripping.
+        Set to True when you call the method outside of itself (non-recursively)
 
-        Returns: data from Vault at prefix (dict)
+        Args:
+            path_prefix (str): The prefix which to dump
+            strip_root_key (bool): Strip the root key from return value
+
+        Returns:
+            Data from Vault at prefix (dict)
         """
         all_values_at_prefix = {}
         logging.info(" - reading vault subkeys at {0}".format(path_prefix))
@@ -290,14 +302,44 @@ class VaultClient(object):
         if not prefix_keyname in all_values_at_prefix:
             all_values_at_prefix[prefix_keyname] = {}
 
+        # look in Vault path for subkeys. If they exist, recurse.
         if subkeys_at_prefix:
             for subkey in subkeys_at_prefix['data']['keys']:
                 prefixed_key = path_prefix + '/' + subkey
-                all_values_at_prefix[prefix_keyname].update(self.dump_vault_from_prefix(prefixed_key))
+                sub_vault_key = self.dump_vault_from_prefix(prefixed_key)
+                all_values_at_prefix[prefix_keyname].update(sub_vault_key)
         else:
-            all_values_at_prefix[prefix_keyname].update(self.__vault_client.read(path_prefix)['data'])
+            vault_item_data = self.get_vault_data(path_prefix)
+            all_values_at_prefix[prefix_keyname].update(vault_item_data)
+
+        # Generate full paths to the vault item.
+        # Set it to True when called from outside this method
+        # It'll handle the rest
         if strip_root_key == True:
             retval = all_values_at_prefix[prefix_keyname]
         else:
             retval = all_values_at_prefix
         return retval
+
+
+    def get_vault_data(self, vault_path):
+        """
+        Get Vault data for a specific path
+
+        Args:
+            vault_path (str): path to Vault item
+
+        Returns:
+            Vault secret contents (dict)
+
+        """
+        vault_error_read_str = 'Vault read error. msg: {0} path: {1}'
+        try:
+            vault_item_contents = self.__vault_client.read(vault_path)
+        except ValueError as e:
+            raise(vault_error_read_str.format(e, vault_path))
+
+        if vault_item_contents and 'data' in vault_item_contents:
+            return vault_item_contents['data']
+        else:
+            raise ValueError(vault_error_read_str.format('Key not readable', vault_path))

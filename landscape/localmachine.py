@@ -16,7 +16,9 @@ class Localmachine(object):
         Override this method in your subclass
         """
         print('TODO: (minikube) import CA')
+        print('TODO: helm add repos (pulled from where? Vault?)')
         print('TODO: Download OpenVPN profile')
+        print('TODO: export local vault with remote vault')
 
     def pre_converge(self):
         install_prerequisites(self.os_platform)
