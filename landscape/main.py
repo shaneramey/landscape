@@ -47,7 +47,7 @@ Options:
   --fetch-lastpass                             Fetches values from Lastpass and puts them in Vault
   --tf-templates-dir=<tf_templates_dir>        Terraform templates directory [default: ./tf-templates].
   --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
-  --log-level=<log_level>                      Log messages at least this level
+  --log-level=<log_level>                      Log messages at least this level [default: NOTSET].
 Provisioner can be one of minikube, terraform.
 """
 
@@ -164,6 +164,9 @@ def main():
     cloud_selection = args['--cloud']
     also_converge_cloud = args['--converge-cloud']
     also_converge_cluster = args['--converge-cluster']
+    # log_level = args['--log-level']
+    logger = logging.getLogger()
+    logger.setLevel(logging.NOTSET)
     # landscape cloud
     if args['cloud']:
         # landscape cloud list

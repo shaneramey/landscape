@@ -2,6 +2,7 @@ import subprocess
 import json
 import os
 import sys
+import logging
 
 from .cluster import Cluster
 
@@ -52,7 +53,7 @@ class TerraformCluster(Cluster):
 
     def write_gcloud_keyfile_json(self):
         gce_creds_file = self.gcloud_auth_jsonfile
-        print("Writing GOOGLE_APPLICATION_CREDENTIALS to {0}".format(gce_creds_file))
+        logging.debug("Writing GOOGLE_APPLICATION_CREDENTIALS to {0}".format(gce_creds_file))
         f = open(gce_creds_file, "w")
         f = open(self.gcloud_auth_jsonfile, "w")
         f.write(self.google_credentials)
