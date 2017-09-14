@@ -1,8 +1,11 @@
 import subprocess
 import sys
 import os
+import logging
 
 from .cloud import Cloud
+
+logging.basicConfig(level=logging.DEBUG)
 
 class TerraformCloud(Cloud):
     """
@@ -45,7 +48,7 @@ class TerraformCloud(Cloud):
 
     def write_gcloud_keyfile_json(self):
         google_application_creds_file = self.gcloud_auth_jsonfile
-        print("Writing GOOGLE_APPLICATION_CREDENTIALS to {0}".format(google_application_creds_file))
+        logging.debug("Writing GOOGLE_APPLICATION_CREDENTIALS to {0}".format(google_application_creds_file))
         f = open(google_application_creds_file, "w")
         f = open(self.gcloud_auth_jsonfile, "w")
         f.write(self.gce_creds)
@@ -76,7 +79,7 @@ class TerraformCloud(Cloud):
         terraform_cmd = terraform_cmd_tmpl.format(self.gce_project,
                                                     'master',
                                                     '1.7.0')
-        print('  - applying terraform state with command: ' + terraform_cmd)
+        logging.info('  - applying terraform state with command: ' + terraform_cmd)
         failed_to_apply_terraform = subprocess.call(terraform_cmd,
                                                     cwd=self.terraform_dir,
                                                     env=self.envvars(),
@@ -96,7 +99,7 @@ class TerraformCloud(Cloud):
 
         tf_init_cmd = tf_init_cmd_tmpl.format(self.gce_project)
 
-        print('  - initializing terraform with command: ' + tf_init_cmd)
+        logging.info('  - initializing terraform with command: ' + tf_init_cmd)
         failed_to_init_terraform = subprocess.call(tf_init_cmd,
                                                     cwd=self.terraform_dir,
                                                     env=self.envvars(),

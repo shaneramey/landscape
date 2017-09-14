@@ -44,13 +44,14 @@ Options:
   --fetch-lastpass                             Fetches values from Lastpass and puts them in Vault
   --tf-templates-dir=<tf_templates_dir>        Terraform templates directory [default: ./tf-templates].
   --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
-  --debug                                      Run in debug mode.
+  --log-level=<log_level>                      Log messages at least this level
 Provisioner can be one of minikube, terraform.
 """
 
 import docopt
 import os
 import subprocess
+import logging
 
 from .cloudcollection import CloudCollection
 from .clustercollection import ClusterCollection
