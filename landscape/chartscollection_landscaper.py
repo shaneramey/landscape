@@ -64,10 +64,10 @@ class LandscaperChartsCollection(ChartsCollection):
                     namespace_secrets.update(self.vault_secrets_for_chart(namespace, name))
                     for yaml_secret in secrets:
                         if yaml_secret not in namespace_secrets.keys():
-                            vault_missing_secrets.append(helm_secret)
+                            vault_missing_secrets.append(yaml_secret)
                     if vault_missing_secrets:
                         for missing_secret in vault_missing_secrets:
-                            print('        - missing secret ' + missing_secret)
+                            print(' - missing landscaper secret ' + missing_secret)
                         sys.exit(1)
             landscaper_env = self.set_landscaper_envvars(namespace_secrets)
             ls_apply_cmd = 'landscaper apply -v --namespace=' + namespace + \
