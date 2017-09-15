@@ -1,8 +1,8 @@
 name: vault
 namespace: vault
 release:
-  chart: charts.downup.us/vault:0.1.120
-  version: 0.1.120
+  chart: helm-charts-staging-165617/vault:0.1.124
+  version: 0.1.124
 configuration:
   clusterDomain: cluster.local
   directorySuffix: dc=cluster,dc=local
