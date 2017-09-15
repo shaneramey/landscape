@@ -16,6 +16,7 @@ class Localmachine(object):
         Override this method in your subclass
         """
         print('TODO: (minikube) import CA')
+        print('sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.minikube/ca.crt')
         print('TODO: helm add repos (pulled from where? Vault?)')
         print('TODO: Download OpenVPN profile')
         print('TODO: export local vault with remote vault')
