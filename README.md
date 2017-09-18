@@ -72,11 +72,9 @@ pip install --upgrade .
 
 3. Set up your environment to point to a Vault server.
 
-Example for local docker instance:
+Example for Vault running locally inside docker:
 ```
-docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault
-export VAULT_ADDR=http://127.0.0.1:8200
-export VAULT_TOKEN=$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $3 }')
+source ./localvault.sh
 ```
 
 4. Put the secrets from LastPass into your local Vault.
