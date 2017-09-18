@@ -23,12 +23,10 @@ Usage:
   landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
   landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>]
   landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
-      [--namespaces=<namespaces>] [--charts=<chart_names>] [--converge-cluster]
+      [--namespaces=<namespaces>] [--charts=<chart_names>] [--converge-cluster] [--converge-localmachine]
       [--converge-cloud] [--git-branch=<branch_name>]
-  landscape secrets export
-  landscape secrets import
-  landscape localmachine setup
-  landscape localmachine post-converge-actions
+  landscape secrets overwrite [--from-lastpass] [--shared-secrets-folder=<central_secrets_path>]
+  landscape setup install-prerequisites
 
 Options:
   --cloud-provisioner=<cloud_provisioner>      Cloud provisioner ("terraform" or "minikube")
@@ -44,7 +42,8 @@ Options:
   --minikube-driver=<driver>                   (minikube only) driver type (virtualbox|xhyve) [default: virtualbox].
   --switch-to-cluster-context=<boolean>        switch to kubernetes context after cluster converges [default: true].
   --namespaces=<namespace>                     install only charts under specified namespaces (comma-separated).
-  --fetch-lastpass                             Fetches values from Lastpass and puts them in Vault
+  --from-lastpass                              Fetches values from Lastpass and puts them in Vault
+  --shared-secrets-folder=<central_folder>     Location in LastPass to pull secrets from [default: Shared-k8s/k8s-landscaper/master].
   --tf-templates-dir=<tf_templates_dir>        Terraform templates directory [default: ./tf-templates].
   --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
   --log-level=<log_level>                      Log messages at least this level [default: NOTSET].
@@ -59,10 +58,11 @@ import logging
 from .cloudcollection import CloudCollection
 from .clustercollection import ClusterCollection
 from .chartscollection_landscaper import LandscaperChartsCollection
+from .secrets import UniversalSecrets
 from .localmachine import Localmachine
 from .kubernetes import (kubernetes_get_context, kubectl_use_context)
 from .vault import (read_kubeconfig, write_kubeconfig)
-
+from .prerequisites import install_prerequisites
 def list_clouds(cloud_collection):
     """Prints a list of cloud names for a given CloudCollection
 
@@ -164,6 +164,7 @@ def main():
     cloud_selection = args['--cloud']
     also_converge_cloud = args['--converge-cloud']
     also_converge_cluster = args['--converge-cluster']
+    also_converge_localmachine = args['--converge-localmachine']
     # log_level = args['--log-level']
     logger = logging.getLogger()
     logger.setLevel(logging.NOTSET)
@@ -196,13 +197,21 @@ def main():
             if also_converge_cluster:
                 clusters[cluster_selection].converge()
             charts.converge()
-    # landscape prerequisites install
-    elif args['localmachine']:
-        localmachine = Localmachine()
-        if args['setup']:
-            localmachine.pre_converge()
-        if args['post-converge-actions']:
-            localmachine.post_converge()
+            # set up local machine for cluster
+            if also_converge_localmachine:
+                localmachine = Localmachine(cloud_collection=clouds, cluster_collection=clusters)
+                localmachine.converge()
+    # landscape secrets
+    elif args['secrets']:
+        # landscape charts list
+        if args['overwrite'] and args['--from-lastpass']:
+            central_secrets_folder = args['--shared-secrets-folder']
+            shared_secrets = UniversalSecrets(provider='lastpass')
+            shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder)
+    # landscape setup install-prerequisites
+    elif args['setup']:
+        if args['install-prerequisites']:
+            install_prerequisites(platform.system())
 
 if __name__ == "__main__":
     main()

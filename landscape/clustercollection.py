@@ -11,7 +11,7 @@ class ClusterCollection(object):
 
 
     def __str__(self):
-        return '\n'.join(self.__clusters)
+        return str(self.__clusters)
 
 
     def __getitem__(self, cluster_name):

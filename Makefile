@@ -20,7 +20,7 @@ K8S_NAMESPACES = __all_namespaces__
 
 # helm charts deployment
 # also converges cluster (GKE/minikube) and cloud (GCE/minikube)
-DEPLOY_CHARTS_CMD = landscape charts converge --git-branch=$(BRANCH_NAME) --cluster=$(CLUSTER_NAME) --converge-cluster --converge-cloud
+DEPLOY_CHARTS_CMD = landscape charts converge --git-branch=$(BRANCH_NAME) --cluster=$(CLUSTER_NAME) --converge-cluster --converge-cloud --converge-localmachine
 
 ifeq ($(DEBUG),true)
 	DEPLOY_CHARTS_CMD += --debug
@@ -35,7 +35,6 @@ endif
 .PHONY: deploy init 
 
 deploy: init
-	helm repo update
 	$(DEPLOY_CHARTS_CMD)
 
 init:
