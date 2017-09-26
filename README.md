@@ -70,16 +70,9 @@ source ~/venv/bin/activate && \
 pip install --upgrade .
 ```
 
-3. Set up your environment to point to a Vault server.
-
-Example for Vault running locally inside docker:
+3. Put the secrets from LastPass into your local Vault.
 ```
-source ./localvault.sh
-```
-
-4. Put the secrets from LastPass into your local Vault.
-Copy and paste the output from this command:
-```
+lpass login username@domain.account
 lpass show Shared-k8s/k8s-landscaper/master --notes
 ```
 

@@ -18,6 +18,7 @@ class Localmachine(object):
         self.vm_clouds  = kwargs['cloud_collection']
         self.kubernetes_clusters = kwargs['cluster_collection']
 
+
     def converge(self):
         """
         Override this method in your subclass

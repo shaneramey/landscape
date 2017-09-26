@@ -32,7 +32,10 @@ ifneq ($(K8S_NAMESPACES),__all_namespaces__)
 endif
 
 # Jenkinsfile stages, plus other targets
-.PHONY: deploy init 
+.PHONY: deploy init deploy-with-local-vault
+
+deploy-with-local-vault: init
+	source ./localvault.sh && $(DEPLOY_CHARTS_CMD)
 
 deploy: init
 	$(DEPLOY_CHARTS_CMD)
