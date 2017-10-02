@@ -25,7 +25,7 @@ Usage:
   landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
       [--namespaces=<namespaces>] [--charts=<chart_names>] [--converge-cluster] [--converge-localmachine]
       [--converge-cloud] [--git-branch=<branch_name>]
-  landscape secrets overwrite [--from-lastpass] [--shared-secrets-folder=<central_secrets_path>]
+  landscape secrets overwrite [--secrets-username=<username>] [--from-lastpass] [--shared-secrets-folder=<central_secrets_path>]
   landscape setup install-prerequisites
 
 Options:
@@ -44,6 +44,7 @@ Options:
   --namespaces=<namespace>                     install only charts under specified namespaces (comma-separated).
   --from-lastpass                              Fetches values from Lastpass and puts them in Vault
   --shared-secrets-folder=<central_folder>     Location in LastPass to pull secrets from [default: Shared-k8s/k8s-landscaper/master].
+  --secrets-username=<username>                Username for central shared secrets repository
   --tf-templates-dir=<tf_templates_dir>        Terraform templates directory [default: ./tf-templates].
   --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
   --log-level=<log_level>                      Log messages at least this level [default: NOTSET].
@@ -209,7 +210,8 @@ def main():
         # landscape charts list
         if args['overwrite'] and args['--from-lastpass']:
             central_secrets_folder = args['--shared-secrets-folder']
-            shared_secrets = UniversalSecrets(provider='lastpass')
+            central_secrets_username = args['--secrets-username']
+            shared_secrets = UniversalSecrets(provider='lastpass', username=central_secrets_username)
             shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder)
     # landscape setup install-prerequisites
     elif args['setup']:

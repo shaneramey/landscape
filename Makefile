@@ -11,6 +11,8 @@
 #  make CLOUD_NAME=[ minikube | <GCE Project ID> ] deploy
 SHELL := /bin/bash
 
+# lastpass username for pulling centralized secrets
+SHARED_SECRETS_USERNAME := please_pass_SHARED_SECRETS_USERNAME
 # override these settings on command-line to override default behavior
 DEBUG := false
 BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
@@ -35,7 +37,7 @@ endif
 .PHONY: deploy init deploy-with-local-vault
 
 deploy-with-local-vault: init
-	source ./localvault.sh && $(DEPLOY_CHARTS_CMD)
+	source ./localvault.sh $(SHARED_SECRETS_USERNAME) && $(DEPLOY_CHARTS_CMD)
 
 deploy: init
 	$(DEPLOY_CHARTS_CMD)

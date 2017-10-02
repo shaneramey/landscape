@@ -4,8 +4,8 @@ import sys
 
 class UniversalSecrets(object):
     def __init__(self, **kwargs):
-    	self.__provider = kwargs['provider']
-
+        self.__provider = kwargs['provider']
+        self.__username = kwargs['username']
 
     def __str__(self):
         return str(self.__secrets)
@@ -16,6 +16,9 @@ class UniversalSecrets(object):
         return retval
 
     def overwrite_vault(self, shared_secrets_folder):
+        not_logged_in = subprocess.call('lpass status', shell=True)
+        if not_logged_in:
+            subprocess.call("lpass login {0}".format(self.__username), shell=True)
         pull_secrets_cmd = 'lpass show {} --notes'.format(shared_secrets_folder)
         print("Running {0}".format(pull_secrets_cmd))
         proc = subprocess.Popen(pull_secrets_cmd, stdout=subprocess.PIPE, shell=True)
