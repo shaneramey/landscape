@@ -1,0 +1,11 @@
+name: cfssl
+namespace: cfssl
+release:
+  chart: helm-charts-staging-165617/cfssl:0.1.101
+  version: 0.1.101
+configuration:
+  postgresql:
+    secretsRef: "cfssl-cfssl" # format is "${namespace}-${chart_name}"
+secrets:
+  - secret-postgresql-postgres-user
+  - secret-postgresql-postgres-password
