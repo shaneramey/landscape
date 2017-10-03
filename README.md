@@ -1,4 +1,4 @@
-# landscape: portable Kubernetes clusters + charts
+# Landscape: Place kubernetes clusters, charts, and secrets into clouds
 
 ## Features
 Deploy k8s clusters + apps (Helm Charts) to:
@@ -10,80 +10,60 @@ It does this in a portable way, by abstracting cluster provisioning, and central
 
 Apps are deployed via Helm Charts, with secrets kept in Vault until deployment
 
-## Arguments
+## Example Usage
+ - List all clouds stored in Vault
 ```
-$ landscape --help
-landscape: Provisions Kubernetes clusters and Helm charts, with secrets in Hashicorp Vault.
-
-Operates on a single cloud, minikube, or GCE project at a time
-
-A "cloud" is a single GCE project, or minikube
-A "cluster" is a Kubernetes cluster
-There may be multiple kubernetes "clusters" within a cloud
-
-Usage:
-  landscape cloud list [--cloud-provisioner=<cloud_provisioner>]
-  landscape cloud converge [--cloud=<cloud_project>]
-  landscape cluster list [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>]
-  landscape cluster converge --cluster=<cluster_name> [--converge-cloud]
-      [--tf-templates-dir=<tf_templates_dir> ] [--debug]
-  landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
-  landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>]
-  landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
-      [--namespaces=<namespace>] [--converge-cluster] [--converge-cloud] [--git-branch=<branch_name>]
-  landscape prerequisites install
-
-Options:
-  --cloud-provisioner=<cloud_provisioner>      Cloud provisioner ("terraform" or "minikube")
-  --cluster=<context_name>                     Operate on cluster context, defined in Vault
-  --git-branch=<branch_name>                   Git branch to use for secrets lookup
-  --write-kubeconfig                           Write ~/.kube/config with contents from Vault
-  --read-kubeconfig                            Read ~/.kube/config and put its contents in Vault
-  --kubeconfig-file=<kubecfg>                  Specify path to KUBECONFIG [default: ~/.kube/config-landscaper].
-  --cloud=<cloud_project>                      k8s cloud provisioner.
-  --project=<gce_project_id>                   in GCE environment, which project ID to use. [default: minikube].
-  --kubernetes-version=<k8s_version>           in GCE environment, which project ID to use [default: 1.7.0].
-  --cluster-dns-domain=<dns_domain>            DNS domain used for inside-cluster DNS [default: cluster.local].
-  --minikube-driver=<driver>                   (minikube only) driver type (virtualbox|xhyve) [default: virtualbox].
-  --switch-to-cluster-context=<boolean>        switch to kubernetes context after cluster converges [default: true].
-  --namespaces=<namespace>                     install only charts under specified namespaces (comma-separated).
-  --fetch-lastpass                             Fetches values from Lastpass and puts them in Vault
-  --tf-templates-dir=<tf_templates_dir>        Terraform templates directory [default: ./tf-templates].
-  --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
-  --debug                                      Run in debug mode.
-Provisioner can be one of minikube, terraform.
+landscape cloud list
 ```
 
-## Getting started
-
-Set up is same for minikube and GKE
-1. clone this repo
+ - List all clusters
 ```
-git clone git@github.com:oreillymedia/landscape.git
+landscape cluster list
 ```
 
-2. cd into the repo and install landscape CLI tool
+ - Converge cloud
 ```
-cd landscape
-python3 -m venv ~/venv && \
-source ~/venv/bin/activate && \
-pip install --upgrade .
+landscape cloud converge
 ```
 
-3. Put the secrets from LastPass into your local Vault.
+ - Converge cloud then cluster
 ```
-lpass login username@domain.account
-lpass show Shared-k8s/k8s-landscaper/master --notes
+landscape cluster converge --converge-cloud
 ```
+
+## Installation (dev-mode via MiniKube)
+If set, HTTP_PROXY and HTTPS_PROXY will be used for docker image caching
+Run squid on your local machine for fastest results
+
+```
+# Create a virtualenv and activate it
+python3.6 -m venv ~/venv
+source ~/venv/bin/activate
+
+# Install landscape tool
+pip install .
+
+# Pull secrets from Lastpass into your locally-running Vault container
+make SHARED_SECRETS_USERNAME=user@yourdomain.com # lastpass username
+
+# Connect to a VPN inside your cluster
+helm status openvpn-openvpn # copy the create_viscosity_profile section
+                            # and run it in your shell
+open minikube-master.ovpn # Import Viscosity profile into MacOS
+
+# Connect to minikube-master. admin credentials are pulled from LastPass
+# via the above `make` command.
+
+# Open https://http.jenkins.svc.cluster.local in your browser
+```
+
+## Getting Started (cloud-mode via Terraform)
+ - Add Jenkinsfile to a Jenkins job
+ - Open https://http.jenkins.svc.cluster.local in your browser
 
 ## Cluster-specific provisioning
 
 ### minikube
-
-- Converge cluster and charts
-```
-make
-```
 
 - Import minikube ca.crt into your MacOS keychain
 ```
@@ -125,38 +105,36 @@ helm status openvpn-openvpn | grep -v '^.*#' | sed -e '1,/generate_openvpn_profi
 
 ## Prerequisites
 Should be installed automatically, if missing
-- kubectl
-- vault
-- helm
-- vault
-- minikube
-- landscaper
+ - kubectl
+ - vault
+ - helm
+ - vault
+ - minikube
+ - landscaper
 
 You may also want to download the [Google Cloud SDK](https://cloud.google.com/sdk/)
 
 ## Credentials
 
-populating a base Vault secret-set in the future will be done with `landscape environment --read-lastpass`
-
-Until then, `vault write` statements are shared in the LastPass folder "Shared-k8s\landscaper\master"
+LastPass credentials are used to retrieve a shared set of secrets
+These secrets are then passed into Vault - used for Terraform and Helm secrets
 
 ## Vault paths
+```
+# GCE credentials JSON
+/secret/terraform/$(GCE_PROJECT_ID)/auth['credentials']
 
-/secret/terraform/$(GCE_PROJECT_ID)/auth['credentials'] = GCE credentials JSON
+# Kubeconfig secrets (used by Jenkins)
+/secret/k8s_contexts/$(CONTEXT_NAME)
 
-/secret/k8s_contexts/$(CONTEXT_NAME): kubeconfig secrets (used by Jenkins)
-
-/secret/landscape/$(GIT_BRANCH): Helm secrets, deployed via Landscaper
-
-## Secrets set up
-
-### minikube secrets
-
-### terraform secrets (for GCE/GKE)
+# Helm secrets, deployed via Landscaper
+/secret/landscape/$(GIT_BRANCH)
+```
 
 ## Troubleshooting
 
 - Error messages
+GCloud credentials failing
 ```
 Failed to load backend:
 Error configuring the backend "gcs": Failed to configure remote backend "gcs": google: could not find default credentials.
@@ -164,8 +142,8 @@ Error configuring the backend "gcs": Failed to configure remote backend "gcs": g
 
 This means you don't have GOOGLE_CREDENTIALS set. Run `gcloud auth activate-service-account` to remedy.
 
-
 - minikube clock out of sync
+Fix:
 ```
 minikube ssh -- docker run -i --rm --privileged --pid=host debian nsenter -t 1 -m -u -n -i date -u $(date -u +%m%d%H%M%Y)
 ```
