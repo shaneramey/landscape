@@ -1,13 +1,14 @@
 name: jenkins
 namespace: jenkins
 release:
-  chart: helm-charts-staging-165617/jenkins:0.6.303
-  version: 0.6.303
+  chart: helm-charts-staging-165617/jenkins:0.6.313
+  version: 0.6.313
 configuration:
   clusterDomain: cluster.local
 secrets:
  - jenkins-admin-user
  - jenkins-admin-password
  - jenkins-github-access-token
+ - jenkins-github-key
  - jenkins-vault-user
  - jenkins-vault-password
