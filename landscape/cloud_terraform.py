@@ -5,8 +5,6 @@ import logging
 
 from .cloud import Cloud
 
-logging.basicConfig(level=logging.DEBUG)
-
 class TerraformCloud(Cloud):
     """
     vault write /secret/landscape/clouds/staging-123456 provisioner=terraform \

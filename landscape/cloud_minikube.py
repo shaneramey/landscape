@@ -1,10 +1,14 @@
 import subprocess
 import sys
+import logging
 
 from .cloud import Cloud
 
 class MinikubeCloud(Cloud):
     """
+    Represents a Cloud provisioned in minikube
+
+    Secrets path must exist as:
     vault write /secret/landscape/clouds/minikube provisioner=minikube
     """
     pass
@@ -21,13 +25,16 @@ class MinikubeCloud(Cloud):
         proc = subprocess.Popen(status_cmd, stdout=subprocess.PIPE, shell=True)
         self.cloud_status = proc.stdout.read().rstrip().decode()
         if self.cloud_status == 'Running':
-            print('  - cloud previously provisioned. Re-using')
+            logging.info('Cloud previously provisioned. Re-using')
         else:
-            print('  - initializing cloud')
+            logging.info('Initializing Cloud')
             self.initialize_cloud()
 
 
     def initialize_cloud(self):
+        """
+        Start minikube
+        """
         start_cmd_tmpl = 'minikube start ' + \
                     '--kubernetes-version=v{0} ' + \
                     "--vm-driver={1} " + \
@@ -46,7 +53,7 @@ class MinikubeCloud(Cloud):
         start_cmd = start_cmd_tmpl.format('1.7.5',
                                             'xhyve',
                                             'cluster.local')
-        print("start_cmd={0}".format(start_cmd))
+        logging.info("Starting minikube with command: {0}".format(start_cmd))
         minikube_start_failed = subprocess.call(start_cmd, shell=True)
         if minikube_start_failed:
             sys.exit('ERROR: minikube cloud initialization failure')

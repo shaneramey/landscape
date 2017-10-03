@@ -8,6 +8,9 @@ from .cluster import Cluster
 
 class TerraformCluster(Cluster):
     """
+    Represents a Cluster provisioned in minikube
+
+    Secrets path must exist as:
     vault write /secret/landscape/clusters/minikube cloud_id=minikube
     vault write /secret/landscape/clouds/minikube provisioner=minikube
     vault write /secret/landscape/clusters/gke_staging-123456_us-west1-a_master cloud_id=staging-123456 gke_cluster_name=master
@@ -35,23 +38,29 @@ class TerraformCluster(Cluster):
         gce_auth_cmd = "gcloud auth activate-service-account " + \
                         self.service_account_email() + \
                         " --key-file=" + self.gcloud_auth_jsonfile
-        print("running command {0}".format(gce_auth_cmd))
+        logging.info("Running command {0}".format(gce_auth_cmd))
         gce_auth_failed = subprocess.call(gce_auth_cmd, env=envvars, shell=True)
         if gce_auth_failed:
             sys.exit("ERROR: non-zero retval for {}".format(gce_auth_cmd))
 
 
     def gce_envvars(self):
+        """
+        Update environment variables with GCE credentials file path
+        """
         return os.environ.update({
             'GOOGLE_APPLICATION_CREDENTIALS': self.gcloud_auth_jsonfile,
         })
 
+
     def service_account_email(self):
+        """Return service account email address"""
         gce_creds = json.loads(self.google_credentials)
         return gce_creds['client_email']
 
 
     def write_gcloud_keyfile_json(self):
+        """Writes GOOGLE_APPLICATION_CREDENTIALS-compatible json"""
         gce_creds_file = self.gcloud_auth_jsonfile
         logging.debug("Writing GOOGLE_APPLICATION_CREDENTIALS to {0}".format(gce_creds_file))
         f = open(gce_creds_file, "w")
@@ -61,15 +70,18 @@ class TerraformCluster(Cluster):
 
 
     def configure_kubectl(self):
+        """
+        Retrieves cluster credentials from gcloud command and sets up profile
+        """
         get_creds_cmd = "gcloud container clusters get-credentials --project={0} --zone={1} {2}".format(self.cloud_id, self.cluster_zone, self.cluster_name)
         envvars = self.gce_envvars()
-        print("running command {0}".format(get_creds_cmd))
+        logging.info("Running command {0}".format(get_creds_cmd))
         get_creds_failed = subprocess.call(get_creds_cmd, env=envvars, shell=True)
         if get_creds_failed:
             sys.exit("ERROR: non-zero retval for {}".format(get_creds_cmd))
 
         configure_kubectl_cmd = "kubectl config use-context {0}".format(self.name)
-        print("running command {0}".format(configure_kubectl_cmd))
+        logging.info("running command {0}".format(configure_kubectl_cmd))
         configure_kubectl_failed = subprocess.call(configure_kubectl_cmd, env=envvars, shell=True)
         if configure_kubectl_failed:
             sys.exit("ERROR: non-zero retval for {}".format(configure_kubectl_cmd))

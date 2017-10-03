@@ -147,6 +147,7 @@ def git_branch():
     return current_branch
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
     args = docopt.docopt(__doc__)
     cloud_provisioner = args['--cloud-provisioner']
     terraform_definition_root = args['--tf-templates-dir']
@@ -163,7 +164,7 @@ def main():
     also_converge_localmachine = args['--converge-localmachine']
     # log_level = args['--log-level']
     logger = logging.getLogger()
-    logger.setLevel(logging.NOTSET)
+    logger.setLevel(logging.INFO)
     # landscape cloud
     if args['cloud']:
         clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
@@ -175,6 +176,7 @@ def main():
             clouds[cloud_selection].converge()
     # landscape cluster
     elif args['cluster']:
+        clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
         clusters = ClusterCollection(clouds)
         # landscape cloud list
         if args['list']:
@@ -185,15 +187,15 @@ def main():
             clusters[cluster_selection].converge()
     # landscape charts
     elif args['charts']:
+        clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
+        clusters = ClusterCollection(clouds)
+        cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
+        charts = LandscaperChartsCollection(chart_definition_root, git_branchname, cluster_cloud['provisioner'])
         # landscape charts list
         if args['list']:
             list_charts(charts)
         # landscape charts converge
         elif args['converge']:
-            clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
-            clusters = ClusterCollection(clouds)
-            cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
-            charts = LandscaperChartsCollection(chart_definition_root, git_branchname, cluster_cloud['provisioner'])
             if also_converge_cloud:
                 cluster_cloud.converge()
             if also_converge_cluster:
@@ -201,8 +203,6 @@ def main():
             charts.converge()
             # set up local machine for cluster
             if also_converge_localmachine:
-                clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
-                clusters = ClusterCollection(clouds)
                 localmachine = Localmachine(cloud_collection=clouds, cluster_collection=clusters)
                 localmachine.converge()
     # landscape secrets

@@ -2,6 +2,8 @@ import subprocess
 import os
 import sys
 import time
+import logging
+
 
 def helm_add_chart_repos(repos):
     """
@@ -16,7 +18,7 @@ def helm_add_chart_repos(repos):
     """
     for repo_name in repos:
         repo_url = repos[repo_name]
-        print("- Adding Helm Chart Repo {0} at {1}".format(repo_name, repo_url))
+        logging.info("Adding Helm Chart Repo {0} at {1}".format(repo_name, repo_url))
         helm_add_chart_repo(repo_name, repo_url)
 
 def helm_add_chart_repo(repo_alias, url):
@@ -48,40 +50,46 @@ def apply_tiller():
     tiller_pod_status_cmd = 'kubectl get pod --namespace=kube-system ' + \
                             '-l app=helm -l name=tiller ' + \
                             '-o jsonpath=\'{.items[0].status.phase}\''
-    print('Checking tiller status with command: ' + tiller_pod_status_cmd)
+    logging.info('Checking tiller status with command: ' + tiller_pod_status_cmd)
 
     proc = subprocess.Popen(tiller_pod_status_cmd, stdout=subprocess.PIPE, shell=True)
     tiller_pod_status = proc.stdout.read().rstrip().decode()
 
     # if Tiller isn't initialized, wait for it to come up
     if not tiller_pod_status == "Running":
-        print('  - did not detect tiller pod')
-        init_tiller(tiller_pod_status_cmd)
+        logging.info('Did not detect tiller pod')
+        init_tiller()
     else:
-        print('  - detected running tiller pod')
+        logging.info('Detected running tiller pod')
+    # make sure Tiller is ready to accept connections
+    wait_for_tiller_ready(tiller_pod_status_cmd)
 
 
-def init_tiller(wait_tiller_ready_cmd):
+def init_tiller():
+    """
+    Creates Tiller RBAC permissions and initializes Tiller
+    """
     serviceaccount_create_command = 'kubectl create serviceaccount --namespace=kube-system tiller'
-    print('  - Setting up Tiller serviceaccount with command: ' + serviceaccount_create_command)
+    logging.info('Setting up Tiller serviceaccount with command: ' + serviceaccount_create_command)
     subprocess.call(serviceaccount_create_command, shell=True)
     
     clusterrolebinding_create_command = 'kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller'
-    print('  - Setting up Tiller ClusterRoleBinding: ' + clusterrolebinding_create_command)
+    logging.info('Setting up Tiller ClusterRoleBinding: ' + clusterrolebinding_create_command)
     subprocess.call(clusterrolebinding_create_command, shell=True)
     
     helm_provision_command = 'helm init --service-account=tiller'
-    print('  - initializing Tiller with command: ' + helm_provision_command)
+    logging.info('Initializing Tiller with command: ' + helm_provision_command)
     subprocess.call(helm_provision_command, shell=True)
-    wait_for_tiller_ready(wait_tiller_ready_cmd)
 
 
 def wait_for_tiller_ready(monitor_command):
+    """
+    Sleep until Tiller is ready
+    """
     devnull = open(os.devnull, 'w')
     proc = subprocess.Popen(monitor_command, stdout=subprocess.PIPE, stderr=devnull, shell=True)
     tiller_pod_status = proc.stdout.read().rstrip().decode()
-
-    print('  - waiting for tiller pod to be ready')
+    logging.info('Waiting for tiller pod to be ready')
     warm_up_seconds = 10
     while tiller_pod_status != "Running":
         proc = subprocess.Popen(monitor_command, stdout=subprocess.PIPE, stderr=devnull, shell=True)
@@ -89,5 +97,5 @@ def wait_for_tiller_ready(monitor_command):
         sys.stdout.write('.')
         sys.stdout.flush()
         time.sleep(1) 
-    print("  - sleeping {0} seconds to allow tiller to warm-up".format(warm_up_seconds))
+    logging.info("Sleeping {0} seconds to allow tiller to warm-up".format(warm_up_seconds))
     time.sleep(warm_up_seconds)

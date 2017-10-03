@@ -294,7 +294,7 @@ class VaultClient(object):
             Data from Vault at prefix (dict)
         """
         all_values_at_prefix = {}
-        logging.info(" - reading vault subkeys at {0}".format(path_prefix))
+        logging.debug(" - reading vault subkeys at {0}".format(path_prefix))
         subkeys_at_prefix = self.__vault_client.list(path_prefix)
 
         # use last vault key (delimited by '/') as dict index
