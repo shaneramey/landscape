@@ -1,8 +1,8 @@
 name: cfssl
 namespace: cfssl
 release:
-  chart: helm-charts-staging-165617/cfssl:0.1.101
-  version: 0.1.101
+  chart: helm-charts-staging-165617/cfssl:0.1.102
+  version: 0.1.102
 configuration:
   postgresql:
     secretsRef: "cfssl-cfssl" # format is "${namespace}-${chart_name}"
