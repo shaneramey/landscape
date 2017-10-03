@@ -16,7 +16,7 @@ class LandscaperChartsCollection(ChartsCollection):
     def __init__(self, root_dir, gitbranch, cloud_specific_subset):
         self.chartset_root_dir = root_dir
         # all clouds get common charts
-        self.chart_collections = ['__all_clusters__'] + [cloud_specific_subset]
+        self.chart_collections = ['__all_cloud_provisioners__'] + [cloud_specific_subset]
         self.chart_sets = self.__load_chart_sets()
         self.secrets_git_branch = gitbranch
         self.__vault = VaultClient()
