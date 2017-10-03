@@ -63,6 +63,9 @@ def apply_tiller():
         logging.info('Detected running tiller pod')
     # make sure Tiller is ready to accept connections
     wait_for_tiller_ready(tiller_pod_status_cmd)
+    warm_up_seconds = 3
+    logging.info("Sleeping {0} seconds to allow tiller to warm-up".format(warm_up_seconds))
+    time.sleep(warm_up_seconds)
 
 
 def init_tiller():
@@ -90,12 +93,9 @@ def wait_for_tiller_ready(monitor_command):
     proc = subprocess.Popen(monitor_command, stdout=subprocess.PIPE, stderr=devnull, shell=True)
     tiller_pod_status = proc.stdout.read().rstrip().decode()
     logging.info('Waiting for tiller pod to be ready')
-    warm_up_seconds = 10
     while tiller_pod_status != "Running":
         proc = subprocess.Popen(monitor_command, stdout=subprocess.PIPE, stderr=devnull, shell=True)
         tiller_pod_status = proc.stdout.read().rstrip().decode()
         sys.stdout.write('.')
         sys.stdout.flush()
         time.sleep(1) 
-    logging.info("Sleeping {0} seconds to allow tiller to warm-up".format(warm_up_seconds))
-    time.sleep(warm_up_seconds)
