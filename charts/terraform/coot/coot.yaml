@@ -1,0 +1,6 @@
+name: coot
+namespace: coot
+release:
+  chart: helm-charts-staging-165617/coot:0.1.0
+  version: 0.1.0
+

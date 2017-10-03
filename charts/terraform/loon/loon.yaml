@@ -1,0 +1,6 @@
+name: loon
+namespace: loon
+release:
+  chart: helm-charts-staging-165617/loon:0.1.0
+  version: 0.1.0
+

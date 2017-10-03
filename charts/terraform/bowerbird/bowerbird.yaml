@@ -1,0 +1,6 @@
+name: bowerbird
+namespace: bowerbird
+release:
+  chart: helm-charts-staging-165617/bowerbird:0.1.0
+  version: 0.1.0
+

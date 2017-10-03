@@ -1,0 +1,6 @@
+name: cardinal
+namespace: cardinal
+release:
+  chart: helm-charts-staging-165617/cardinal:0.1.0
+  version: 0.1.0
+
