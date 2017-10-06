@@ -99,6 +99,6 @@ def wait_for_tiller_ready(monitor_command):
             sys.stdout.write('.')
             sys.stdout.flush()
             time.sleep(1) 
-        warm_up_seconds = 3
+        warm_up_seconds = 7
         logging.info("Sleeping {0} seconds to allow tiller to warm-up".format(warm_up_seconds))
         time.sleep(warm_up_seconds)
