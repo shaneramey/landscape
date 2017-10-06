@@ -203,7 +203,7 @@ def main():
             charts.converge()
             # set up local machine for cluster
             if also_converge_localmachine:
-                localmachine = Localmachine(cloud_collection=clouds, cluster_collection=clusters)
+                localmachine = Localmachine(cluster=clusters[cluster_selection])
                 localmachine.converge()
     # landscape secrets
     elif args['secrets']:
