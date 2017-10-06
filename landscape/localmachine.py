@@ -21,20 +21,25 @@ class Localmachine(object):
 
     def __init__(self, **kwargs):
         self.os_platform = platform.system()
-        self.vm_clouds  = kwargs['cloud_collection']
-        self.kubernetes_clusters = kwargs['cluster_collection']
+        self.kubernetes_cluster = kwargs['cluster']
 
 
     def converge(self):
         """
         Override this method in your subclass
         """
+        self.helm_add_repos()
+        self.import_ca_certificate()
+        self.run_vpn_install() # Install Viscosity OpenVPN profile
+
+
+    def helm_add_repos(self):
+        print('TODO: helm add repos (chartmuseum)') # cluster
+        print('helm repo add chartmuseum https://http.chartmuseum.svc.cluster.local')
+
+    def import_ca_certificate(self):
         print('TODO: (minikube) import CA') # cluster
         print('sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.minikube/ca.crt')
-        print('TODO: helm add repos (pulled from where? Vault?)') # cluster
-        self.run_vpn_install() # Install Viscosity OpenVPN profile
-        print("vm_clouds={0}".format(self.vm_clouds))
-        print("kubernetes_clusters={0}".format(self.kubernetes_clusters))
 
 
     def run_vpn_install(self):
