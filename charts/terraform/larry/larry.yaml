@@ -1,6 +1,6 @@
 name: larry
 namespace: larry
 release:
-  chart: helm-charts-staging-165617/larry:0.1.0
+  chart: chartmuseum/larry:0.1.0
   version: 0.1.0
 

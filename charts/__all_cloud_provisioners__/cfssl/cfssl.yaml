@@ -1,7 +1,7 @@
 name: cfssl
 namespace: cfssl
 release:
-  chart: helm-charts-staging-165617/cfssl:0.1.102
+  chart: chartmuseum/cfssl:0.1.102
   version: 0.1.102
 configuration:
   postgresql:

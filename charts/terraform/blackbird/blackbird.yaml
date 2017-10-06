@@ -1,6 +1,6 @@
 name: blackbird
 namespace: blackbird
 release:
-  chart: helm-charts-staging-165617/blackbird:0.1.0
+  chart: chartmuseum/blackbird:0.1.0
   version: 0.1.0
 

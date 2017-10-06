@@ -1,8 +1,8 @@
 name: openvpn
 namespace: openvpn
 release:
-  chart: charts.downup.us/openvpn:0.1.242
-  version: 0.1.242
+  chart: chartmuseum/openvpn:0.1.247
+  version: 0.1.247
 configuration:
   gitBranch: master
   clusterDomain: cluster.local
