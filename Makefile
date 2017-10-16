@@ -11,8 +11,6 @@
 #  make CLOUD_NAME=[ minikube | <GCE Project ID> ] deploy
 SHELL := /bin/bash
 
-# lastpass username for pulling centralized secrets
-SHARED_SECRETS_USERNAME := please_pass_SHARED_SECRETS_USERNAME
 # override these settings on command-line to override default behavior
 DEBUG := false
 BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
@@ -20,6 +18,13 @@ CLUSTER_NAME := minikube
 # namespaces can be comma-separated
 K8S_NAMESPACES = __all_namespaces__
 
+# LastPass username for pulling centralized secrets
+SHARED_SECRETS_USERNAME := please_pass_SHARED_SECRETS_USERNAME
+SHARED_SECRETS_FOLDER := Shared-k8s/k8s-landscaper
+
+# GCS backend for local Helm Chart repo (ChartMuseum)
+GOOGLE_STORAGE_BUCKET := please_pass_GOOGLE_STORAGE_BUCKET
+CHARTS_BRANCH_FOR_SECRETS := master
 # helm charts deployment
 # also converges cluster (GKE/minikube) and cloud (GCE/minikube)
 DEPLOY_CHARTS_CMD = landscape charts converge --git-branch=$(BRANCH_NAME) --cluster=$(CLUSTER_NAME) --converge-cluster --converge-cloud --converge-localmachine
@@ -34,10 +39,14 @@ ifneq ($(K8S_NAMESPACES),__all_namespaces__)
 endif
 
 # Jenkinsfile stages, plus other targets
-.PHONY: deploy init deploy-with-local-vault
+.PHONY: deploy init local bootstrap
 
-deploy-with-local-vault: init
-	source ./localvault.sh $(SHARED_SECRETS_USERNAME) && $(DEPLOY_CHARTS_CMD)
+# cluster boostrapping/maintenance from workstation
+bootstrap: local deploy
+
+local: init
+	# run dev-vault container locally 
+	bash -x ./localvault.sh $(SHARED_SECRETS_USERNAME) $(GOOGLE_STORAGE_BUCKET) $(SHARED_SECRETS_FOLDER) $(CHARTS_BRANCH_FOR_SECRETS)
 
 deploy: init
 	$(DEPLOY_CHARTS_CMD)
@@ -45,5 +54,4 @@ deploy: init
 init:
 # landscape prerequisites install
 	helm init --client-only
-	helm repo add charts.downup.us http://charts.downup.us
 	helm repo update

@@ -55,6 +55,7 @@ import docopt
 import os
 import subprocess
 import logging
+import platform
 
 from .cloudcollection import CloudCollection
 from .clustercollection import ClusterCollection

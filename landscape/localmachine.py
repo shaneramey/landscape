@@ -34,8 +34,10 @@ class Localmachine(object):
 
 
     def helm_add_repos(self):
-        print('TODO: helm add repos (chartmuseum)') # cluster
-        print('helm repo add chartmuseum https://http.chartmuseum.svc.cluster.local')
+        """
+        Add local Chartmuseum Helm Chart server
+        """
+        print('helm repo add chartmuseum http://localhost:8080/')
 
     def import_ca_certificate(self):
         print('TODO: (minikube) import CA') # cluster

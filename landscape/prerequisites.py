@@ -50,9 +50,9 @@ def install_lastpass(os_platform):
 def install_vault(os_platform):
     """Installs Hashicorp Vault"""
     install_cmds = {
-        'Darwin': 'curl -LO https://releases.hashicorp.com/vault/0.8.1/vault_0.8.1_darwin_amd64.zip && \
-        unzip -d /usr/local/bin/ vault_0.8.1_darwin_amd64.zip && \
-        rm vault_0.8.1_darwin_amd64.zip'
+        'Darwin': 'curl -LO https://releases.hashicorp.com/vault/0.8.3/vault_0.8.3_darwin_amd64.zip && \
+        unzip -d /usr/local/bin/ vault_0.8.3_darwin_amd64.zip && \
+        rm vault_0.8.3_darwin_amd64.zip'
     }
     dst = '/usr/local/bin/vault'
     if not os.path.isfile(dst):
@@ -65,7 +65,7 @@ def install_vault(os_platform):
 def install_kubectl(os_platform):
     """Installs Kubernetes kubectl"""
     install_cmds = {
-        'Darwin': 'curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.7.4/bin/darwin/amd64/kubectl && \
+        'Darwin': 'curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.8.1/bin/darwin/amd64/kubectl && \
         chmod +x kubectl && \
         mv kubectl /usr/local/bin/'
     }
@@ -80,11 +80,11 @@ def install_kubectl(os_platform):
 def install_helm(os_platform):
     """Installs Kubernetes Helm"""
     install_cmds = {
-        'Darwin': 'curl -LO https://storage.googleapis.com/kubernetes-helm/helm-v2.5.1-darwin-amd64.tar.gz && \
-        tar zvxf helm-v2.5.1-darwin-amd64.tar.gz --strip-components=1 darwin-amd64/helm && \
+        'Darwin': 'curl -LO https://storage.googleapis.com/kubernetes-helm/helm-v2.6.1-darwin-amd64.tar.gz && \
+        tar zvxf helm-v2.6.1-darwin-amd64.tar.gz --strip-components=1 darwin-amd64/helm && \
         chmod +x helm && \
         mv helm /usr/local/bin/ && \
-        rm helm-v2.5.1-darwin-amd64.tar.gz'
+        rm helm-v2.6.1-darwin-amd64.tar.gz'
     }
     dst = '/usr/local/bin/helm'
     if not os.path.isfile(dst):
@@ -97,10 +97,10 @@ def install_helm(os_platform):
 def install_landscaper(os_platform):
     """Installs Helm Landscaper"""
     install_cmds = {
-        'Darwin': 'curl -LO https://github.com/Eneco/landscaper/releases/download/1.0.10/landscaper-1.0.10-darwin-amd64.tar.gz && \
-        tar zvxf landscaper-1.0.10-darwin-amd64.tar.gz landscaper && \
+        'Darwin': 'curl -LO https://github.com/Eneco/landscaper/releases/download/1.0.10/landscaper-1.0.11-darwin-amd64.tar.gz && \
+        tar zvxf landscaper-1.0.11-darwin-amd64.tar.gz landscaper && \
         mv landscaper /usr/local/bin/ && \
-        rm landscaper-1.0.10-darwin-amd64.tar.gz'
+        rm landscaper-1.0.11-darwin-amd64.tar.gz'
     }
     dst = '/usr/local/bin/landscaper'
     if not os.path.isfile(dst):
@@ -113,9 +113,9 @@ def install_landscaper(os_platform):
 def install_terraform(os_platform):
     """Installs Terraform"""
     install_cmds = {
-        'Darwin': 'curl -LO https://releases.hashicorp.com/terraform/0.10.2/terraform_0.10.2_darwin_amd64.zip && \
-        unzip -d /usr/local/bin terraform_0.10.2_darwin_amd64.zip && \
-        rm terraform_0.10.2_darwin_amd64.zip'
+        'Darwin': 'curl -LO https://releases.hashicorp.com/terraform/0.10.2/terraform_0.10.7_darwin_amd64.zip && \
+        unzip -d /usr/local/bin terraform_0.10.7_darwin_amd64.zip && \
+        rm terraform_0.10.7_darwin_amd64.zip'
     }
     dst = '/usr/local/bin/terraform'
     if not os.path.isfile(dst):
@@ -123,21 +123,6 @@ def install_terraform(os_platform):
         sp.call(install_cmds[os_platform], shell=True)
     else:
         logging.info("terraform already installed in {0}".format(dst))
-
-
-def install_chartmuseum(os_platform):
-    """Installs Terraform"""
-    install_cmds = {
-        'Darwin': 'curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/darwin/amd64/chartmuseum && \
-        chmod +x ./chartmuseum && \
-        mv ./chartmuseum /usr/local/bin'
-    }
-    dst = '/usr/local/bin/chartmuseum'
-    if not os.path.isfile(dst):
-        logging.info("installing chartmuseum")
-        sp.call(install_cmds[os_platform], shell=True)
-    else:
-        logging.info("chartmuseum already installed in {0}".format(dst))
 
 
 def install_helm_plugins():
