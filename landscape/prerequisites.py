@@ -1,7 +1,7 @@
 import subprocess as sp
 import platform
 import os.path
-
+import logging
 
 def install_prerequisites(os_platform):
     """
@@ -22,15 +22,16 @@ def install_prerequisites(os_platform):
 def install_minikube(os_platform):
     """Install minikube"""
     install_cmds = {
-        'Darwin': 'curl -LO https://storage.googleapis.com/minikube/releases/v0.21.0/minikube-darwin-amd64 && \
+        'Darwin': 'curl -LO https://storage.googleapis.com/minikube/releases/v0.22.3/minikube-darwin-amd64 && \
         chmod +x minikube-darwin-amd64 && \
         mv minikube-darwin-amd64 /usr/local/bin/minikube'
     }
     dst = '/usr/local/bin/minikube'
     if not os.path.isfile(dst):
+        logging.info("installing minikube")
         sp.call(install_cmds[os_platform], shell=True)
     else:
-        print("minikube already installed in {0}".format(dst))
+        logging.info("minikube already installed in {0}".format(dst))
 
 
 def install_lastpass(os_platform):
@@ -40,9 +41,10 @@ def install_lastpass(os_platform):
     }
     dst = '/usr/local/bin/lpass'
     if not os.path.isfile(dst):
+        logging.info("installing lastpass")
         sp.call(install_cmds[os_platform], shell=True)
     else:
-        print("lastpass already installed in {0}".format(dst))
+        logging.info("lastpass already installed in {0}".format(dst))
 
 
 def install_vault(os_platform):
@@ -54,9 +56,10 @@ def install_vault(os_platform):
     }
     dst = '/usr/local/bin/vault'
     if not os.path.isfile(dst):
+        logging.info("installing vault")
         sp.call(install_cmds[os_platform], shell=True)
     else:
-        print("vault already installed in {0}".format(dst))
+        logging.info("vault already installed in {0}".format(dst))
 
 
 def install_kubectl(os_platform):
@@ -68,9 +71,10 @@ def install_kubectl(os_platform):
     }
     dst = '/usr/local/bin/kubectl'
     if not os.path.isfile(dst):
+        logging.info("installing kubectl")
         sp.call(install_cmds[os_platform], shell=True)
     else:
-        print("kubectl already installed in {0}".format(dst))
+        logging.info("kubectl already installed in {0}".format(dst))
 
 
 def install_helm(os_platform):
@@ -84,9 +88,10 @@ def install_helm(os_platform):
     }
     dst = '/usr/local/bin/helm'
     if not os.path.isfile(dst):
+        logging.info("installing helm")
         sp.call(install_cmds[os_platform], shell=True)
     else:
-        print("helm already installed in {0}".format(dst))
+        logging.info("helm already installed in {0}".format(dst))
 
 
 def install_landscaper(os_platform):
@@ -99,9 +104,10 @@ def install_landscaper(os_platform):
     }
     dst = '/usr/local/bin/landscaper'
     if not os.path.isfile(dst):
+        logging.info("installing landscaper")
         sp.call(install_cmds[os_platform], shell=True)
     else:
-        print("landscaper already installed in {0}".format(dst))
+        logging.info("landscaper already installed in {0}".format(dst))
 
 
 def install_terraform(os_platform):
@@ -113,9 +119,25 @@ def install_terraform(os_platform):
     }
     dst = '/usr/local/bin/terraform'
     if not os.path.isfile(dst):
+        logging.info("installing terraform")
         sp.call(install_cmds[os_platform], shell=True)
     else:
-        print("terraform already installed in {0}".format(dst))
+        logging.info("terraform already installed in {0}".format(dst))
+
+
+def install_chartmuseum(os_platform):
+    """Installs Terraform"""
+    install_cmds = {
+        'Darwin': 'curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/darwin/amd64/chartmuseum && \
+        chmod +x ./chartmuseum && \
+        mv ./chartmuseum /usr/local/bin'
+    }
+    dst = '/usr/local/bin/chartmuseum'
+    if not os.path.isfile(dst):
+        logging.info("installing chartmuseum")
+        sp.call(install_cmds[os_platform], shell=True)
+    else:
+        logging.info("chartmuseum already installed in {0}".format(dst))
 
 
 def install_helm_plugins():
@@ -128,5 +150,5 @@ def install_helm_plugins():
         install_cmd = "helm plugin install {0} --version={1}".format(
                                                     plugin_url,
                                                     version)
-        print("installing helm plugin with command: {0}".format(install_cmd))
+        logging.info("installing helm plugin with command: {0}".format(install_cmd))
         sp.call(install_cmd, shell=True)
