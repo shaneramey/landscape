@@ -46,7 +46,7 @@ bootstrap: local deploy
 
 local: init
 	# run dev-vault container locally 
-	bash -x ./localvault.sh $(SHARED_SECRETS_USERNAME) $(GOOGLE_STORAGE_BUCKET) $(SHARED_SECRETS_FOLDER) $(CHARTS_BRANCH_FOR_SECRETS)
+	source ./localvault.sh $(SHARED_SECRETS_USERNAME) $(GOOGLE_STORAGE_BUCKET) $(SHARED_SECRETS_FOLDER) $(CHARTS_BRANCH_FOR_SECRETS)
 
 deploy: init
 	$(DEPLOY_CHARTS_CMD)
