@@ -129,7 +129,7 @@ def install_helm_plugins():
     """Install helm plugins. Requires helm to be installed"""
     plugins = {
         'https://github.com/technosophos/helm-gpg': '0.1.0',
-        'https://github.com/technosophos/helm-template': '2.4.1+2',
+        'https://github.com/technosophos/helm-template': '2.5.1+2',
     }
     for plugin_url, version in plugins.items():
         install_cmd = "helm plugin install {0} --version={1}".format(
