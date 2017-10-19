@@ -8,7 +8,7 @@
 #
 #
 # Usage:
-#  make CLOUD_NAME=[ minikube | <GCE Project ID> ] deploy
+#  make CLOUD_NAME=[ minikube | <GCE Project ID> ] [ deploy | bootstrap ]
 SHELL := /bin/bash
 
 # override these settings on command-line to override default behavior
