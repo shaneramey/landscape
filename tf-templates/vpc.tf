@@ -180,7 +180,7 @@ resource "google_compute_vpn_tunnel" "tunnel1" {
   shared_secret      = "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn1_ipsec_secret_key"]}"
   target_vpn_gateway = "${google_compute_vpn_gateway.target_gateway1.self_link}"
   local_traffic_selector  = ["${google_compute_subnetwork.gke_cluster1.ip_cidr_range}", "${google_container_cluster.cluster1.cluster_ipv4_cidr}"]
-  remote_traffic_selector = ["${data.vault_generic_secret.gce_project_secrets.data["gce_vpn1_ipsec_tunneled_net1"]}"]
+  remote_traffic_selector = ["${data.vault_generic_secret.gce_project_secrets.data["gce_vpn1_ipsec_tunneled_net1"]}", "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn1_ipsec_tunneled_net2"]}"]
   ike_version        = "1"
 
   depends_on = ["google_compute_forwarding_rule.fr1_udp500",
@@ -220,6 +220,14 @@ resource "google_compute_route" "route2" {
   network             = "${google_compute_network.networkA.name}"
   next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel2.self_link}"
   dest_range          = "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn2_ipsec_tunneled_net1"]}"
+  priority            = 1000
+}
+
+resource "google_compute_route" "route3" {
+  name                = "route3"
+  network             = "${google_compute_network.networkA.name}"
+  next_hop_vpn_tunnel = "${google_compute_vpn_tunnel.tunnel1.self_link}"
+  dest_range          = "${data.vault_generic_secret.gce_project_secrets.data["gce_vpn1_ipsec_tunneled_net2"]}"
   priority            = 1000
 }
 
