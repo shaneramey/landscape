@@ -1,9 +1,13 @@
 name: cfssl
 namespace: cfssl
 release:
-  chart: chartmuseum/cfssl:0.1.102
-  version: 0.1.102
+  chart: chartmuseum/cfssl:0.1.108
+  version: 0.1.108
 configuration:
+  containers:
+    cfssl:
+      image:
+        tag: 373420cef10697dc4f259a532311ae85ae1c5f8d
   postgresql:
     secretsRef: "cfssl-cfssl" # format is "${namespace}-${chart_name}"
 secrets:

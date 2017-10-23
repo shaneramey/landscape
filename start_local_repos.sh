@@ -1,6 +1,7 @@
 #! /usr/bin/env bash
 #
-# Overwrites secrets in local dev-vault container from LastPass
+# Starts secrets in local vault container + overwrites its secrets from LastPass
+# Starts ChartMuseum as local container
 
 LASTPASS_USERNAME=$1
 GOOGLE_STORAGE_BUCKET=$2
@@ -57,13 +58,11 @@ if [ "$DOCKER_CHARTMUSEUM_RUNNING" != "true" ]; then
 	fi
 fi
 
-# set up dev-vault credentials
-export VAULT_ADDR=http://127.0.0.1:8200
-export VAULT_TOKEN=$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $3 }')
-
 # add chartmuseum chart repo
 helm repo add chartmuseum http://127.0.0.1:8080
 
 # overwrite existing secrets
+VAULT_ADDR=http://127.0.0.1:8200 \
+VAULT_TOKEN=$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $3 }')
 landscape secrets overwrite --secrets-username="${LASTPASS_USERNAME}" --from-lastpass \
 	--shared-secrets-folder="${LASTPASS_SHARED_SECRETS_FOLDER}/${CHARTS_BRANCH_FOR_SECRETS}"

@@ -50,7 +50,7 @@ class MinikubeCloud(Cloud):
                     '--docker-env HTTPS_PROXY=$http_proxy ' + \
                     '--docker-env HTTP_PROXY=$https_proxy ' + \
                     '-v=2'
-        start_cmd = start_cmd_tmpl.format('1.7.5',
+        start_cmd = start_cmd_tmpl.format('1.8.0',
                                             'xhyve',
                                             'cluster.local')
         logging.info("Starting minikube with command: {0}".format(start_cmd))

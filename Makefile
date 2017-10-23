@@ -1,5 +1,6 @@
 # Acts on a single Landscape namespace at a time (smallest unit to CRUD is namespace)
 # Helm charts can be deployed independently of Landscaper using helm install / helm upgrade utils
+# Capable of deploying from either inside or outside target cluster
 #
 # Deploy environment
 #  deploys to current branch to context in `kubectl config current-context`
@@ -39,19 +40,24 @@ ifneq ($(K8S_NAMESPACES),__all_namespaces__)
 endif
 
 # Jenkinsfile stages, plus other targets
-.PHONY: deploy init local bootstrap
+.PHONY: deploy start_local_repos deploy_with_local_repos
 
 # cluster boostrapping/maintenance from workstation
-bootstrap: local deploy
+deploy_with_local_repos: init start_local_repos
+	VAULT_ADDR=http://127.0.0.1:8200 \
+	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
+	$(DEPLOY_CHARTS_CMD)
 
-local: init
-	# run dev-vault container locally 
-	source ./localvault.sh $(SHARED_SECRETS_USERNAME) $(GOOGLE_STORAGE_BUCKET) $(SHARED_SECRETS_FOLDER) $(CHARTS_BRANCH_FOR_SECRETS)
+# start local vault and chartmuseum containers (deploy from outside target cluster)
+start_local_repos:
+	VAULT_ADDR=http://127.0.0.1:8200 \
+	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
+	./start_local_repos.sh $(SHARED_SECRETS_USERNAME) $(GOOGLE_STORAGE_BUCKET) $(SHARED_SECRETS_FOLDER) $(CHARTS_BRANCH_FOR_SECRETS)
 
 deploy: init
 	$(DEPLOY_CHARTS_CMD)
 
 init:
-# landscape prerequisites install
+	# FUTURE? landscape prerequisites install
 	helm init --client-only
 	helm repo update

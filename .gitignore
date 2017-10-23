@@ -12,3 +12,4 @@ landscape.egg-info/
 .tox/
 .coverage
 htmlcov
+*.ovpn
