@@ -1,8 +1,8 @@
 name: jenkins
 namespace: jenkins
 release:
-  chart: helm-charts-staging-165617/jenkins:0.6.313
-  version: 0.6.313
+  chart: chartmuseum/jenkins:0.6.356
+  version: 0.6.356
 configuration:
   clusterDomain: cluster.local
 secrets:

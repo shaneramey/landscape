@@ -48,7 +48,10 @@ class LandscaperChartsCollection(ChartsCollection):
 
 
     def converge(self):
-        apply_tiller()
+        """
+        Converges charts
+        Helm Tiller must already be installed
+        """
         for namespace in self.chart_sets.keys():
             yaml_files = [] # which landscape yaml files to apply in namespace
             for chart in self.chart_sets[namespace]:

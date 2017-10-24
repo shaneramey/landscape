@@ -1,4 +1,6 @@
 # Landscape: Place kubernetes clusters, charts, and secrets into clouds
+(vev) sramey $ export GOOGLE_APPLICATION_CREDENTIALS=/Users/sramey/cloud-serviceaccount-staging-165617.json
+(vev) sramey $ pip install --upgrade . && make SHARED_SECRETS_USERNAME=sramey@safaribooksonline.com GOOGLE_STORAGE_BUCKET=helm-charts-staging-165617
 
 ## Features
 Deploy k8s clusters + apps (Helm Charts) to:
@@ -34,17 +36,40 @@ landscape cluster converge --converge-cloud
 ## Installation (dev-mode via MiniKube)
 If set, HTTP_PROXY and HTTPS_PROXY will be used for docker image caching
 Run squid on your local machine for fastest results
+```brew install squid && brew services start squid```
 
+Set up your local ~/.bash_profile:
 ```
+cat << EOF > ~/.bash_profile
+DEFAULT_INTERFACE=`netstat -rn | grep default | head -n 1 | awk '{ print $NF }'`
+DEFAULT_IP=`ifconfig $DEFAULT_INTERFACE | grep inet | awk '{ print $2 }'`
+export https_proxy=http://${DEFAULT_IP}:3128
+export HTTPS_PROXY="$https_proxy"
+export http_proxy="$https_proxy"
+export HTTP_PROXY="$https_proxy"
+export no_proxy=http.chartmuseum.svc.cluster.local,storage.googleapis.com
+EOF
+```
+
+open a new shell to use these environment variables
+
 # Create a virtualenv and activate it
+```
 python3.6 -m venv ~/venv
 source ~/venv/bin/activate
 
 # Install landscape tool
-pip install .
+pip install --upgrade .
 
-# Pull secrets from Lastpass into your locally-running Vault container
-make SHARED_SECRETS_USERNAME=user@yourdomain.com # lastpass username
+# install prerequisites
+landscape setup install-prerequisites
+
+## Bootstrap local setup
+Deploys to local docker containers:
+ - hashicorp vault
+ - chartmuseum Helm chart server
+
+make SHARED_SECRETS_USERNAME=<lastpass_username> GOOGLE_STORAGE_BUCKET=<chart_gcs_bucket> local deploy
 
 # Connect to a VPN inside your cluster
 helm status openvpn-openvpn # copy the create_viscosity_profile section
@@ -147,3 +172,6 @@ Fix:
 ```
 minikube ssh -- docker run -i --rm --privileged --pid=host debian nsenter -t 1 -m -u -n -i date -u $(date -u +%m%d%H%M%Y)
 ```
+
+- chartmuseum helm chart server
+Requires command `gcloud auth application-default login` having been run. Mounts your own google credentials json inside of the chartmuseum container.

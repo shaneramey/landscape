@@ -1,6 +1,6 @@
 name: noisyminer
 namespace: noisyminer
 release:
-  chart: helm-charts-staging-165617/noisyminer:0.1.0
+  chart: chartmuseum/noisyminer:0.1.0
   version: 0.1.0
 
