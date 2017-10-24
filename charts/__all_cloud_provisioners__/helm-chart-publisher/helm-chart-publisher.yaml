@@ -1,8 +1,0 @@
-name: helm-chart-publisher
-namespace: helm-chart-publisher
-release:
-  chart: chartmuseum/helm-chart-publisher:0.1.17
-  version: 0.1.17
-secrets:
- - secret-google-application-credentials
- - secret-chart-gce-bucket
