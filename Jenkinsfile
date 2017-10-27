@@ -39,14 +39,14 @@ def getVaultToken() {
     }
 }
  
-def getTargets() {
+def getTargets(cluster_subscribes_to_charts_branch) {
 // gets provisioner targets from Vault 
 // returns a list used for dynamic Jenkinsfile parameters
     def vaultVars = []
     vaultVars.add('VAULT_ADDR=' +  getVaultAddr())
     vaultVars.add('VAULT_CACERT=' + getVaultCacert())
     vaultVars.add('VAULT_TOKEN=' + getVaultToken())
-    targets_list_cmd = "landscape cluster list"
+    targets_list_cmd = "landscape cluster list --git-branch=${env.BRANCH_NAME}"
     println("Running command: " + targets_list_cmd)
     sout = executeOrReportErrors(targets_list_cmd, vaultVars)
     // prepend targets with null value, which is default

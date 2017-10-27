@@ -19,7 +19,6 @@ class LandscaperChartsCollection(ChartsCollection):
         # all clouds get common charts
         self.chart_collections = ['__all_cloud_provisioners__'] + [cloud_specific_subset]
         self.namespaces = namespaces
-        print("NS={0}".format(self.namespaces))
         self.chart_sets = self.__load_chart_sets()
         self.secrets_git_branch = gitbranch
         self.__vault = VaultClient()

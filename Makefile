@@ -16,15 +16,15 @@ SHELL := /bin/bash
 DEBUG := false
 BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 CLUSTER_NAME := minikube
-# namespaces can be comma-separated
-K8S_NAMESPACES = __all_namespaces__
+# namespaces can be comma-separated. Default is to deploy all
+DEPLOY_ONLY_NAMESPACES :=
 
 # LastPass username for pulling centralized secrets
-SHARED_SECRETS_USERNAME := please_pass_SHARED_SECRETS_USERNAME
+SHARED_SECRETS_USERNAME := 
 SHARED_SECRETS_FOLDER := Shared-k8s/k8s-landscaper
 
 # GCS backend for local Helm Chart repo (ChartMuseum)
-GOOGLE_STORAGE_BUCKET := please_pass_GOOGLE_STORAGE_BUCKET
+GOOGLE_STORAGE_BUCKET := 
 CHARTS_BRANCH_FOR_SECRETS := master
 # helm charts deployment
 # also converges cluster (GKE/minikube) and cloud (GCE/minikube)
@@ -35,8 +35,8 @@ ifeq ($(DEBUG),true)
 endif
 
 # Options for Helm Charts
-ifneq ($(K8S_NAMESPACES),__all_namespaces__)
-	DEPLOY_CHARTS_CMD += --namespaces=$(K8S_NAMESPACES)
+ifneq (,$(DEPLOY_ONLY_NAMESPACES))
+	DEPLOY_CHARTS_CMD += --namespaces=$(DEPLOY_ONLY_NAMESPACES)
 endif
 
 # Jenkinsfile stages, plus other targets
@@ -58,6 +58,13 @@ deploy: init
 	$(DEPLOY_CHARTS_CMD)
 
 init:
+ifeq (,$(SHARED_SECRETS_USERNAME))
+	$(error SHARED_SECRETS_USERNAME required to pull secrets from LastPass)
+endif
+
+ifeq (,$(GOOGLE_STORAGE_BUCKET))
+	$(error GOOGLE_STORAGE_BUCKET required for Helm Charts repo via ChartMuseum)
+endif
 	# FUTURE? landscape prerequisites install
 	helm init --client-only
 	helm repo update

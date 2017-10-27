@@ -17,7 +17,7 @@ There may be multiple kubernetes "clusters" within a cloud
 Usage:
   landscape cloud list [--cloud-provisioner=<cloud_provisioner>]
   landscape cloud converge [--cloud=<cloud_project>]
-  landscape cluster list [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>]
+  landscape cluster list --git-branch=<landscaper_branch> [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>]
   landscape cluster converge --cluster=<cluster_name> [--converge-cloud]
       [--tf-templates-dir=<tf_templates_dir> ] [--debug]
   landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
@@ -31,7 +31,7 @@ Usage:
 Options:
   --cloud-provisioner=<cloud_provisioner>      Cloud provisioner [terraform|minikube|unmanaged]
   --cluster=<context_name>                     Operate on cluster context, defined in Vault
-  --git-branch=<branch_name>                   Git branch to use for secrets lookup
+  --git-branch=<branch_name>                   Git branch to use for secrets lookup. List clusters subscribing to this landscaper branch
   --write-kubeconfig                           Write ~/.kube/config with contents from Vault
   --read-kubeconfig                            Read ~/.kube/config and put its contents in Vault
   --kubeconfig-file=<kubecfg>                  Specify path to KUBECONFIG [default: ~/.kube/config-landscaper].
@@ -182,7 +182,7 @@ def main():
     # landscape cluster
     elif args['cluster']:
         clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
-        clusters = ClusterCollection(clouds)
+        clusters = ClusterCollection(clouds, git_branchname)
         # landscape cloud list
         if args['list']:
             list_clusters(clusters)
