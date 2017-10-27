@@ -29,7 +29,7 @@ Usage:
   landscape setup install-prerequisites
 
 Options:
-  --cloud-provisioner=<cloud_provisioner>      Cloud provisioner ("terraform" or "minikube")
+  --cloud-provisioner=<cloud_provisioner>      Cloud provisioner [terraform|minikube|unmanaged]
   --cluster=<context_name>                     Operate on cluster context, defined in Vault
   --git-branch=<branch_name>                   Git branch to use for secrets lookup
   --write-kubeconfig                           Write ~/.kube/config with contents from Vault
@@ -159,6 +159,10 @@ def main():
     cluster_selection = args['--cluster']
     # branch is used to pull secrets from Vault, and to distinguish clusters
     namespaces_selection = args['--namespaces']
+    if namespaces_selection:
+        deploy_only_these_namespaces = namespaces_selection.split(',')
+    else:
+        deploy_only_these_namespaces = []
     cloud_selection = args['--cloud']
     also_converge_cloud = args['--converge-cloud']
     also_converge_cluster = args['--converge-cluster']
@@ -191,7 +195,9 @@ def main():
         clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
         clusters = ClusterCollection(clouds)
         cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
-        charts = LandscaperChartsCollection(chart_definition_root, git_branchname, cluster_cloud['provisioner'])
+        # TODO: figure out cluster_provisioner inside LandscaperChartsCollection
+        cluster_provisioner = cluster_cloud['provisioner']
+        charts = LandscaperChartsCollection(cluster_selection, chart_definition_root, git_branchname, cluster_provisioner, deploy_only_these_namespaces)
         # landscape charts list
         if args['list']:
             list_charts(charts)

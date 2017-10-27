@@ -13,10 +13,13 @@ class LandscaperChartsCollection(ChartsCollection):
     vault write /secret/landscape/clouds/staging-123456 provisioner=terraform
     vault write /secret/landscape/clouds/minikube provisioner=minikube
     """
-    def __init__(self, root_dir, gitbranch, cloud_specific_subset):
+    def __init__(self, context_name, root_dir, gitbranch, cloud_specific_subset, namespaces):
+        self.kube_context = context_name
         self.chartset_root_dir = root_dir
         # all clouds get common charts
         self.chart_collections = ['__all_cloud_provisioners__'] + [cloud_specific_subset]
+        self.namespaces = namespaces
+        print("NS={0}".format(self.namespaces))
         self.chart_sets = self.__load_chart_sets()
         self.secrets_git_branch = gitbranch
         self.__vault = VaultClient()
@@ -29,6 +32,7 @@ class LandscaperChartsCollection(ChartsCollection):
     def __load_chart_sets(self):
         path_to_chartset_root_dir = self.chartset_root_dir
         chart_sets = {}
+        namespaces = self.namespaces
         for chart_set in os.listdir(path_to_chartset_root_dir):
             if chart_set in self.chart_collections:
                 chart_set_charts = []
@@ -40,10 +44,12 @@ class LandscaperChartsCollection(ChartsCollection):
                         chart_info = yaml.load(f)
                         chart_name = chart_info['name']
                         chart_namespace = chart_info['namespace']
-                        if not chart_namespace in chart_sets:
-                            chart_sets[chart_namespace] = []
-                        chart_info['landscaper_yaml_path'] = landscaper_yaml
-                        chart_sets[chart_namespace].append(chart_info)
+                        # check to see if chart in selected list of namespaces
+                        if not namespaces or chart_namespace in namespaces:
+                            if not chart_namespace in chart_sets:
+                                chart_sets[chart_namespace] = []
+                            chart_info['landscaper_yaml_path'] = landscaper_yaml
+                            chart_sets[chart_namespace].append(chart_info)
         return chart_sets
 
 
@@ -52,6 +58,7 @@ class LandscaperChartsCollection(ChartsCollection):
         Converges charts
         Helm Tiller must already be installed
         """
+        k8s_context = self.kube_context
         for namespace in self.chart_sets.keys():
             yaml_files = [] # which landscape yaml files to apply in namespace
             for chart in self.chart_sets[namespace]:
@@ -74,6 +81,7 @@ class LandscaperChartsCollection(ChartsCollection):
                         sys.exit(1)
             landscaper_env = self.set_landscaper_envvars(namespace_secrets)
             ls_apply_cmd = 'landscaper apply -v --namespace=' + namespace + \
+                                ' --context=' + k8s_context + \
                                 ' ' + ' '.join(yaml_files)
             print("    - executing: " + ls_apply_cmd)
             os.environ.update(landscaper_env)
