@@ -193,7 +193,7 @@ def main():
     # landscape charts
     elif args['charts']:
         clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
-        clusters = ClusterCollection(clouds)
+        clusters = ClusterCollection(clouds, git_branchname)
         cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
         # TODO: figure out cluster_provisioner inside LandscaperChartsCollection
         cluster_provisioner = cluster_cloud['provisioner']
