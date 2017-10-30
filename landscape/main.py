@@ -183,7 +183,7 @@ def main():
         cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
         # TODO: figure out cluster_provisioner inside LandscaperChartsCollection
         cluster_provisioner = cluster_cloud['provisioner']
-        charts = LandscaperChartsCollection(cluster_selection, chart_definition_root, git_branch_selector, cluster_provisioner, deploy_only_these_namespaces)
+        charts = LandscaperChartsCollection(cluster_selection, chart_definition_root, cluster_provisioner, deploy_only_these_namespaces)
         # landscape charts list
         if args['list']:
             list_charts(charts)

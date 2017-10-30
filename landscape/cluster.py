@@ -17,9 +17,10 @@ class Cluster(object):
         Reads a cluster's definition from Vault.
 
         Args:
-            kwargs['context_id']: the Cluster's context name on local machine
-            kwargs['cloud_id']: a list of Clouds, one of which should (if
-                defined in Vault properly) host the Cluster
+            kwargs**:
+              context_id: the Cluster's context name on local machine
+              cloud_id: a list of Clouds, one of which should (if defined
+              in Vault properly) host the Cluster
 
         Returns:
             None

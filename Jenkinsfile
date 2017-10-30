@@ -43,13 +43,9 @@ def getVaultToken() {
 def getClusterTargets() {
 // gets provisioner targets from Vault 
 // returns a list used for dynamic Jenkinsfile parameters
-    def vaultVars = []
-    vaultVars.add('VAULT_ADDR=' +  getVaultAddr())
-    vaultVars.add('VAULT_CACERT=' + getVaultCacert())
-    vaultVars.add('VAULT_TOKEN=' + getVaultToken())
     targets_list_cmd = "landscape cluster list --git-branch=${env.BRANCH_NAME}"
     println("Running command: " + targets_list_cmd)
-    sout = executeOrReportErrors(targets_list_cmd, vaultVars)
+    sout = executeOrReportErrors(targets_list_cmd)
     // prepend targets with null value, which is default
     targetsString = "\n" + sout.toString()
     if(targetsString.length() == 0) {
@@ -62,13 +58,9 @@ def getClusterTargets() {
 def getCloudTargets() {
 // gets provisioner targets from Vault 
 // returns a list used for dynamic Jenkinsfile parameters
-    def vaultVars = []
-    vaultVars.add('VAULT_ADDR=' +  getVaultAddr())
-    vaultVars.add('VAULT_CACERT=' + getVaultCacert())
-    vaultVars.add('VAULT_TOKEN=' + getVaultToken())
     targets_list_cmd = "landscape cloud list --git-branch=${env.BRANCH_NAME}"
     println("Running command: " + targets_list_cmd)
-    sout = executeOrReportErrors(targets_list_cmd, vaultVars)
+    sout = executeOrReportErrors(targets_list_cmd)
     // prepend targets with null value, which is default
     targetsString = "\n" + sout.toString()
     if(targetsString.length() == 0) {
@@ -78,9 +70,14 @@ def getCloudTargets() {
     return targetsString
 }
 
-def executeOrReportErrors(command_string, env_vars=[], working_dir='/') {
+def executeOrReportErrors(command_string, working_dir='/') {
 // executes a command, printing stderr if command fails
 // returns command stdout string
+    def vaultVars = []
+    vaultVars.add('VAULT_ADDR=' +  getVaultAddr())
+    vaultVars.add('VAULT_CACERT=' + getVaultCacert())
+    vaultVars.add('VAULT_TOKEN=' + getVaultToken())
+
     def cmd_stdout = new StringBuilder(), cmd_stderr = new StringBuilder()
     def cmd_exe = command_string.execute(env_vars, new File(working_dir))
     cmd_exe.consumeProcessOutput(cmd_stdout, cmd_stderr)
@@ -93,30 +90,74 @@ def executeOrReportErrors(command_string, env_vars=[], working_dir='/') {
     return cmd_stdout
 }
 
+def convergeCloud(cloud_name, dry_run=true) {
+    def mkParams = "CLOUD_NAME=" + cloud_name
+    if(dry_run) {
+        mkParams += " DRYRUN=true"
+    }
+    def cmd = "make " + mkParams + " cloud"
+}
+
+def convergeCluster(cluster_name, dry_run=true) {
+    def mkParams = "SKIP_CONVERGE_CLOUD=true CLUSTER_NAME=" + cluster_name
+    if(dry_run) {
+        mkParams += " DRYRUN=true"
+    }
+    def cmd = "make " + mkParams + " cluster"
+}
+
+def convergeCharts(cluster_name, dry_run=true) {
+    def mkParams = "SKIP_CONVERGE_CLOUD=true SKIP_CONVERGE_CLUSTER=true " + \
+                    "CLUSTER_NAME=" + cluster_name
+    if(dry_run) {
+        mkParams += " DRYRUN=true"
+    }
+    def cmd = "make " + mkParams + " charts"
+}
+
 properties([parameters([choice(choices: getClusterTargets(), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')])])
 
 
 node('landscape') {
     stage('Checkout') {
-        def provisioner = env.CONTEXT
-        if (provisioner != null && !provisioner.isEmpty()) {
-            print("Using Provisioner: " + provisioner)
+        def kubernetes_context = env.CONTEXT
+        if (kubernetes_context != null && !kubernetes_context.isEmpty()) {
+            print("Using Kubernetes context: " + kubernetes_context)
             checkout scm
         } else {
             error("CONTEXT not set (normal on first-run)")
         }
     }
-    stage('Environment') {
-    }
-    stage('Test') {
-    }
-    stage('Deploy') {
+    stage('Test Cloud') {
         withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            sh "make CLUSTER_NAME=${CONTEXT} BRANCH_NAME=${env.BRANCH_NAME} deploy"
+            def cloud_name = 
+            convergeCloud(cloud_name, true)
         }
     }
-    stage('Verify') {
+    stage('Test Cluster') {
+        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+            convergeCluster(env.CONTEXT, true)
+        }
     }
-    stage('Report') {
+    stage('Test Charts') {
+        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+            convergeCharts(env.CONTEXT, true)
+        }
+    }
+    stage('Converge Cloud') {
+        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+            def cloud_name = 
+            convergeCloud(cloud_name, false)
+        }
+    }
+    stage('Converge Cluster') {
+        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+            convergeCluster(env.CONTEXT, false)
+        }
+    }
+    stage('Converge Charts') {
+        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+            convergeCharts(env.CONTEXT, false)
+        }
     }
 }
