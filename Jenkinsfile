@@ -79,7 +79,7 @@ def executeOrReportErrors(command_string, working_dir='/') {
     vaultVars.add('VAULT_TOKEN=' + getVaultToken())
 
     def cmd_stdout = new StringBuilder(), cmd_stderr = new StringBuilder()
-    def cmd_exe = command_string.execute(env_vars, new File(working_dir))
+    def cmd_exe = command_string.execute(vaultVars, new File(working_dir))
     cmd_exe.consumeProcessOutput(cmd_stdout, cmd_stderr)
     cmd_exe.waitForOrKill(5000)
     if(cmd_exe.exitValue() != 0) {
