@@ -6,17 +6,29 @@ import logging
 from .cloud import Cloud
 
 class TerraformCloud(Cloud):
-    """
+    """A Terraform-provisioned resource-set
+
+    Secrets path must exist as:
     vault write /secret/landscape/clouds/staging-123456 provisioner=terraform \
         google_credentials=
+
+    Attributes:
+        tf_templates_dir: String containing path to terraform templates
+        gce_creds: GOOGLE_APPICATION_CREDENTIALS for cloud
+        terraform_dir: String containing path to terraform templates (TODO: dup)
+
+        Other attributes inherited from superclass.
+
     """
+
     def __init__(self, **kwargs):
         Cloud.__init__(self, **kwargs)
         self.tf_templates_dir = '.'
         self.gce_creds = kwargs['google_credentials']
         self.terraform_dir = kwargs['terraform_templates_dir']
-        self.gcloud_auth_jsonfile = os.getcwd() + '/cloud-serviceaccount-' + self.name + '.json'
+        self.__gcp_auth_jsonfile = os.getcwd() + '/cloud-serviceaccount-' + self.name + '.json'
         self.write_gcloud_keyfile_json()
+
 
     @property
     def gce_project(self):
@@ -35,7 +47,7 @@ class TerraformCloud(Cloud):
 
     def envvars(self):
         return os.environ.update({
-            'GOOGLE_APPLICATION_CREDENTIALS': self.gcloud_auth_jsonfile,
+            'GOOGLE_APPLICATION_CREDENTIALS': self.__gcp_auth_jsonfile,
             'TF_LOG': 'TRACE'
         })
 
@@ -45,10 +57,10 @@ class TerraformCloud(Cloud):
 
 
     def write_gcloud_keyfile_json(self):
-        google_application_creds_file = self.gcloud_auth_jsonfile
+        google_application_creds_file = self.__gcp_auth_jsonfile
         logging.debug("Writing GOOGLE_APPLICATION_CREDENTIALS to {0}".format(google_application_creds_file))
         f = open(google_application_creds_file, "w")
-        f = open(self.gcloud_auth_jsonfile, "w")
+        f = open(self.__gcp_auth_jsonfile, "w")
         f.write(self.gce_creds)
         f.close()
 

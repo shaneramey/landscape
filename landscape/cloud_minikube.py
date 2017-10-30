@@ -5,21 +5,29 @@ import logging
 from .cloud import Cloud
 
 class MinikubeCloud(Cloud):
-    """
-    Represents a Cloud provisioned in minikube
+    """A Minikube-provisioned Virtual Machine
 
     Secrets path must exist as:
     vault write /secret/landscape/clouds/minikube provisioner=minikube
+
+    Attributes:
+        Inherited from superclass.
     """
-    pass
 
     def converge(self):
-        """
+        """Converges state of a minikube VM
+
         Checks if a minikube cloud is already running
         Initializes it if not yet running
 
-        Returns:
+        Args:
+            None.
 
+        Returns:
+            None.
+
+        Raises:
+            None.
         """
         status_cmd = 'minikube status --format=\'{{.MinikubeStatus}}\''
         proc = subprocess.Popen(status_cmd, stdout=subprocess.PIPE, shell=True)
@@ -32,8 +40,16 @@ class MinikubeCloud(Cloud):
 
 
     def initialize_cloud(self):
-        """
-        Start minikube
+        """Start minikube.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+
+        Raises:
+            None.
         """
         start_cmd_tmpl = 'minikube start ' + \
                     '--kubernetes-version=v{0} ' + \
@@ -57,4 +73,3 @@ class MinikubeCloud(Cloud):
         minikube_start_failed = subprocess.call(start_cmd, shell=True)
         if minikube_start_failed:
             sys.exit('ERROR: minikube cloud initialization failure')
-

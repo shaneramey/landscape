@@ -43,16 +43,20 @@ def helm_repo_update():
     subprocess.call(repo_update_cmd, shell=True)
 
 
-def apply_tiller():
+def apply_tiller(k8s_context):
     """
     Checks if Tiller is already installed. If not, install it.
     """
-    tiller_pod_status_cmd = 'kubectl get pod --namespace=kube-system ' + \
+    tiller_pod_status_cmd = 'kubectl get pod --context=' + k8s_context + \
+                            ' --namespace=kube-system ' + \
                             '-l app=helm -l name=tiller ' + \
                             '-o jsonpath=\'{.items[0].status.phase}\''
-    logging.info('Checking tiller status with command: ' + tiller_pod_status_cmd)
 
-    proc = subprocess.Popen(tiller_pod_status_cmd, stdout=subprocess.PIPE, shell=True)
+    logging.info('Checking tiller pod status with command: ' + \
+                    tiller_pod_status_cmd)
+
+    proc = subprocess.Popen(tiller_pod_status_cmd,stdout=subprocess.PIPE,
+                            shell=True)
     tiller_pod_status = proc.stdout.read().rstrip().decode()
 
     # if Tiller isn't initialized, wait for it to come up

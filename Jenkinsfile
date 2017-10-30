@@ -14,6 +14,7 @@ def getVaultAddr() {
     }
     return vault_address
 }
+
 def getVaultCacert() {
     // in-cluster default vault ca certificate; can be overridden below
     def vault_cacertificate = '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
@@ -39,7 +40,7 @@ def getVaultToken() {
     }
 }
  
-def getTargets(cluster_subscribes_to_charts_branch) {
+def getClusterTargets() {
 // gets provisioner targets from Vault 
 // returns a list used for dynamic Jenkinsfile parameters
     def vaultVars = []
@@ -47,6 +48,25 @@ def getTargets(cluster_subscribes_to_charts_branch) {
     vaultVars.add('VAULT_CACERT=' + getVaultCacert())
     vaultVars.add('VAULT_TOKEN=' + getVaultToken())
     targets_list_cmd = "landscape cluster list --git-branch=${env.BRANCH_NAME}"
+    println("Running command: " + targets_list_cmd)
+    sout = executeOrReportErrors(targets_list_cmd, vaultVars)
+    // prepend targets with null value, which is default
+    targetsString = "\n" + sout.toString()
+    if(targetsString.length() == 0) {
+        error("No targets found in Vault (zero results returned from command)")
+    }
+    println("command output: " + targetsString)
+    return targetsString
+}
+
+def getCloudTargets() {
+// gets provisioner targets from Vault 
+// returns a list used for dynamic Jenkinsfile parameters
+    def vaultVars = []
+    vaultVars.add('VAULT_ADDR=' +  getVaultAddr())
+    vaultVars.add('VAULT_CACERT=' + getVaultCacert())
+    vaultVars.add('VAULT_TOKEN=' + getVaultToken())
+    targets_list_cmd = "landscape cloud list --git-branch=${env.BRANCH_NAME}"
     println("Running command: " + targets_list_cmd)
     sout = executeOrReportErrors(targets_list_cmd, vaultVars)
     // prepend targets with null value, which is default
@@ -73,7 +93,7 @@ def executeOrReportErrors(command_string, env_vars=[], working_dir='/') {
     return cmd_stdout
 }
 
-properties([parameters([choice(choices: getTargets(), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')])])
+properties([parameters([choice(choices: getClusterTargets(), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')])])
 
 
 node('landscape') {

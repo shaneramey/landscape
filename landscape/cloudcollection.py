@@ -11,12 +11,25 @@ class CloudCollection(object):
         self.__clouds = self.__clouds_in_vault()
 
     def __str__(self):
-        return str(self.__clouds)
+        """Pretty-prints a list of clusters
+
+        Args:
+            self: the current object
+
+        Returns:
+            A new-line separated str of cluster names
+
+        Raises:
+            None.
+        """
+
+        return '\n'.join(self.__clouds.keys())
 
 
     def __getitem__(self, cloud_name):
         retval = self.__clouds[cloud_name]
         return retval
+
 
     def __clouds_in_vault(self):
         vault_cloud_prefix = '/secret/landscape/clouds'
