@@ -8,8 +8,8 @@
 def getVaultAddr() {
     // in-cluster default vault server address; can be overridden below
     def vault_address = 'https://http.vault.svc.cluster.local:8200'
-    environment_configured_vault_addr = "${env.VAULT_ADDR}"
-    if(environment_configured_vault_addr) {
+    def environment_configured_vault_addr = env.VAULT_ADDR
+    if(environment_configured_vault_addr?.trim()) {
         vault_address = environment_configured_vault_addr
     }
     return vault_address
@@ -18,8 +18,8 @@ def getVaultAddr() {
 def getVaultCacert() {
     // in-cluster default vault ca certificate; can be overridden below
     def vault_cacertificate = '/var/run/secrets/kubernetes.io/serviceaccount/ca.crt'
-    environment_configured_vault_cacert = "${env.VAULT_CACERT}"
-    if(environment_configured_vault_cacert) {
+    def environment_configured_vault_cacert = env.VAULT_CACERT
+    if(environment_configured_vault_cacert?.trim()) {
         vault_cacertificate = environment_configured_vault_cacert
     }
     return vault_cacertificate
@@ -43,7 +43,7 @@ def getVaultToken() {
 def getClusterTargets() {
 // gets provisioner targets from Vault 
 // returns a list used for dynamic Jenkinsfile parameters
-    targets_list_cmd = "landscape cluster list --git-branch=${env.BRANCH_NAME}"
+    targets_list_cmd = 'landscape cluster list --git-branch='+env.BRANCH_NAME
     println("Running command: " + targets_list_cmd)
     sout = executeOrReportErrors(targets_list_cmd)
     // prepend targets with null value, which is default
@@ -115,6 +115,19 @@ def convergeCharts(cluster_name, dry_run=true) {
     def cmd = "make " + mkParams + " charts"
 }
 
+def clusters_for_branch(branch_name) {
+    clusters_list_cmd = 'landscape cluster list --git-branch='+branch_name
+    println("Running command: " + clusters_list_cmd)
+    sout = executeOrReportErrors(clusters_list_cmd)
+    // prepend targets with null value, which is default
+    targetsString = "\n" + sout.toString()
+    if(targetsString.length() == 0) {
+        error("No clusters found in Vault (zero results returned from command)")
+    }
+    println("command output: " + targetsString)
+    return targetsString
+}
+
 properties([parameters([choice(choices: getClusterTargets(), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')])])
 
 
@@ -128,36 +141,37 @@ node('landscape') {
             error("CONTEXT not set (normal on first-run)")
         }
     }
-    stage('Test Cloud') {
-        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            def cloud_name = 
-            convergeCloud(cloud_name, true)
+    for (String cluster_name : clusters_for_branch(${env.BRANCH_NAME})) {
+        def cloud_name = getCloudForCluster(cluster_name)
+        stage('Test Cloud ' + cloud_name) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCloud(cloud_name, true)
+            }
         }
-    }
-    stage('Test Cluster') {
-        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCluster(env.CONTEXT, true)
+        stage('Test Cluster ' + cluster_name) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCluster(cluster_name, true)
+            }
         }
-    }
-    stage('Test Charts') {
-        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCharts(env.CONTEXT, true)
+        stage('Test Charts ' + cluster_name) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCharts(cluster_name, true)
+            }
         }
-    }
-    stage('Converge Cloud') {
-        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            def cloud_name = 
-            convergeCloud(cloud_name, false)
+        stage('Converge Cloud ' + cloud_name) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCloud(cloud_name, false)
+            }
         }
-    }
-    stage('Converge Cluster') {
-        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCluster(env.CONTEXT, false)
+        stage('Converge Cluster ' + cluster_name) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCluster(cluster_name, false)
+            }
         }
-    }
-    stage('Converge Charts') {
-        withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCharts(env.CONTEXT, false)
+        stage('Converge Charts ' + cluster_name) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCharts(cluster_name, false)
+            }
         }
     }
 }

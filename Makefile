@@ -76,6 +76,8 @@ endif
 # Jenkinsfile stages, plus other targets
 .PHONY: cloud cluster charts localsetup start-local-repos
 
+# Cloud deployment
+ifeq (false,$(SKIP_CONVERGE_CLOUD))
 cloud:
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
@@ -84,7 +86,12 @@ ifeq (true,$(DEPLOY_LOCAL_REPOS))
 else
 	$(CONVERGE_CLOUD_CMD)
 endif
+else
+cloud: ;
+endif
 
+# Cluster deployment
+ifeq (false,$(SKIP_CONVERGE_CLUSTER))
 cluster: cloud
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
@@ -92,6 +99,9 @@ ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	$(CONVERGE_CLUSTER_CMD)
 else
 	$(CONVERGE_CLUSTER_CMD)
+endif
+else:
+cluster: ;
 endif
 
 charts: cluster cloud
