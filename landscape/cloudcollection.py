@@ -18,7 +18,7 @@ class CloudCollection(object):
             None.
         """
 
-        return '\n'.join(self.__clouds.keys())
+        return '\n'.join(self.list())
 
 
     def __getitem__(self, cloud_name):
