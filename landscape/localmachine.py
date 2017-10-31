@@ -6,7 +6,6 @@ import re
 import sh
 
 from .kubernetes import kubectl_use_context
-from .helm import apply_tiller
 
 class Localmachine(object):
     """
@@ -33,6 +32,9 @@ class Localmachine(object):
         self.run_vpn_install() # Install Viscosity OpenVPN profile
 
 
+    def helm_init_client(self):
+        helm_init_client_cmd = 'helm init --client-only'
+        proc = subprocess.call(helm_init_client_cmd, shell=True)
     def helm_add_repos(self):
         """
         Add local Chartmuseum Helm Chart server

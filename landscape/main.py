@@ -15,23 +15,24 @@ A "cluster" is a Kubernetes cluster running within a cloud
 There may be multiple kubernetes "clusters" within a cloud
 
 Usage:
-  landscape cloud list [--cloud-provisioner=<cloud_provisioner>]
-  landscape cloud converge [--cloud=<cloud_project>]
-  landscape cluster list --git-branch=<landscaper_branch> [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>]
-  landscape cluster converge --cluster=<cluster_name> [--converge-cloud]
-      [--tf-templates-dir=<tf_templates_dir> ] [--debug]
-  landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
-  landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>]
-  landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
+  landscape cloud list [--git-branch=<terraform_branch>] [--cloud-provisioner=<cloud_provisioner>] [--log-level=<log_level>]
+  landscape cloud converge [--cloud=<cloud_project>] [--log-level=<log_level>] [--dry-run]
+  landscape cluster list [--git-branch=<landscaper_branch>] [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>] [--log-level=<log_level>]
+  landscape cluster show --cluster=<cluster_name> --cloud-id  [--log-level=<log_level>]
+  landscape cluster converge --cluster=<cluster_name> [--converge-cloud]  [--log-level=<log_level>]
+      [--log-level=<log_level>] [--dry-run]
+  landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>] [--log-level=<log_level>]
+  landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>] [--log-level=<log_level>]
+  landscape charts converge --cluster=<cluster_name>
       [--namespaces=<namespaces>] [--charts=<chart_names>] [--converge-cluster] [--converge-localmachine]
-      [--converge-cloud] [--git-branch=<branch_name>]
-  landscape secrets overwrite [--secrets-username=<username>] [--from-lastpass] [--shared-secrets-folder=<central_secrets_path>]
-  landscape setup install-prerequisites
+      [--converge-cloud] [--landscaper-branch=<branch_name>] [--log-level=<log_level>] [--dry-run]
+  landscape secrets overwrite [--secrets-username=<username>] [--from-lastpass] [--shared-secrets-folder=<central_secrets_path>] [--log-level=<log_level>]
+  landscape setup install-prerequisites [--log-level=<log_level>]
 
 Options:
   --cloud-provisioner=<cloud_provisioner>      Cloud provisioner [terraform|minikube|unmanaged]
   --cluster=<context_name>                     Operate on cluster context, defined in Vault
-  --git-branch=<branch_name>                   Git branch to use for secrets lookup. List clusters subscribing to this landscaper branch
+  --git-branch=<branch_name>                   List clouds (Terraform) or charts (Landscaper) subscribed to branch (via Vault) 
   --write-kubeconfig                           Write ~/.kube/config with contents from Vault
   --read-kubeconfig                            Read ~/.kube/config and put its contents in Vault
   --kubeconfig-file=<kubecfg>                  Specify path to KUBECONFIG [default: ~/.kube/config-landscaper].
@@ -45,10 +46,11 @@ Options:
   --from-lastpass                              Fetches values from Lastpass and puts them in Vault
   --shared-secrets-folder=<central_folder>     Location in LastPass to pull secrets from [default: Shared-k8s/k8s-landscaper/master].
   --secrets-username=<username>                Username for central shared secrets repository
-  --tf-templates-dir=<tf_templates_dir>        Terraform templates directory [default: ./tf-templates].
-  --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
+  --cloud-id                                   Retrieve cloud-id of cluster (which is pulled from Vault)
+  --dry-run                                    Simulate, but don't converge
   --log-level=<log_level>                      Log messages at least this level [default: NOTSET].
-Provisioner can be one of minikube, terraform.
+
+Provisioner can be one of minikube, terraform, unmanaged.
 """
 
 import docopt
@@ -65,30 +67,6 @@ from .localmachine import Localmachine
 from .kubernetes import (kubernetes_get_context, kubectl_use_context)
 from .vault import (read_kubeconfig, write_kubeconfig)
 from .prerequisites import install_prerequisites
-def list_clouds(cloud_collection):
-    """Prints a list of cloud names for a given CloudCollection
-
-    Args:
-        cloud_collection (CloudCollection): a set of Cloud objects
-
-    Returns:
-        None
-    """
-    for cloud_name in cloud_collection.list():
-        print(cloud_name)
-
-
-def list_clusters(cluster_collection):
-    """Prints a list of cluster names for a given ClusterCollection
-
-    Args:
-        cluster_collection (ClusterCollection): a set of Cluster objects
-
-    Returns:
-        None
-    """
-    for cluster_name in cluster_collection.list():
-        print(cluster_name)
 
 
 def list_charts(chart_collection):
@@ -151,11 +129,14 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     args = docopt.docopt(__doc__)
     cloud_provisioner = args['--cloud-provisioner']
-    terraform_definition_root = args['--tf-templates-dir']
-    chart_definition_root = args['--chart-dir']
-    git_branchname = args['--git-branch']
-    if not git_branchname:
-        git_branchname = git_branch()
+    git_branch_selector = args['--git-branch']
+    dry_run = args['--dry-run']
+    # Check if current branch matches cloud/cluster. TODO: move this to classes
+    # if not tf_git_branch_selector:
+    #     tf_git_branchname = git_branch()
+    # if not ls_git_branchname:
+    #     ls_git_branchname = git_branch()
+
     cluster_selection = args['--cluster']
     # branch is used to pull secrets from Vault, and to distinguish clusters
     namespaces_selection = args['--namespaces']
@@ -172,32 +153,35 @@ def main():
     logger.setLevel(logging.INFO)
     # landscape cloud
     if args['cloud']:
-        clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
+        clouds = CloudCollection()
         # landscape cloud list
         if args['list']:
-            list_clouds(clouds)
+            print(clouds)
         # landscape cloud converge
         elif args['converge']:
-            clouds[cloud_selection].converge()
+            clouds[cloud_selection].converge(dry_run)
     # landscape cluster
     elif args['cluster']:
-        clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
-        clusters = ClusterCollection(clouds, git_branchname)
-        # landscape cloud list
+        clouds = CloudCollection()
+        clusters = ClusterCollection(clouds, git_branch_selector)
+        # landscape cluster list
         if args['list']:
-            list_clusters(clusters)
+            print(clusters)
+        elif args['show'] and args['--cloud-id']:
+            cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
+            print(cluster_cloud.name)
         elif args['converge']:
             if also_converge_cloud:
                 cluster_cloud.converge()
-            clusters[cluster_selection].converge()
+            clusters[cluster_selection].converge(dry_run)
     # landscape charts
     elif args['charts']:
-        clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
-        clusters = ClusterCollection(clouds)
+        clouds = CloudCollection()
+        clusters = ClusterCollection(clouds, git_branch_selector)
         cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
         # TODO: figure out cluster_provisioner inside LandscaperChartsCollection
         cluster_provisioner = cluster_cloud['provisioner']
-        charts = LandscaperChartsCollection(cluster_selection, chart_definition_root, git_branchname, cluster_provisioner, deploy_only_these_namespaces)
+        charts = LandscaperChartsCollection(cluster_selection, cluster_provisioner, deploy_only_these_namespaces)
         # landscape charts list
         if args['list']:
             list_charts(charts)
@@ -207,14 +191,14 @@ def main():
                 cluster_cloud.converge()
             if also_converge_cluster:
                 clusters[cluster_selection].converge()
-            charts.converge()
+            charts.converge(dry_run)
             # set up local machine for cluster
             if also_converge_localmachine:
                 localmachine = Localmachine(cluster=clusters[cluster_selection])
                 localmachine.converge()
     # landscape secrets
     elif args['secrets']:
-        # landscape charts list
+        # landscape secrets overwrite --from-lastpass
         if args['overwrite'] and args['--from-lastpass']:
             central_secrets_folder = args['--shared-secrets-folder']
             central_secrets_username = args['--secrets-username']

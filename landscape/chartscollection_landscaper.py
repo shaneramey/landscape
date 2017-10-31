@@ -6,29 +6,66 @@ import sys
 
 from .vault import VaultClient
 from .chartscollection import ChartsCollection
-from .helm import apply_tiller
 
 class LandscaperChartsCollection(ChartsCollection):
-    """ Loads up a directory of chart yaml for use by Landscaper
+    """Loads up a directory of chart yaml for use by Landscaper
+
     vault write /secret/landscape/clouds/staging-123456 provisioner=terraform
     vault write /secret/landscape/clouds/minikube provisioner=minikube
+
+    Attributes:
+        kube_context: A boolean indicating if we like SPAM or not.
+        chartset_root_dir: An integer count of the eggs we have laid.
+        chart_collections: An integer count of the eggs we have laid.
+        namespaces: An integer count of the eggs we have laid.
+        chart_sets: An integer count of the eggs we have laid.
+        secrets_git_branch: An integer count of the eggs we have laid.
     """
-    def __init__(self, context_name, root_dir, gitbranch, cloud_specific_subset, namespaces):
+
+    def __init__(self, context_name, cloud_specific_subset, namespaces):
+        """Initializes a set of charts for a cluster.
+
+        When namespaces=[], deploy all namespaces.
+        TODO: move cloud_specific_subset logic to within each cluster
+
+        Args:
+            context_name: The Kubernetes context name in which to apply charts
+            root_dir: A sequence of strings representing the key of each table row
+                to fetch
+            cloud_specific_subset: A directory name containing the cluster type
+            namespaces: A List of namespaces for which to apply charts.
+
+        Returns:
+            None.
+
+        Raises:
+            None.
+        """
         self.kube_context = context_name
-        self.chartset_root_dir = root_dir
+        self.chartset_root_dir = './charts'
         # all clouds get common charts
         self.chart_collections = ['__all_cloud_provisioners__'] + [cloud_specific_subset]
         self.namespaces = namespaces
         self.chart_sets = self.__load_chart_sets()
-        self.secrets_git_branch = gitbranch
         self.__vault = VaultClient()
-
-
-    def __str__(self):
-        return self.chartset_root_dir
+        self.secrets_git_branch = self.__vault.get_vault_data('/secret/landscape/clusters/' + self.kube_context)['landscaper_branch']
 
 
     def __load_chart_sets(self):
+        """Loads the set of charts for a specific cluster.
+
+        Different provisioners deploy a different set of charts under a 
+        directory structure on a single branch.
+
+        Args:
+            None.
+
+        Returns:
+            A dict of namespaces with the charts in each namespace inside.
+
+        Raises:
+            None.
+        """
         path_to_chartset_root_dir = self.chartset_root_dir
         chart_sets = {}
         namespaces = self.namespaces
@@ -52,10 +89,21 @@ class LandscaperChartsCollection(ChartsCollection):
         return chart_sets
 
 
-    def converge(self):
-        """
-        Converges charts
-        Helm Tiller must already be installed
+    def converge(self,dry_run):
+        """Pulls secrets from Vault and converges using Landscaper.
+
+        Helm Tiller must already be installed. Injects environment variables 
+        pulled from Vault into local environment variables, so landscaper can
+        apply the secrets from Vault
+
+        Args:
+            None.
+
+        Returns:
+            None.
+
+        Raises:
+            None.
         """
         k8s_context = self.kube_context
         for namespace in self.chart_sets.keys():
@@ -82,6 +130,8 @@ class LandscaperChartsCollection(ChartsCollection):
             ls_apply_cmd = 'landscaper apply -v --namespace=' + namespace + \
                                 ' --context=' + k8s_context + \
                                 ' ' + ' '.join(yaml_files)
+            if dry_run:
+                ls_apply_cmd += ' --dry-run'
             print("    - executing: " + ls_apply_cmd)
             os.environ.update(landscaper_env)
             create_failed = subprocess.call(ls_apply_cmd, shell=True)
@@ -90,6 +140,18 @@ class LandscaperChartsCollection(ChartsCollection):
 
 
     def vault_secrets_for_chart(self, chart_namespace, chart_name):
+        """Read Vault secrets for a deployment (chart name + namespace).
+
+        Args:
+            chart_namespace: The namespace where the chart will be installed.
+            chart_name: The name of the chart being installed.
+
+        Returns:
+            A dict of Vault secrets, pulled from a deployment-specific key
+
+        Raises:
+            None.
+        """
         chart_vault_secret = "/secret/landscape/charts/{0}/{1}/{2}".format(
                                                     self.secrets_git_branch,
                                                     chart_namespace,
@@ -101,6 +163,20 @@ class LandscaperChartsCollection(ChartsCollection):
 
 
     def set_landscaper_envvars(self, vault_secrets):
+        """Converts secrets pulled from Vault to environment variables.
+
+        Used by Landscaper to inject environment variables into secrets.
+
+        Args:
+            vault_secrets: A dict of secrets, typically pulled from Vault.
+
+        Returns:
+            A dict of secrets, converted to landscaper-compatible environment
+            variables.
+
+        Raises:
+            None.
+        """
         envvar_list = {}
         for secret_key, secret_value in vault_secrets.items():
             envvar_key = self.helm_secret_name_to_envvar_name(secret_key)
@@ -109,10 +185,19 @@ class LandscaperChartsCollection(ChartsCollection):
 
 
     def helm_secret_name_to_envvar_name(self, keyname):
-        """
-        Translate helm secret name to environment variable
+        """Translate helm secret name to environment variable.
+
         The environment variable is then read by the landscaper command
 
         e.g., secret-admin-password becomes SECRET_ADMIN_PASSWORD
+
+        Args:
+            keyname: A String of the environment variable name.
+
+        Returns:
+            A String converted to capitalized environment variable.
+
+        Raises:
+            None.
         """
         return keyname.replace('-', '_').upper()
