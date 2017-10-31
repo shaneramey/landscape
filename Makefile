@@ -8,7 +8,7 @@
 # TODO: use https://github.com/shaneramey/vault-backup for backup/restore
 #
 # Intended pipeline:
-#  localsetup -> cloud -> cluster -> charts
+#  reposetup -> cloud -> cluster -> charts
 #
 # Examples:
 # - Bootstrapping from local machine
@@ -30,8 +30,6 @@ SHELL := /bin/bash
 DEBUG := false
 BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 CLUSTER_NAME := minikube
-CLOUD_NAME := $(shell landscape cluster show \
-				--cluster=$(CLUSTER_NAME) --cloud-id)
 # Whether to start local dev-vault and dev-chartmuseum containers and retrieve
 DEPLOY_LOCAL_REPOS := true
 
@@ -73,12 +71,17 @@ ifeq ($(DEBUG),true)
 endif
 
 
-# Jenkinsfile stages, plus other targets
-.PHONY: cloud cluster charts localsetup start-local-repos
+# Invoke with one of these arguments
+# can use them for Jenkinsfile stages
+.PHONY: reposetup cloud cluster charts
 
 # Cloud deployment
-ifeq (false,$(SKIP_CONVERGE_CLOUD))
-cloud:
+ifneq (true,$(SKIP_CONVERGE_CLOUD))
+cloud: reposetup
+	echo Make Target: cloud
+	$(CONVERGE_LOCAL_CLOUD_SETTINGS_CMD)
+CLOUD_NAME := $(shell landscape cluster show \
+				--cluster=$(CLUSTER_NAME) --cloud-id)
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
 	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
@@ -87,12 +90,14 @@ else
 	$(CONVERGE_CLOUD_CMD)
 endif
 else
-cloud: ;
+cloud: reposetup;
 endif
 
 # Cluster deployment
-ifeq (false,$(SKIP_CONVERGE_CLUSTER))
-cluster: cloud
+ifneq (true,$(SKIP_CONVERGE_CLUSTER))
+cluster: reposetup cloud
+	echo Make Target: cluster
+	$(CONVERGE_LOCAL_CLUSTER_SETTINGS_CMD)
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
 	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
@@ -101,10 +106,12 @@ else
 	$(CONVERGE_CLUSTER_CMD)
 endif
 else:
-cluster: ;
+cluster: reposetup
 endif
 
-charts: cluster cloud
+# Charts deployment
+charts: reposetup cluster cloud
+	echo Make Target: charts
 # deploy secrets from local repos
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
@@ -115,20 +122,14 @@ else
 endif
 
 # cluster boostrapping/maintenance from workstation
-localsetup:
+# start local vault and chartmuseum containers
+# to deploy from outside target cluster (e.g., a laptop)
+reposetup:
+	echo Make Target: reposetup
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 # use local docker-based vault + chartmuseum
 # as opposed to using pre-existing Vault and Helm repo values
-localsetup: start-local-repos
-endif
-	$(CONVERGE_LOCAL_CLOUD_SETTINGS_CMD)
-	$(CONVERGE_LOCAL_CLUSTER_SETTINGS_CMD)
-	helm init --client-only
-	helm repo update
-
-# start local vault and chartmuseum containers
-# to deploy from outside target cluster
-start-local-repos:
+reposetup:
 ifeq (,$(SHARED_SECRETS_USERNAME))
 	$(error SHARED_SECRETS_USERNAME required to pull secrets from LastPass)
 endif
@@ -141,3 +142,5 @@ endif
 	CHARTS_STORAGE_BUCKET=$(GOOGLE_STORAGE_BUCKET) \
 	SHARED_SECRETS_ITEM=$(BRANCH_NAME) \
 	./start_local_repos.sh
+endif
+
