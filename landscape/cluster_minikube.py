@@ -14,7 +14,7 @@ class MinikubeCluster(Cluster):
         None.
     """
 
-    def cluster_setup(self):
+    def cluster_setup(self, dry_run):
         """Converges minikube state and sets addons
 
         Checks if a minikube cloud is already running; initializes it if not
@@ -36,10 +36,13 @@ class MinikubeCluster(Cluster):
         # addons to disable
         for disable_addon in disable_addons:
             addon_cmd = "minikube addons disable {0}".format(disable_addon)
-            check_cmd_failed = subprocess.call(addon_cmd, shell=True)
-            if check_cmd_failed:
-                logging.warn("Failed to disable addon with command: {0}".format(addon_cmd))
-        
+            logging.info(addon_cmd)
+            if not dry_run:
+                check_cmd_failed = subprocess.call(addon_cmd, shell=True)
+                if check_cmd_failed:
+                    logging.warn("Failed to disable addon with command: {0}".format(addon_cmd))
+            else:
+                print("Dry run complete")
         # addons to enable
         for enable_addon in enable_addons:
             addon_cmd = "minikube addons enable {0}".format(enable_addon)
@@ -48,7 +51,7 @@ class MinikubeCluster(Cluster):
                 logging.warn("Failed to enable addon with command: {0}".format(addon_cmd))
 
 
-    def _configure_kubectl_credentials(self):
+    def _configure_kubectl_credentials(self, dry_run):
         """Don't configure kubectl for minikube clusters.
 
         Override parent class method to do nothing, because minikube sets up

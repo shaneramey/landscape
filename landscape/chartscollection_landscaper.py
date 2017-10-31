@@ -6,7 +6,6 @@ import sys
 
 from .vault import VaultClient
 from .chartscollection import ChartsCollection
-from .helm import apply_tiller
 
 class LandscaperChartsCollection(ChartsCollection):
     """Loads up a directory of chart yaml for use by Landscaper
@@ -23,61 +22,33 @@ class LandscaperChartsCollection(ChartsCollection):
         secrets_git_branch: An integer count of the eggs we have laid.
     """
 
-    def __init__(self, context_name, root_dir, cloud_specific_subset, namespaces):
-        """Fetches rows from a Bigtable.
+    def __init__(self, context_name, cloud_specific_subset, namespaces):
+        """Initializes a set of charts for a cluster.
 
-        Retrieves rows pertaining to the given keys from the Table instance
-        represented by big_table.  Silly things may happen if
-        other_silly_variable is not None.
+        When namespaces=[], deploy all namespaces.
+        TODO: move cloud_specific_subset logic to within each cluster
 
         Args:
-            big_table: An open Bigtable Table instance.
-            keys: A sequence of strings representing the key of each table row
-                to fetch.
-            other_silly_variable: Another optional variable, that has a much
-                longer name than the other args, and which does nothing.
+            context_name: The Kubernetes context name in which to apply charts
+            root_dir: A sequence of strings representing the key of each table row
+                to fetch
+            cloud_specific_subset: A directory name containing the cluster type
+            namespaces: A List of namespaces for which to apply charts.
 
         Returns:
-            A dict mapping keys to the corresponding table row data
-            fetched. Each row is represented as a tuple of strings. For
-            example:
-
-            {'Serak': ('Rigel VII', 'Preparer'),
-             'Zim': ('Irk', 'Invader'),
-             'Lrrr': ('Omicron Persei 8', 'Emperor')}
-
-            If a key from the keys argument is missing from the dictionary,
-            then that row was not found in the table.
+            None.
 
         Raises:
-            IOError: An error occurred accessing the bigtable.Table object.
+            None.
         """
         self.kube_context = context_name
-        self.chartset_root_dir = root_dir
+        self.chartset_root_dir = './charts'
         # all clouds get common charts
         self.chart_collections = ['__all_cloud_provisioners__'] + [cloud_specific_subset]
         self.namespaces = namespaces
         self.chart_sets = self.__load_chart_sets()
         self.__vault = VaultClient()
         self.secrets_git_branch = self.__vault.get_vault_data('/secret/landscape/clusters/' + self.kube_context)['landscaper_branch']
-
-
-    def __str__(self):
-        """Returns a list of charts.
-
-        The chart list returned will be a key-value pair of the format:
-        ${namespace}-${chart_name}.
-
-        Args:
-            None.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-        """
-        return self.chartset_root_dir
 
 
     def __load_chart_sets(self):
@@ -118,7 +89,7 @@ class LandscaperChartsCollection(ChartsCollection):
         return chart_sets
 
 
-    def converge(self):
+    def converge(self,dry_run):
         """Pulls secrets from Vault and converges using Landscaper.
 
         Helm Tiller must already be installed. Injects environment variables 
@@ -159,6 +130,8 @@ class LandscaperChartsCollection(ChartsCollection):
             ls_apply_cmd = 'landscaper apply -v --namespace=' + namespace + \
                                 ' --context=' + k8s_context + \
                                 ' ' + ' '.join(yaml_files)
+            if dry_run:
+                ls_apply_cmd += ' --dry-run'
             print("    - executing: " + ls_apply_cmd)
             os.environ.update(landscaper_env)
             create_failed = subprocess.call(ls_apply_cmd, shell=True)

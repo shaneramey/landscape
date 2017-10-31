@@ -23,7 +23,7 @@ Usage:
       [--log-level=<log_level>] [--dry-run]
   landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>] [--log-level=<log_level>]
   landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>] [--log-level=<log_level>]
-  landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
+  landscape charts converge --cluster=<cluster_name>
       [--namespaces=<namespaces>] [--charts=<chart_names>] [--converge-cluster] [--converge-localmachine]
       [--converge-cloud] [--landscaper-branch=<branch_name>] [--log-level=<log_level>] [--dry-run]
   landscape secrets overwrite [--secrets-username=<username>] [--from-lastpass] [--shared-secrets-folder=<central_secrets_path>] [--log-level=<log_level>]
@@ -46,7 +46,6 @@ Options:
   --from-lastpass                              Fetches values from Lastpass and puts them in Vault
   --shared-secrets-folder=<central_folder>     Location in LastPass to pull secrets from [default: Shared-k8s/k8s-landscaper/master].
   --secrets-username=<username>                Username for central shared secrets repository
-  --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
   --cloud-id                                   Retrieve cloud-id of cluster (which is pulled from Vault)
   --dry-run                                    Simulate, but don't converge
   --log-level=<log_level>                      Log messages at least this level [default: NOTSET].
@@ -130,7 +129,6 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     args = docopt.docopt(__doc__)
     cloud_provisioner = args['--cloud-provisioner']
-    chart_definition_root = args['--chart-dir']
     git_branch_selector = args['--git-branch']
     dry_run = args['--dry-run']
     # Check if current branch matches cloud/cluster. TODO: move this to classes
@@ -175,7 +173,7 @@ def main():
         elif args['converge']:
             if also_converge_cloud:
                 cluster_cloud.converge()
-            clusters[cluster_selection].converge()
+            clusters[cluster_selection].converge(dry_run)
     # landscape charts
     elif args['charts']:
         clouds = CloudCollection()
@@ -183,7 +181,7 @@ def main():
         cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
         # TODO: figure out cluster_provisioner inside LandscaperChartsCollection
         cluster_provisioner = cluster_cloud['provisioner']
-        charts = LandscaperChartsCollection(cluster_selection, chart_definition_root, cluster_provisioner, deploy_only_these_namespaces)
+        charts = LandscaperChartsCollection(cluster_selection, cluster_provisioner, deploy_only_these_namespaces)
         # landscape charts list
         if args['list']:
             list_charts(charts)
@@ -193,7 +191,7 @@ def main():
                 cluster_cloud.converge()
             if also_converge_cluster:
                 clusters[cluster_selection].converge()
-            charts.converge()
+            charts.converge(dry_run)
             # set up local machine for cluster
             if also_converge_localmachine:
                 localmachine = Localmachine(cluster=clusters[cluster_selection])

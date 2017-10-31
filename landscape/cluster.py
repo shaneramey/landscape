@@ -1,5 +1,7 @@
+import logging
+import subprocess
 from .kubernetes import kubectl_use_context
-from .helm import apply_tiller
+from .helm import wait_for_tiller_ready
 
 class Cluster(object):
     """A single generic Kubernetes cluster. Meant to be subclassed.
@@ -28,7 +30,6 @@ class Cluster(object):
         Raises:
             None
         """
-
         self.name = kwargs['context_id']
         self.cloud_id = kwargs['cloud_id']
 
@@ -41,18 +42,97 @@ class Cluster(object):
         return self.name
 
 
-    def converge(self):
+    def converge(self, dry_run):
         """
         Override these methods in your subclass
         """
-        self.cluster_setup()
-        self._configure_kubectl_credentials()
-        apply_tiller(self.name)
+        self.cluster_setup(dry_run)
+        self._configure_kubectl_credentials(dry_run)
+        self.apply_tiller(dry_run)
 
 
-    def cluster_setup(self):
+    def apply_tiller(self, dry_run):
+        """Checks if Tiller is already installed. If not, install it.
+
+        Retrieves rows pertaining to the given keys from the Table instance
+        represented by big_table.  Silly things may happen if
+        other_silly_variable is not None.
+
+        Args:
+            dry_run: flag for simulating convergence
+
+        Returns:
+            None.
+
+        Raises:
+            None.
+        """
+        tiller_pod_status_cmd = 'kubectl get pod --context=' + self.name + \
+                                ' --namespace=kube-system ' + \
+                                '-l app=helm -l name=tiller ' + \
+                                '-o jsonpath=\'{.items[0].status.phase}\''
+
+        logging.info('Checking tiller pod status with command: ' + \
+                        tiller_pod_status_cmd)
+
+        if not dry_run:
+            proc = subprocess.Popen(tiller_pod_status_cmd,stdout=subprocess.PIPE,
+                                    shell=True)
+            tiller_pod_status = proc.stdout.read().rstrip().decode()
+
+            # if Tiller isn't initialized, wait for it to come up
+            if not tiller_pod_status == "Running":
+                logging.info('Did not detect tiller pod')
+                self.init_tiller(dry_run)
+            else:
+                logging.info('Detected running tiller pod')
+            # make sure Tiller is ready to accept connections
+            wait_for_tiller_ready(tiller_pod_status_cmd)
+        else:
+            print("Dry run complete")
+
+
+    def init_tiller(self, dry_run):
+        """Creates Tiller RBAC permissions and initializes Tiller.
+
+        Retrieves rows pertaining to the given keys from the Table instance
+        represented by big_table.  Silly things may happen if
+        other_silly_variable is not None.
+
+        Args:
+            dry_run: flag for simulating convergence
+
+        Returns:
+            None.
+
+        Raises:
+            None.
+        """
+        serviceaccount_create_command = 'kubectl create serviceaccount --namespace=kube-system tiller'
+        logging.info('Setting up Tiller serviceaccount with command: ' + serviceaccount_create_command)
+        if not dry_run:
+            subprocess.call(serviceaccount_create_command, shell=True)
+        else:
+            print("Dry run complete")
+
+        clusterrolebinding_create_command = 'kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller'
+        logging.info('Setting up Tiller ClusterRoleBinding: ' + clusterrolebinding_create_command)
+        if not dry_run:
+            subprocess.call(clusterrolebinding_create_command, shell=True)
+        else:
+            print("Dry run complete")
+
+        helm_provision_command = 'helm init --service-account=tiller'
+        logging.info('Initializing Tiller with command: ' + helm_provision_command)
+        if not dry_run:
+            subprocess.call(helm_provision_command, shell=True)
+        else:
+            print("Dry run complete")
+
+
+    def cluster_setup(self, dry_run):
         raise NotImplementedError('Must be overridden in subclass')
 
 
-    def _configure_kubectl_credentials(self):
+    def _configure_kubectl_credentials(self, dry_run):
         raise NotImplementedError('Must be overridden in subclass')

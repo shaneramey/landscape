@@ -87,20 +87,17 @@ endif
 
 .PHONY: repos cloud cluster charts
 
-# Cloud deployment
-ifneq (true,$(SKIP_CONVERGE_CLOUD))
-cloud: repos
-	$(eval CLOUD_NAME := $(shell landscape cluster show --cluster=$(CLUSTER_NAME) --cloud-id))
-	@echo - Converging cloud for CLOUD_NAME=$(CLOUD_NAME)
+
+# Charts deployment
+charts: repos cluster cloud
+	@echo - Converging Charts for CLUSTER_NAME=$(CLUSTER_NAME) CLOUD_NAME=$(CLOUD_NAME)
+# deploy secrets from local repos
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
 	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
-	$(CONVERGE_CLOUD_CMD)
+	$(CONVERGE_CHARTS_CMD)
 else
-	$(CONVERGE_CLOUD_CMD)
-endif
-else
-cloud: repos
+	$(CONVERGE_CHARTS_CMD)
 endif
 
 # Cluster deployment
@@ -119,16 +116,20 @@ else:
 cluster: repos
 endif
 
-# Charts deployment
-charts: repos cluster cloud
-	@echo - Converging Charts for CLUSTER_NAME=$(CLUSTER_NAME) CLOUD_NAME=$(CLOUD_NAME)
-# deploy secrets from local repos
+# Cloud deployment
+ifneq (true,$(SKIP_CONVERGE_CLOUD))
+cloud: repos
+	$(eval CLOUD_NAME := $(shell landscape cluster show --cluster=$(CLUSTER_NAME) --cloud-id))
+	@echo - Converging cloud for CLOUD_NAME=$(CLOUD_NAME)
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
 	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
-	$(CONVERGE_CHARTS_CMD)
+	$(CONVERGE_CLOUD_CMD)
 else
-	$(CONVERGE_CHARTS_CMD)
+	$(CONVERGE_CLOUD_CMD)
+endif
+else
+cloud: repos
 endif
 
 # cluster boostrapping/maintenance from workstation
