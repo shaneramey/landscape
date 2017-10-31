@@ -23,7 +23,7 @@ class TerraformCloud(Cloud):
 
     def __init__(self, **kwargs):
         Cloud.__init__(self, **kwargs)
-        self.tf_templates_dir = '.'
+        self.tf_templates_dir = 'terraform-templates'
         self.gce_creds = kwargs['google_credentials']
         self.__gcp_auth_jsonfile = os.getcwd() + '/cloud-serviceaccount-' + self.name + '.json'
         self.write_gcloud_keyfile_json()
@@ -45,9 +45,14 @@ class TerraformCloud(Cloud):
 
 
     def envvars(self):
+        current_log_level_int = logging.getLogger().getEffectiveLevel()
+        current_log_level = logging.getLevelName(current_log_level_int)
+        tf_log = 'INFO'
+        if current_log_level == 'DEBUG':
+            tf_log = 'TRACE'
         return os.environ.update({
             'GOOGLE_APPLICATION_CREDENTIALS': self.__gcp_auth_jsonfile,
-            'TF_LOG': 'TRACE'
+            'TF_LOG': tf_log
         })
 
     def service_account_email(self):
@@ -70,7 +75,7 @@ class TerraformCloud(Cloud):
         return tf_vars_args.format(self.gce_project,
                                     'master',
                                     '1.7.0')
-    def converge(self):
+    def converge(self,dry_run):
         """
         Checks if a terraform cloud is already running
         Initializes it if not yet running
@@ -78,16 +83,15 @@ class TerraformCloud(Cloud):
         Returns: None
 
         """
-        self.init_terraform()
+        self.init_terraform(dry_run)
         terraform_cmd_tmpl = 'terraform validate ' + self.tf_varstr() + \
             ' && ' + \
-            'terraform plan ' + self.tf_varstr() + \
-            ' && ' + \
-            'terraform apply ' + self.tf_varstr()
-
+            'terraform plan ' + self.tf_varstr()
+        if not dry_run:
+            terraform_cmd_tmpl += ' && terraform apply ' + self.tf_varstr()
         terraform_cmd = terraform_cmd_tmpl.format(self.gce_project,
                                                     'master',
-                                                    '1.7.0')
+                                                    '1.8.1-gke.0')
         logging.info('  - applying terraform state with command: ' + terraform_cmd)
         failed_to_apply_terraform = subprocess.call(terraform_cmd,
                                                     cwd=self.terraform_dir,
@@ -97,7 +101,7 @@ class TerraformCloud(Cloud):
             sys.exit('ERROR: terraform command failed')
 
 
-    def init_terraform(self):
+    def init_terraform(self, dry_run):
         """
         initializes a terraform cloud
         """

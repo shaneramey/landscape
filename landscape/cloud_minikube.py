@@ -31,8 +31,9 @@ class MinikubeCloud(Cloud):
         """
         status_cmd = 'minikube status --format=\'{{.MinikubeStatus}}\''
         proc = subprocess.Popen(status_cmd, stdout=subprocess.PIPE, shell=True)
-        self.cloud_status = proc.stdout.read().rstrip().decode()
-        if self.cloud_status == 'Running':
+        cloud_status = proc.stdout.read().rstrip().decode()
+        logging.debug('Minikube Cloud status is ' + cloud_status)
+        if cloud_status == 'Running':
             logging.info('Cloud previously provisioned. Re-using')
         else:
             logging.info('Initializing Cloud')

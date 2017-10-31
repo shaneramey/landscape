@@ -15,19 +15,19 @@ A "cluster" is a Kubernetes cluster running within a cloud
 There may be multiple kubernetes "clusters" within a cloud
 
 Usage:
-  landscape cloud list [--git-branch=<terraform_branch>] [--cloud-provisioner=<cloud_provisioner>]
-  landscape cloud converge [--cloud=<cloud_project>]
-  landscape cluster list [--git-branch=<landscaper_branch>] [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>]
-  landscape cluster show --cluster=<cluster_name> --cloud-id
-  landscape cluster converge --cluster=<cluster_name> [--converge-cloud]
-      [--tf-templates-dir=<tf_templates_dir> ] [--debug]
-  landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>]
-  landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>]
+  landscape cloud list [--git-branch=<terraform_branch>] [--cloud-provisioner=<cloud_provisioner>] [--log-level=<log_level>]
+  landscape cloud converge [--cloud=<cloud_project>] [--log-level=<log_level>] [--dry-run]
+  landscape cluster list [--git-branch=<landscaper_branch>] [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>] [--log-level=<log_level>]
+  landscape cluster show --cluster=<cluster_name> --cloud-id  [--log-level=<log_level>]
+  landscape cluster converge --cluster=<cluster_name> [--converge-cloud]  [--log-level=<log_level>]
+      [--log-level=<log_level>] [--dry-run]
+  landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>] [--log-level=<log_level>]
+  landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>] [--log-level=<log_level>]
   landscape charts converge --cluster=<cluster_name> [--chart-dir=<path containing chart defs>]
       [--namespaces=<namespaces>] [--charts=<chart_names>] [--converge-cluster] [--converge-localmachine]
-      [--converge-cloud] [--landscaper-branch=<branch_name>]
-  landscape secrets overwrite [--secrets-username=<username>] [--from-lastpass] [--shared-secrets-folder=<central_secrets_path>]
-  landscape setup install-prerequisites
+      [--converge-cloud] [--landscaper-branch=<branch_name>] [--log-level=<log_level>] [--dry-run]
+  landscape secrets overwrite [--secrets-username=<username>] [--from-lastpass] [--shared-secrets-folder=<central_secrets_path>] [--log-level=<log_level>]
+  landscape setup install-prerequisites [--log-level=<log_level>]
 
 Options:
   --cloud-provisioner=<cloud_provisioner>      Cloud provisioner [terraform|minikube|unmanaged]
@@ -46,11 +46,12 @@ Options:
   --from-lastpass                              Fetches values from Lastpass and puts them in Vault
   --shared-secrets-folder=<central_folder>     Location in LastPass to pull secrets from [default: Shared-k8s/k8s-landscaper/master].
   --secrets-username=<username>                Username for central shared secrets repository
-  --tf-templates-dir=<tf_templates_dir>        Terraform templates directory [default: ./tf-templates].
   --chart-dir=<path containing chart defs>     Helm Chart deployment directory [default: ./charts].
-  --log-level=<log_level>                      Log messages at least this level [default: NOTSET].
   --cloud-id                                   Retrieve cloud-id of cluster (which is pulled from Vault)
-Provisioner can be one of minikube, terraform.
+  --dry-run                                    Simulate, but don't converge
+  --log-level=<log_level>                      Log messages at least this level [default: NOTSET].
+
+Provisioner can be one of minikube, terraform, unmanaged.
 """
 
 import docopt
@@ -129,10 +130,9 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     args = docopt.docopt(__doc__)
     cloud_provisioner = args['--cloud-provisioner']
-    terraform_definition_root = args['--tf-templates-dir']
     chart_definition_root = args['--chart-dir']
     git_branch_selector = args['--git-branch']
-    
+    dry_run = args['--dry-run']
     # Check if current branch matches cloud/cluster. TODO: move this to classes
     # if not tf_git_branch_selector:
     #     tf_git_branchname = git_branch()
@@ -161,7 +161,7 @@ def main():
             print(clouds)
         # landscape cloud converge
         elif args['converge']:
-            clouds[cloud_selection].converge()
+            clouds[cloud_selection].converge(dry_run)
     # landscape cluster
     elif args['cluster']:
         clouds = CloudCollection()

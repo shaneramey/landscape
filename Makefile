@@ -6,14 +6,22 @@
 #  - env vars are fed into landscaper
 #  - landscaper deploys Helm charts and their secrets
 #
+# Intended pipeline.
+# Running any of the below commands automatically runs all those above it.
+# Alter with DEPLOY_LOCAL_REPOS, SKIP_CONVERGE_CLOUD, SKIP_CONVERGE_CLUSTER
+# make repos
+# make [DEPLOY_LOCAL_REPOS=true] [DRYRUN=true] cloud
+# make [SKIP_CONVERGE_CLOUD=true] [DEPLOY_LOCAL_REPOS=true] [DRYRUN=true] cluster
+# make [SKIP_CONVERGE_CLUSTER=true] [SKIP_CONVERGE_CLOUD=true] [DEPLOY_LOCAL_REPOS=true] [DRYRUN=true] charts
+#
+# A Jenkins pipeline might look like:
+#  repos -> cloud -> cluster -> charts
+#
 # Acts on a single Landscape namespace at a time
 # Smallest unit to CRUD is namespace
 # Helm charts can be deployed independently
 # landscaper will delete manually-installed helm charts in its namespaces
 # Capable of deploying from either inside or outside target cluster
-#
-# Intended pipeline:
-#  reposetup -> cloud -> cluster -> charts
 #
 # Examples:
 # - Bootstrapping from local machine
@@ -39,7 +47,7 @@ CLUSTER_NAME := minikube
 BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 DEPLOY_ONLY_NAMESPACES :=
 # Whether to start local dev-vault and dev-chartmuseum containers and retrieve
-DEPLOY_LOCAL_REPOS := true
+DEPLOY_LOCAL_REPOS := false
 
 
 # LastPass team-shared secrets username (REQUIRED when DEPLOY_LOCAL_REPOS=true)
@@ -77,16 +85,13 @@ ifeq ($(DEBUG),true)
 	CONVERGE_CHARTS_CMD += --debug
 endif
 
-
-# Invoke with one of these arguments
-# can use them for Jenkinsfile stages
-.PHONY: reposetup cloud cluster charts
+.PHONY: repos cloud cluster charts
 
 # Cloud deployment
 ifneq (true,$(SKIP_CONVERGE_CLOUD))
-cloud: reposetup
-	echo Make Target: cloud
-	$(CONVERGE_LOCAL_CLOUD_SETTINGS_CMD)
+cloud: repos
+	$(eval CLOUD_NAME := $(shell landscape cluster show --cluster=$(CLUSTER_NAME) --cloud-id))
+	@echo - Converging cloud for CLOUD_NAME=$(CLOUD_NAME)
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
 	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
@@ -95,14 +100,14 @@ else
 	$(CONVERGE_CLOUD_CMD)
 endif
 else
-cloud: reposetup;
+cloud: repos
 endif
 
 # Cluster deployment
 ifneq (true,$(SKIP_CONVERGE_CLUSTER))
-cluster: reposetup cloud
-	echo Make Target: cluster
-	$(CONVERGE_LOCAL_CLUSTER_SETTINGS_CMD)
+cluster: repos cloud
+	@echo - Converging cluster for CLUSTER_NAME=$(CLUSTER_NAME)
+	@echo   - Setting CLOUD_NAME=$(CLOUD_NAME)
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
 	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
@@ -111,12 +116,12 @@ else
 	$(CONVERGE_CLUSTER_CMD)
 endif
 else:
-cluster: reposetup
+cluster: repos
 endif
 
 # Charts deployment
-charts: reposetup cluster cloud
-	echo Make Target: charts
+charts: repos cluster cloud
+	@echo - Converging Charts for CLUSTER_NAME=$(CLUSTER_NAME) CLOUD_NAME=$(CLOUD_NAME)
 # deploy secrets from local repos
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
@@ -129,12 +134,12 @@ endif
 # cluster boostrapping/maintenance from workstation
 # start local vault and chartmuseum containers
 # to deploy from outside target cluster (e.g., a laptop)
-reposetup:
-	echo Make Target: reposetup
+repos:
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
+	@echo - Converging Local Repos
 # use local docker-based vault + chartmuseum
 # as opposed to using pre-existing Vault and Helm repo values
-reposetup:
+repos:
 ifeq (,$(SHARED_SECRETS_USERNAME))
 	$(error SHARED_SECRETS_USERNAME required to pull secrets from LastPass)
 endif
