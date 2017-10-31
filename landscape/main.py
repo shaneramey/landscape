@@ -155,7 +155,7 @@ def main():
     logger.setLevel(logging.INFO)
     # landscape cloud
     if args['cloud']:
-        clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
+        clouds = CloudCollection()
         # landscape cloud list
         if args['list']:
             print(clouds)
@@ -164,7 +164,7 @@ def main():
             clouds[cloud_selection].converge()
     # landscape cluster
     elif args['cluster']:
-        clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
+        clouds = CloudCollection()
         clusters = ClusterCollection(clouds, git_branch_selector)
         # landscape cluster list
         if args['list']:
@@ -178,7 +178,7 @@ def main():
             clusters[cluster_selection].converge()
     # landscape charts
     elif args['charts']:
-        clouds = CloudCollection(cloud_provisioner, terraform_definition_root)
+        clouds = CloudCollection()
         clusters = ClusterCollection(clouds, git_branch_selector)
         cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
         # TODO: figure out cluster_provisioner inside LandscaperChartsCollection

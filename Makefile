@@ -1,11 +1,16 @@
-# Acts on a single Landscape namespace at a time (smallest unit to CRUD is namespace)
-# Helm charts can be deployed independently of Landscaper using helm install / helm upgrade utils
+# Branch-aware management of clouds, clusters, and charts.
+#
+# Terraform clouds use files in the terraform/ dir of the landscape repo
+# Helm chart secrets are deployed through process:
+#  - landscape tool pulls environment variables out of Vault
+#  - env vars are fed into landscaper
+#  - landscaper deploys Helm charts and their secrets
+#
+# Acts on a single Landscape namespace at a time
+# Smallest unit to CRUD is namespace
+# Helm charts can be deployed independently
+# landscaper will delete manually-installed helm charts in its namespaces
 # Capable of deploying from either inside or outside target cluster
-#
-# Deploy environment
-#  deploys to current branch to context in `kubectl config current-context`
-#
-# TODO: use https://github.com/shaneramey/vault-backup for backup/restore
 #
 # Intended pipeline:
 #  reposetup -> cloud -> cluster -> charts
@@ -24,12 +29,15 @@
 # make DEPLOY_ONLY_NAMESPACES=openvpn,389ds \
 #      CLUSTER_NAME=gke_staging-123456_us-west1-a_master \
 #      (cloud|cluster|charts)
+DEBUG := false
 
 SHELL := /bin/bash
 
-DEBUG := false
-BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
+# Manages deployment of clouds, clusters, and charts.
+CLOUD_NAME := minikube
 CLUSTER_NAME := minikube
+BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
+DEPLOY_ONLY_NAMESPACES :=
 # Whether to start local dev-vault and dev-chartmuseum containers and retrieve
 DEPLOY_LOCAL_REPOS := true
 
@@ -50,7 +58,6 @@ CONVERGE_CLUSTER_CMD = landscape cluster converge --cluster=$(CLUSTER_NAME)
 # Converge Helm charts
 # Optionally, deploy a sub-set (instead of the full-set), using CSV namespaces
 CONVERGE_CHARTS_CMD = landscape charts converge --cluster=$(CLUSTER_NAME)
-DEPLOY_ONLY_NAMESPACES :=
 ifneq (,$(DEPLOY_ONLY_NAMESPACES))
 	CONVERGE_CHARTS_CMD += --namespaces=$(DEPLOY_ONLY_NAMESPACES)
 endif
@@ -80,8 +87,6 @@ ifneq (true,$(SKIP_CONVERGE_CLOUD))
 cloud: reposetup
 	echo Make Target: cloud
 	$(CONVERGE_LOCAL_CLOUD_SETTINGS_CMD)
-CLOUD_NAME := $(shell landscape cluster show \
-				--cluster=$(CLUSTER_NAME) --cloud-id)
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
 	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
