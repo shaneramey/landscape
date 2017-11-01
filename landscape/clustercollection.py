@@ -15,7 +15,7 @@ class ClusterCollection(object):
         None.
     """
 
-    def __init__(self, cloud_collection, charts_git_branch_selector):
+    def __init__(self, cloud_collection, cloud_selector, charts_git_branch_selector):
         """initializes a ClusterCollection for a given git branch.
 
         Reads a dict of clusters from Vault, and filter the results based on the
@@ -24,6 +24,8 @@ class ClusterCollection(object):
         Args:
             cloud_collection(List): Clouds that contain the cluster(s). Used to
                 identify the cluster's type
+            cloud_selector(str): If set, ClusterCollection is
+                composed of only clusters in this cloud
             charts_git_branch_selector(str): If set, ClusterCollection is
                 composed of only clusters subscribed to this branch. Set in
                 Vault-defined settings for the cluster
@@ -37,6 +39,7 @@ class ClusterCollection(object):
 
         self.vault_cluster_prefix = '/secret/landscape/clusters'
         self.charts_git_branch_selector = charts_git_branch_selector
+        self.cloud_selector = cloud_selector
         self.__clouds = cloud_collection
         self.__vault = VaultClient()
         self.__clusters = self.__clusters_in_vault()
@@ -111,8 +114,8 @@ class ClusterCollection(object):
                 cluster_parameters = clusters_in_vault[k8s_context_name]
                 cluster_parameters.update({'context_id': k8s_context_name})
                 cloud_id_for_cluster = cluster_parameters['cloud_id']
-
-                if cluster_parameters['cloud_id'] in self.__clouds.list():
+                if not self.cloud_selector or \
+                    cloud_id_for_cluster == self.cloud_selector:
                     # What provisioned the cloud? e.g., terraform, minikube
                     cloud_for_cluster = self.__clouds[cloud_id_for_cluster]
                     cloud_provisioner = cloud_for_cluster['provisioner']
@@ -155,6 +158,7 @@ class ClusterCollection(object):
         vault_cluster_prefix = '/secret/landscape/clusters'
         vault_path = self.vault_cluster_prefix + '/' + cluster_name
         return self.__vault.get_vault_data(vault_path)['landscaper_branch']
+
 
     def list(self):
         """Generates list of clusters and returns them.

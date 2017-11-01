@@ -1,56 +1,13 @@
 #! /usr/bin/env python3
 
 """
-landscape: Provisions Kubernetes clusters and Helm charts, with secrets in Hashicorp Vault.
-
-
-A "cloud" is a single GCE Project ID, or minikube. Currently, only one cloud can be operated on at a time.
-
-A "cluster" is a Kubernetes cluster running within a cloud
-
-"charts" represent a sub-set of charts specific to a cluster
-
-"localmachine" commands operate on the local machine
-
-There may be multiple kubernetes "clusters" within a cloud
-
-Usage:
-  landscape cloud list [--git-branch=<terraform_branch>] [--cloud-provisioner=<cloud_provisioner>] [--log-level=<log_level>]
-  landscape cloud converge [--cloud=<cloud_project>] [--log-level=<log_level>] [--dry-run]
-  landscape cluster list [--git-branch=<landscaper_branch>] [--cloud=<cloud_project>] [--cloud-provisioner=<cloud_provisioner>] [--log-level=<log_level>]
-  landscape cluster show --cluster=<cluster_name> --cloud-id  [--log-level=<log_level>]
-  landscape cluster converge --cluster=<cluster_name> [--converge-cloud]  [--log-level=<log_level>]
-      [--log-level=<log_level>] [--dry-run]
-  landscape cluster environment (--write-kubeconfig|--read-kubeconfig) [--kubeconfig-file=<kubecfg>] [--log-level=<log_level>]
-  landscape charts list --cluster=<cluster_name> [--provisioner=<cloud_provisioner>] [--log-level=<log_level>]
-  landscape charts converge --cluster=<cluster_name>
-      [--namespaces=<namespaces>] [--charts=<chart_names>] [--converge-cluster] [--converge-localmachine]
-      [--converge-cloud] [--landscaper-branch=<branch_name>] [--log-level=<log_level>] [--dry-run]
-  landscape secrets overwrite [--secrets-username=<username>] [--from-lastpass] [--shared-secrets-folder=<central_secrets_path>] [--log-level=<log_level>]
-  landscape setup install-prerequisites [--log-level=<log_level>]
+Usage: landscape [options] cloud (list [--git-branch] | converge [--cloud=<cloud_project>])
+       landscape [options] cluster [--cloud=<cloud_name>] (list | show | converge [--cluster=<cluster_name>] [--converge-cloud])
+       landscape [options] charts (list --cluster=<cluster_name> | show | converge [--converge-cluster] [--converge-localmachine]) [--namespaces=<namespaces>]
 
 Options:
-  --cloud-provisioner=<cloud_provisioner>      Cloud provisioner [terraform|minikube|unmanaged]
-  --cluster=<context_name>                     Operate on cluster context, defined in Vault
-  --git-branch=<branch_name>                   List clouds (Terraform) or charts (Landscaper) subscribed to branch (via Vault) 
-  --write-kubeconfig                           Write ~/.kube/config with contents from Vault
-  --read-kubeconfig                            Read ~/.kube/config and put its contents in Vault
-  --kubeconfig-file=<kubecfg>                  Specify path to KUBECONFIG [default: ~/.kube/config-landscaper].
-  --cloud=<cloud_project>                      k8s cloud provisioner.
-  --project=<gce_project_id>                   in GCE environment, which project ID to use. [default: minikube].
-  --kubernetes-version=<k8s_version>           in GCE environment, which project ID to use [default: 1.7.0].
-  --cluster-dns-domain=<dns_domain>            DNS domain used for inside-cluster DNS [default: cluster.local].
-  --minikube-driver=<driver>                   (minikube only) driver type (virtualbox|xhyve) [default: virtualbox].
-  --switch-to-cluster-context=<boolean>        switch to kubernetes context after cluster converges [default: true].
-  --namespaces=<namespace>                     install only charts under specified namespaces (comma-separated).
-  --from-lastpass                              Fetches values from Lastpass and puts them in Vault
-  --shared-secrets-folder=<central_folder>     Location in LastPass to pull secrets from [default: Shared-k8s/k8s-landscaper/master].
-  --secrets-username=<username>                Username for central shared secrets repository
-  --cloud-id                                   Retrieve cloud-id of cluster (which is pulled from Vault)
-  --dry-run                                    Simulate, but don't converge
-  --log-level=<log_level>                      Log messages at least this level [default: NOTSET].
-
-Provisioner can be one of minikube, terraform, unmanaged.
+    --dry-run                  Simulate, but don't converge.
+    --log-level=<log_level>    Log messages at least this level [default: INFO].
 """
 
 import docopt
@@ -113,10 +70,7 @@ def git_branch():
     return current_branch
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
     args = docopt.docopt(__doc__)
-    cloud_provisioner = args['--cloud-provisioner']
-    git_branch_selector = args['--git-branch']
     dry_run = args['--dry-run']
     # Check if current branch matches cloud/cluster. TODO: move this to classes
     # if not tf_git_branch_selector:
@@ -124,21 +78,27 @@ def main():
     # if not ls_git_branchname:
     #     ls_git_branchname = git_branch()
 
+    cloud_selection = args['--cloud']
     cluster_selection = args['--cluster']
     # branch is used to pull secrets from Vault, and to distinguish clusters
     namespaces_selection = args['--namespaces']
+    git_branch_selection = args['--git-branch']
     if namespaces_selection:
         deploy_only_these_namespaces = namespaces_selection.split(',')
     else:
         deploy_only_these_namespaces = []
-    cloud_selection = args['--cloud']
     also_converge_cloud = args['--converge-cloud']
     also_converge_cluster = args['--converge-cluster']
     also_converge_localmachine = args['--converge-localmachine']
-    # log_level = args['--log-level']
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    # landscape cloud
+
+    # parse logging level
+    loglevel = args['--log-level']
+    numeric_level = getattr(logging, loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % loglevel)
+    logging.basicConfig(level=numeric_level)
+
+    # landscape cloud ...
     if args['cloud']:
         clouds = CloudCollection()
         # landscape cloud list
@@ -147,10 +107,11 @@ def main():
         # landscape cloud converge
         elif args['converge']:
             clouds[cloud_selection].converge(dry_run)
-    # landscape cluster
+
+    # landscape cluster ...
     elif args['cluster']:
         clouds = CloudCollection()
-        clusters = ClusterCollection(clouds, git_branch_selector)
+        clusters = ClusterCollection(clouds, cloud_selection, git_branch_selection)
         # landscape cluster list
         if args['list']:
             print(clusters)
@@ -161,18 +122,21 @@ def main():
             if also_converge_cloud:
                 cluster_cloud.converge()
             clusters[cluster_selection].converge(dry_run)
-    # landscape charts
+
+    # landscape charts ...
     elif args['charts']:
         clouds = CloudCollection()
-        clusters = ClusterCollection(clouds, git_branch_selector)
+        clusters = ClusterCollection(clouds, cloud_selection, git_branch_selection)
         cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
         # TODO: figure out cluster_provisioner inside LandscaperChartsCollection
         cluster_provisioner = cluster_cloud['provisioner']
         charts = LandscaperChartsCollection(cluster_selection, cluster_provisioner, deploy_only_these_namespaces)
-        # landscape charts list
+        
+        # landscape charts list ...
         if args['list']:
             print(charts)
-        # landscape charts converge
+
+        # landscape charts converge ...
         elif args['converge']:
             if also_converge_cloud:
                 cluster_cloud.converge()
@@ -183,15 +147,17 @@ def main():
             if also_converge_localmachine:
                 localmachine = Localmachine(cluster=clusters[cluster_selection])
                 localmachine.converge()
-    # landscape secrets
+
+    # landscape secrets ...
     elif args['secrets']:
-        # landscape secrets overwrite --from-lastpass
+        # landscape secrets overwrite --from-lastpass ...
         if args['overwrite'] and args['--from-lastpass']:
             central_secrets_folder = args['--shared-secrets-folder']
             central_secrets_username = args['--secrets-username']
             shared_secrets = UniversalSecrets(provider='lastpass', username=central_secrets_username)
             shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder)
-    # landscape setup install-prerequisites
+
+    # landscape setup install-prerequisites ...
     elif args['setup']:
         if args['install-prerequisites']:
             install_prerequisites(platform.system())
