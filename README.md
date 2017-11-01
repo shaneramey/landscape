@@ -38,11 +38,17 @@ landscape cluster converge --converge-cloud
 ```
 for cloud_name in `landscape cloud list`; do
         echo saw cloud ${cloud_name}
+        for cluster_name in `landscape cluster list --cloud=${cloud_name}`; do
+	        echo saw cluster ${cluster_name}
+            landscape charts list --cluster=${cluster_name}
+        done
 done
 
 for cluster_name in `landscape cluster list`; do
-        echo saw cluster ${cluster_name}
-        landscape charts list --cluster=${cluster_name}
+	echo saw cluster ${cluster_name}
+	for cloud_name in `landscape cloud list --cluster=${cluster_name}`; do
+		echo saw cloud ${cloud_name}
+	done
 done
 ```
 
