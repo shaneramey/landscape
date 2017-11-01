@@ -34,6 +34,18 @@ landscape cloud converge
 landscape cluster converge --converge-cloud
 ```
 
+ - Verify cloud, clusters, and charts can be pulled from Vault
+```
+for cloud_name in `landscape cloud list`; do
+        echo saw cloud ${cloud_name}
+done
+
+for cluster_name in `landscape cluster list`; do
+        echo saw cluster ${cluster_name}
+        landscape charts list --cluster=${cluster_name}
+done
+```
+
 ## minikube HTTP Proxy
 Applies to minikube clusters
 
