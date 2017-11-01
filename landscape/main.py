@@ -69,19 +69,6 @@ from .vault import (read_kubeconfig, write_kubeconfig)
 from .prerequisites import install_prerequisites
 
 
-def list_charts(chart_collection):
-    """Prints a list of cluster names for a given ClusterCollection
-
-    Args:
-        cluster_collection (ClusterCollection): a set of Cluster objects
-
-    Returns:
-        None
-    """
-    for chart_name in chart_collection.list():
-        print(chart_name)
-
-
 def cloud_for_cluster(cloud_collection, cluster_collection, cluster_selection):
     """Finds and returns the Cloud given a cluster's name
 
@@ -184,7 +171,7 @@ def main():
         charts = LandscaperChartsCollection(cluster_selection, cluster_provisioner, deploy_only_these_namespaces)
         # landscape charts list
         if args['list']:
-            list_charts(charts)
+            print(charts)
         # landscape charts converge
         elif args['converge']:
             if also_converge_cloud:

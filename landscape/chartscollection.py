@@ -13,6 +13,4 @@ class ChartsCollection(object):
     Attributes:
         chart_sets (dict): Set of Chart deployment definitions.
 	"""
-    def list(self):
-        """Lists charts"""
-        return self.chart_sets
+    pass

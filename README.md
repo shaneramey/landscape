@@ -1,6 +1,7 @@
 # Landscape: Place kubernetes clusters, charts, and secrets into clouds
-(vev) sramey $ export GOOGLE_APPLICATION_CREDENTIALS=/Users/sramey/cloud-serviceaccount-staging-165617.json
-(vev) sramey $ pip install --upgrade . && make SHARED_SECRETS_USERNAME=sramey@safaribooksonline.com GOOGLE_STORAGE_BUCKET=helm-charts-staging-165617
+
+## Quick Start:
+run `make` to launch a minikube cluster. See Makefile for other options.
 
 ## Features
 Deploy k8s clusters + apps (Helm Charts) to:
@@ -33,7 +34,9 @@ landscape cloud converge
 landscape cluster converge --converge-cloud
 ```
 
-## Installation (dev-mode via MiniKube)
+## minikube HTTP Proxy
+Applies to minikube clusters
+
 If set, HTTP_PROXY and HTTPS_PROXY will be used for docker image caching
 Run squid on your local machine for fastest results
 ```brew install squid && brew services start squid```
@@ -103,7 +106,7 @@ landscape cluster list
 
 2. deploy cluster (GCE/GKE terraform template + helm charts)
 ```
-make CLUSTER_NAME=gke_staging-165617_us-west1-a_master
+make CLUSTER_NAME=gke_staging-123456_us-west1-a_master
 ```
 
 or

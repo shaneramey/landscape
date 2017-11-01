@@ -1,4 +1,4 @@
-class Chart(object):
+class LandscaperChart(object):
     """Kubernetes Helm Chart deployment information
 
     Represents a Chart to be deployed. Includes configuration overrides
@@ -18,6 +18,29 @@ class Chart(object):
         self.name = kwargs['name']
         self.namespace = kwargs['namespace']
         self.release = kwargs['release']
-        self.configuration = kwargs['configuration']
-        self.secrets = kwargs['secrets']
+        self.filepath = kwargs['filepath']
+
+        # configuration and secrets are optional fields in landscaper yaml
+        self.configuration = {}
+        self.secrets = []
+        if 'configuration' in kwargs:
+            self.configuration = kwargs['configuration']
+        if 'secrets' in kwargs:
+            self.secrets = kwargs['secrets']
+
+    def __str__(self):
+        """Pretty-prints a chart deployment
+
+        Args:
+            self: the current object
+
+        Returns:
+            A new-line separated str of charts in format:
+            namespace/chart_name
+
+        Raises:
+            None.
+        """
+        return "{0}/{1}".format(self.namespace, self.name)
+
 

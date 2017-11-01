@@ -21,7 +21,7 @@ class CloudCollection(object):
         return '\n'.join(self.list())
 
 
-    def __getitem__(self, cloud_name):
+    def __getitem__(self, x):
         """Enables CloudCollection to be subscriptable.
 
         Used to iterate and index clouds
@@ -31,7 +31,7 @@ class CloudCollection(object):
             cc['minikube'] is a MinikubeCloud object
 
         Args:
-            cloud_name: The unique name of the cloud. GCE uses Project ID
+            x: The unique name of the cloud. GCE uses Project ID
 
         Returns:
             A Cloud object.
@@ -39,7 +39,7 @@ class CloudCollection(object):
         Raises:
             None.
         """
-        retval = self.list()[cloud_name]
+        retval = self.list()[x]
         return retval
 
 
