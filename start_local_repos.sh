@@ -39,6 +39,7 @@ if [ "$DOCKER_VAULT_RUNNING" != "true" ]; then
 	else
 		echo "dev-vault container exists but not started. Starting it"
 		docker start dev-vault
+		sleep 3
 	fi
 else
 	echo "dev-vault container already running."
@@ -58,6 +59,7 @@ if [ "$DOCKER_CHARTMUSEUM_RUNNING" != "true" ]; then
 	else
 		echo "dev-chartmuseum container exists but not started. Starting it"
 		docker start dev-chartmuseum
+		sleep 3
 	fi
 else
 	echo "dev-chartmuseum container already running."
