@@ -282,10 +282,12 @@ resource "google_storage_bucket_acl" "helm-charts-acl" {
 
 resource "google_compute_instance" "db-replica" {
   name         = "db-replica" 
-  machine_type = "n1-highmem-64" 
-  region      = "${data.vault_generic_secret.gce_project_secrets.data["region"]}" 
-  disk {
-    image = "ubuntu-1604-xenial-v20171026a"
+  machine_type = "n1-standard-16" 
+  zone         = "${data.vault_generic_secret.gce_project_secrets.data["region"]}-a"
+  boot_disk {
+    initialize_params {
+       image = "ubuntu-1604-xenial-v20171026a"
+    }
   }
  
   network_interface {
