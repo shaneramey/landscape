@@ -58,7 +58,7 @@ def getClusterTargets() {
 def getCloudTargets() {
 // gets provisioner targets from Vault 
 // returns a list used for dynamic Jenkinsfile parameters
-    targets_list_cmd = "landscape cloud list --git-branch=${env.BRANCH_NAME}"
+    targets_list_cmd = 'landscape cloud list --git-branch='+env.BRANCH_NAME
     println("Running command: " + targets_list_cmd)
     sout = executeOrReportErrors(targets_list_cmd)
     // prepend targets with null value, which is default
