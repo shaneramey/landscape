@@ -1,26 +1,27 @@
 #! /usr/bin/env python3
 
 """
-Usage: landscape [options] cloud
-         (list [--git-branch] [--cluster=<cluster_name>] | 
-         converge [--cloud=<cloud_project>])
-       landscape [options] cluster
-         [--cloud=<cloud_name>] (list 
-         | show | converge [--cluster=<cluster_name>] [--converge-cloud])
-       landscape [options] charts
-         [--namespaces=<namespaces>] (list 
-         --cluster=<cluster_name> | show | converge 
-         [--converge-cluster] [--converge-localmachine])
-       landscape [options] secrets [--namespaces=<namespaces>]
-         (list --cluster=<cluster_name> | show | converge 
-         [--converge-cluster] [--converge-localmachine])
-       landscape [options] secrets overwrite --from-lastpass
-         --secrets-username=<lastpass_user> 
-         --shared-secrets-folder=<lastpass_folder>
+Usage: landscape [options]
+        cloud (list [--git-branch] [--cluster=<cluster_name>] | 
+               converge [--cloud=<cloud_project>])
+       landscape [options]
+        cluster [--cluster=<cluster_name>] [--cloud=<cloud_name>] (list 
+         | show | converge [--converge-cloud])
+       landscape [options]
+        charts [--namespaces=<namespaces>] [--cluster=<cluster_name>] (list 
+         | show | converge [--converge-cluster] [--converge-localmachine])
+       landscape [options]
+        secrets overwrite-vault-with-lastpass 
+         --secrets-username=<lpass_user> 
+         [--shared-secrets-folder=<pass_folder>] 
+         [--shared-secrets-item=<pass_folder_item>] 
+         [--secrets-password=<lpass_password>]
 
 Options:
     --dry-run                  Simulate, but don't converge.
     --log-level=<log_level>    Log messages at least this level [default: INFO].
+    --shared-secrets-folder=<pass_folder>  [default: Shared-k8s/k8s-landscaper].
+    --shared-secrets-item=<pass_folder_item>  [default: GIT_BRANCH_NAME].
 """
 
 import docopt
@@ -84,6 +85,7 @@ def git_branch():
 
 def main():
     args = docopt.docopt(__doc__)
+    print("args={0}".format(args))
     dry_run = args['--dry-run']
     # Check if current branch matches cloud/cluster. TODO: move this to classes
     # if not tf_git_branch_selector:
@@ -116,7 +118,12 @@ def main():
         clouds = CloudCollection()
         # landscape cloud list
         if args['list']:
-            print(clouds)
+            if cluster_selection:
+                clusters = ClusterCollection(clouds, cloud_selection, git_branch_selection)
+                cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
+                print(cluster_cloud.name)
+            else:
+                print(clouds)
         # landscape cloud converge
         elif args['converge']:
             clouds[cloud_selection].converge(dry_run)
@@ -128,9 +135,6 @@ def main():
         # landscape cluster list
         if args['list']:
             print(clusters)
-        elif args['show'] and args['--cloud-id']:
-            cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
-            print(cluster_cloud.name)
         elif args['converge']:
             if also_converge_cloud:
                 cluster_cloud.converge()
@@ -164,11 +168,15 @@ def main():
     # landscape secrets ...
     elif args['secrets']:
         # landscape secrets overwrite --from-lastpass ...
-        if args['overwrite'] and args['--from-lastpass']:
+        if args['overwrite-vault-with-lastpass']:
             central_secrets_folder = args['--shared-secrets-folder']
+            central_secrets_item = args['--shared-secrets-item']
+            if central_secrets_item == 'GIT_BRANCH_NAME':
+                central_secrets_item = git_branch()
             central_secrets_username = args['--secrets-username']
-            shared_secrets = UniversalSecrets(provider='lastpass', username=central_secrets_username)
-            shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder)
+            central_secrets_password = args['--secrets-password']
+            shared_secrets = UniversalSecrets(provider='lastpass', username=central_secrets_username, password=central_secrets_password)
+            shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder, shared_secrets_item=central_secrets_item)
 
     # landscape setup install-prerequisites ...
     elif args['setup']:

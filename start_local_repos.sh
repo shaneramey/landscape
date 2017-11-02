@@ -5,9 +5,9 @@
 #
 # Environment Variables:
 #  - LASTPASS_USERNAME: Username for centralized secrets
-#  - CHARTS_STORAGE_BUCKET: ChartMuseum GCS storage bucket
-#  - LASTPASS_SHARED_SECRETS_FOLDER: LastPass folder for centralized secrets
-#  - SHARED_SECRETS_ITEM: entry in LastPass folder to read for secrets
+#  - LASTPASS_SECRETS_FOLDER: LastPass folder for centralized secrets
+#  - LASTPASS_SECRETS_ITEM: entry in LastPass folder to read for secrets
+#  - CHARTS_STORAGE_BUCKET: ChartMuseum GCS storage bucket name
 
 HASHICORP_VAULT_VERSION=0.8.3
 CHARTMUSEUM_VERSION=v0.2.2
@@ -21,12 +21,16 @@ if [ -z "$CHARTS_STORAGE_BUCKET" ]; then
 	echo "CHARTS_STORAGE_BUCKET required"
 	exit 1
 fi
-if [ -z "$SHARED_SECRETS_ITEM" ]; then
-	echo "SHARED_SECRETS_ITEM required"
+if [ -z "$LASTPASS_SECRETS_ITEM" ]; then
+	echo "LASTPASS_SECRETS_ITEM required"
+	exit 1
+fi
+if [ -z "$LASTPASS_SECRETS_FOLDER" ]; then
+	echo "LASTPASS_SECRETS_FOLDER required"
 	exit 1
 fi
 
-LASTPASS_SHARED_SECRETS_FOLDER="Shared-k8s/k8s-landscaper"
+LASTPASS_SECRETS_FOLDER="Shared-k8s/k8s-landscaper"
 
 # start a local vault container, if it's not already running
 DOCKER_VAULT_RUNNING=`docker inspect -f '{{.State.Running}}' dev-vault`
@@ -69,7 +73,11 @@ fi
 helm repo add chartmuseum http://127.0.0.1:8080
 
 # pull secrets from LastPass to local vault container
+PULL_SECRETS_CMD='landscape secrets overwrite --from-lastpass \
+					--secrets-username="${LASTPASS_USERNAME}"
+					--shared-secrets-folder="${LASTPASS_SECRETS_FOLDER}/${LASTPASS_SECRETS_ITEM}"'
+echo "Pulling LastPass secrets with ${PULL_SECRETS_CMD}"					
 VAULT_ADDR=http://127.0.0.1:8200 \
-VAULT_TOKEN=$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $3 }')
-landscape secrets overwrite --secrets-username="${SHARED_SECRETS_USERNAME}" --from-lastpass \
-	--shared-secrets-folder="${LASTPASS_SHARED_SECRETS_FOLDER}/${SHARED_SECRETS_ITEM}"
+VAULT_TOKEN=$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $3 }') \
+$PULL_SECRETS_CMD
+

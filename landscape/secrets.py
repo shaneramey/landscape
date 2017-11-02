@@ -6,6 +6,7 @@ class UniversalSecrets(object):
     def __init__(self, **kwargs):
         self.__provider = kwargs['provider']
         self.__username = kwargs['username']
+        self.__password = kwargs['password']
 
     def __str__(self):
         return str(self.__secrets)
@@ -15,11 +16,13 @@ class UniversalSecrets(object):
         retval = self.__secrets[secret_name]
         return retval
 
-    def overwrite_vault(self, shared_secrets_folder):
+    def overwrite_vault(self, shared_secrets_folder, shared_secrets_item):
+        if self.__password:
+            raise NotImplementedError('passing LastPass password on CLI not supported yet')
         not_logged_in = subprocess.call('lpass status', shell=True)
         if not_logged_in:
             subprocess.call("lpass login {0}".format(self.__username), shell=True)
-        pull_secrets_cmd = 'lpass show {} --notes'.format(shared_secrets_folder)
+        pull_secrets_cmd = 'lpass show {0}/{1} --notes'.format(shared_secrets_folder, shared_secrets_item)
         print("Running {0}".format(pull_secrets_cmd))
         proc = subprocess.Popen(pull_secrets_cmd, stdout=subprocess.PIPE, shell=True)
         secrets_write_commands_from_lastpass = proc.stdout.read().rstrip().decode()

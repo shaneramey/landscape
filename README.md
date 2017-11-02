@@ -12,16 +12,6 @@
  - Cloud: terraform, minikube
  - Cluster: GKE, minikube, unmanaged (unmanaged bypasses cloud setup)
 
-## Quick Start:
- - minikube
-```
-make CLUSTER_NAME=minikube
-     DEPLOY_LOCAL_REPOS=true
-     SHARED_SECRETS_USERNAME=sramey@safaribooksonline.com
-     GOOGLE_STORAGE_BUCKET=helm-charts-staging-165617
-```
-    run `make SHARED_SECRETS_USERNAME=DEPLOY_LOCAL_REPOS=true` to launch a minikube cluster. See Makefile for other options.
-
 ## Features
 Deploy k8s clusters + apps (Helm Charts) to:
 - minikube
@@ -130,9 +120,23 @@ open minikube-master.ovpn # Import Viscosity profile into MacOS
 
 ### minikube
 
-- Import minikube ca.crt into your MacOS keychain
+ - Import minikube ca.crt into your MacOS keychain
 ```
 sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.minikube/ca.crt
+```
+
+ - deploy cluster (minikube + helm charts)
+
+ Pulls secrets from LastPass and puts them in a local dev-vault container
+ Serves Helm Chart repo in a local dev-chartmuseum container, backed by GCS
+```
+make CLUSTER_NAME=minikube
+     SHARED_SECRETS_USERNAME=lastpass@email.address
+     DEPLOY_LOCAL_REPOS=true
+     GOOGLE_STORAGE_BUCKET=helm-charts-staging-123456
+```
+
+ - terraform
 ```
 
 ### GKE

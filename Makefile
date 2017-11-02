@@ -151,7 +151,7 @@ endif
 	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
 	LASTPASS_USERNAME=$(SHARED_SECRETS_USERNAME) \
 	CHARTS_STORAGE_BUCKET=$(GOOGLE_STORAGE_BUCKET) \
-	SHARED_SECRETS_ITEM=$(BRANCH_NAME) \
+	LASTPASS_SECRETS_ITEM=$(BRANCH_NAME) \
 	./start_local_repos.sh
 endif
 
