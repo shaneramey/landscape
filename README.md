@@ -1,7 +1,26 @@
-# Landscape: Place kubernetes clusters, charts, and secrets into clouds
+# Landscape: Place kubernetes clusters, charts, and secrets into clouds.
+  
+  This tool unites components of the Kubernetes ecosystem:
+   - Cloud management (hosting the Kubernetes clusters)
+   - Kubernetes Cluster management
+   - Helm Chart deployment and deletion (via Landscaper)
+   - Kubernetes secrets (flow: [LastPass ->] Vault -> Landscaper -> K8S Secrets)
+
+   Optionally a command exists, pulls centralized shared secrets from LastPass into Vault.
+
+## Supported systems
+ - Cloud: terraform, minikube
+ - Cluster: GKE, minikube, unmanaged (unmanaged bypasses cloud setup)
 
 ## Quick Start:
-run `make` to launch a minikube cluster. See Makefile for other options.
+ - minikube
+```
+make CLUSTER_NAME=minikube
+     DEPLOY_LOCAL_REPOS=true
+     SHARED_SECRETS_USERNAME=sramey@safaribooksonline.com
+     GOOGLE_STORAGE_BUCKET=helm-charts-staging-165617
+```
+    run `make SHARED_SECRETS_USERNAME=DEPLOY_LOCAL_REPOS=true` to launch a minikube cluster. See Makefile for other options.
 
 ## Features
 Deploy k8s clusters + apps (Helm Charts) to:

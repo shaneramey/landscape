@@ -1,9 +1,22 @@
 #! /usr/bin/env python3
 
 """
-Usage: landscape [options] cloud (list [--git-branch] | converge [--cloud=<cloud_project>])
-       landscape [options] cluster [--cloud=<cloud_name>] (list | show | converge [--cluster=<cluster_name>] [--converge-cloud])
-       landscape [options] charts (list --cluster=<cluster_name> | show | converge [--converge-cluster] [--converge-localmachine]) [--namespaces=<namespaces>]
+Usage: landscape [options] cloud
+         (list [--git-branch] [--cluster=<cluster_name>] | 
+         converge [--cloud=<cloud_project>])
+       landscape [options] cluster
+         [--cloud=<cloud_name>] (list 
+         | show | converge [--cluster=<cluster_name>] [--converge-cloud])
+       landscape [options] charts
+         [--namespaces=<namespaces>] (list 
+         --cluster=<cluster_name> | show | converge 
+         [--converge-cluster] [--converge-localmachine])
+       landscape [options] secrets [--namespaces=<namespaces>]
+         (list --cluster=<cluster_name> | show | converge 
+         [--converge-cluster] [--converge-localmachine])
+       landscape [options] secrets overwrite --from-lastpass
+         --secrets-username=<lastpass_user> 
+         --shared-secrets-folder=<lastpass_folder>
 
 Options:
     --dry-run                  Simulate, but don't converge.
@@ -43,7 +56,7 @@ def cloud_for_cluster(cloud_collection, cluster_collection, cluster_selection):
     Returns:
         Cloud that contains the Cluster with the given name
     """
-    parent_cloud_id = cluster_collection[cluster_selection]['cloud_id']
+    parent_cloud_id = cluster_collection[cluster_selection].cloud_id
     parent_cloud = cloud_collection[parent_cloud_id]
     return parent_cloud
 
@@ -91,7 +104,7 @@ def main():
     also_converge_cluster = args['--converge-cluster']
     also_converge_localmachine = args['--converge-localmachine']
 
-    # parse logging level
+    # parse and apply logging verbosity
     loglevel = args['--log-level']
     numeric_level = getattr(logging, loglevel.upper(), None)
     if not isinstance(numeric_level, int):

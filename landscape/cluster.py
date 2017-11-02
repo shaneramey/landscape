@@ -32,10 +32,7 @@ class Cluster(object):
         """
         self.name = kwargs['context_id']
         self.cloud_id = kwargs['cloud_id']
-
-
-    def __getitem__(self, x):
-        return getattr(self, x)
+        self.landscaper_branch = kwargs['landscaper_branch']
 
 
     def __str__(self):

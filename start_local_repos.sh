@@ -32,7 +32,7 @@ LASTPASS_SHARED_SECRETS_FOLDER="Shared-k8s/k8s-landscaper"
 DOCKER_VAULT_RUNNING=`docker inspect -f '{{.State.Running}}' dev-vault`
 if [ "$DOCKER_VAULT_RUNNING" != "true" ]; then
 	# check if vault container exists
-	docker inspect dev-vault
+	docker inspect dev-vault > /dev/null
 	if [ $? != 0 ]; then
 		echo "dev-vault container doesnt exist. Creating it"
 		docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault:${HASHICORP_VAULT_VERSION}
@@ -49,7 +49,7 @@ fi
 DOCKER_CHARTMUSEUM_RUNNING=`docker inspect -f '{{.State.Running}}' dev-chartmuseum`
 if [ "$DOCKER_CHARTMUSEUM_RUNNING" != "true" ]; then
 	# check if chartmuseum container exists
-	docker inspect dev-chartmuseum
+	docker inspect dev-chartmuseum > /dev/null
 	if [ $? != 0 ]; then
 		echo "dev-chartmuseum container doesnt exist. Creating it"
 		docker run -p 8080:8080 -d --name=dev-chartmuseum \
