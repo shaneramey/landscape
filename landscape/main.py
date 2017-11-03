@@ -82,9 +82,23 @@ def git_branch():
     Returns:
         git branch of current directory (str)
     """
-    git_branch_cmd = "git branch | grep \* | cut -d ' ' -f2"
+    git_branch_cmd = "git branch"
+
+    logging.debug("Running {0}".format(git_branch_cmd))
     proc = subprocess.Popen(git_branch_cmd, stdout=subprocess.PIPE, shell=True)
-    current_branch = proc.stdout.read().rstrip().decode()
+    git_branch_cmd_output = proc.stdout.read().rstrip().decode()
+    # wait for command return code
+    proc.communicate()[0]
+    if proc.returncode != 0:
+        raise ChildProcessError('Could not detect git branch. Try passing --git-branch')
+
+    logging.debug("git_branch_cmd_output=" + git_branch_cmd_output)
+    git_branch_cmd_lines = git_branch_cmd_output.splitlines()
+    starred_branchname = next((item for item in git_branch_cmd_lines if item.startswith('*')))
+    logging.debug("starred_branchname=" + starred_branchname)
+    current_branch = starred_branchname.strip()[2:]
+    logging.info("Auto-detected cwd branch to be: " + current_branch)
+
     return current_branch
 
 def main():
@@ -95,9 +109,16 @@ def main():
     cloud_selection = args['--cloud']
     cluster_selection = args['--cluster']
     namespaces_selection = args['--namespaces']
+
     # branch is used to pull secrets from Vault, and to distinguish clusters
     git_branch_selection = args['--git-branch']
+    if not git_branch_selection:
+        git_branch_selection = git_branch()
+    
     use_all_git_branches = args['--all-branches']
+    if use_all_git_branches:
+        git_branch_selection = None
+
     if namespaces_selection:
         deploy_only_these_namespaces = namespaces_selection.split(',')
     else:
@@ -134,8 +155,6 @@ def main():
     # landscape cluster ...
     elif args['cluster']:
         clouds = CloudCollection(git_branch_selection)
-        if not git_branch_selection and not use_all_git_branches:
-            git_branch_selection = git_branch()
         clusters = ClusterCollection(clouds, cloud_selection, git_branch_selection)
         # landscape cluster list
         if args['list']:
