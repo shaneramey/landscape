@@ -134,6 +134,7 @@ make CLUSTER_NAME=minikube
      SHARED_SECRETS_USERNAME=lastpass@email.address
      DEPLOY_LOCAL_REPOS=true
      GOOGLE_STORAGE_BUCKET=helm-charts-staging-123456
+     DANGER_DEPLOY_LASTPASS_SECRETS=true
 ```
 
  - terraform

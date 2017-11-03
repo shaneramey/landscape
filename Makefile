@@ -29,7 +29,8 @@
 #      GOOGLE_STORAGE_BUCKET=helm-charts-staging-123456 \
 #      DEPLOY_ONLY_NAMESPACES=openvpn,389ds \
 #      CLOUD_NAME=minikube \
-#      DEPLOY_LOCAL_REPOS=true
+#      DEPLOY_LOCAL_REPOS=true \
+#      DANGER_DEPLOY_LASTPASS_SECRETS=true \
 #      (cloud|cluster|charts)
 #
 # - Running with existing Vault and ChartMuseum repos (set in env vars)
