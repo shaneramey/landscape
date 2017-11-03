@@ -1,8 +1,8 @@
 name: jenkins
 namespace: jenkins
 release:
-  chart: chartmuseum/jenkins:0.6.362
-  version: 0.6.362
+  chart: chartmuseum/jenkins:0.6.363
+  version: 0.6.363
 configuration:
   clusterDomain: cluster.local
 secrets:
