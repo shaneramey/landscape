@@ -1,8 +1,9 @@
+import logging
+
+from .vault import VaultClient
 from .cluster_minikube import MinikubeCluster
 from .cluster_terraform import TerraformCluster
 from .cluster_unmanaged import UnmanagedCluster
-from .vault import VaultClient
-
 from .cloudcollection import CloudCollection # for linking a cluster to a cloud
 
 
@@ -74,6 +75,8 @@ class ClusterCollection(object):
         Raises:
             None.
         """
+        logging.debug("cluster_name is".format(cluster_name))
+        logging.debug("clusters are".format(self.clusters))
         cluster = next((item for item in self.clusters if item.name == cluster_name))
         return cluster
 
@@ -100,7 +103,7 @@ class ClusterCollection(object):
         """Retrieves cluster definitions from Vault and loads them into a dict
 
         Recurses through Vault looking to only retrieve clusters referencing a
-        cloud in self.__clouds
+        cloud in self.clouds
 
         Args:
             None.
@@ -166,4 +169,4 @@ class ClusterCollection(object):
             None.
         """
 
-        return self.__clusters
+        return self.clusters

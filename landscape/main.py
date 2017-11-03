@@ -2,25 +2,29 @@
 
 """
 Usage: landscape [options]
-        cloud (list [--git-branch] [--cluster=<cluster_name>] | 
+        cloud (list [--git-branch=<git_branch> | --all-branches] [--cluster=<cluster_name>] | 
                converge [--cloud=<cloud_project>])
        landscape [options]
         cluster [--cluster=<cluster_name>] [--cloud=<cloud_name>] (list 
-         | show | converge [--converge-cloud])
+         [--git-branch=<git_branch> | --all-branches] |
+         converge [--converge-cloud])
        landscape [options]
         charts [--namespaces=<namespaces>] [--cluster=<cluster_name>] (list 
-         | show | converge [--converge-cluster] [--converge-localmachine])
+         | converge [--converge-cluster] [--converge-localmachine])
        landscape [options]
         secrets overwrite-vault-with-lastpass 
          --secrets-username=<lpass_user> 
+         [--dangerous-overwrite-vault] 
          [--shared-secrets-folder=<pass_folder>] 
          [--shared-secrets-item=<pass_folder_item>] 
          [--secrets-password=<lpass_password>]
 
 Options:
-    --dry-run                  Simulate, but don't converge.
-    --log-level=<log_level>    Log messages at least this level [default: INFO].
-    --shared-secrets-folder=<pass_folder>  [default: Shared-k8s/k8s-landscaper].
+    --all-branches               When listing resources, list all git-branches
+    --dry-run                    Simulate, but don't converge.
+    --log-level=<log_level>      Log messages at least this level [default: INFO].
+    --dangerous-overwrite-vault  Allow VAULT_ADDR != http://127.0.0.1:8200 [default: false].
+    --shared-secrets-folder=<pass_folder>     [default: Shared-k8s/k8s-landscaper].
     --shared-secrets-item=<pass_folder_item>  [default: GIT_BRANCH_NAME].
 """
 
@@ -85,19 +89,15 @@ def git_branch():
 
 def main():
     args = docopt.docopt(__doc__)
-    print("args={0}".format(args))
     dry_run = args['--dry-run']
-    # Check if current branch matches cloud/cluster. TODO: move this to classes
-    # if not tf_git_branch_selector:
-    #     tf_git_branchname = git_branch()
-    # if not ls_git_branchname:
-    #     ls_git_branchname = git_branch()
 
+    # parse arguments
     cloud_selection = args['--cloud']
     cluster_selection = args['--cluster']
-    # branch is used to pull secrets from Vault, and to distinguish clusters
     namespaces_selection = args['--namespaces']
+    # branch is used to pull secrets from Vault, and to distinguish clusters
     git_branch_selection = args['--git-branch']
+    use_all_git_branches = args['--all-branches']
     if namespaces_selection:
         deploy_only_these_namespaces = namespaces_selection.split(',')
     else:
@@ -105,6 +105,9 @@ def main():
     also_converge_cloud = args['--converge-cloud']
     also_converge_cluster = args['--converge-cluster']
     also_converge_localmachine = args['--converge-localmachine']
+    # if set, write to a VAULT_ADDR env variable besides http://127.0.0.1:8200
+    remote_vault_ok = args['--dangerous-overwrite-vault']
+
 
     # parse and apply logging verbosity
     loglevel = args['--log-level']
@@ -115,7 +118,7 @@ def main():
 
     # landscape cloud ...
     if args['cloud']:
-        clouds = CloudCollection()
+        clouds = CloudCollection(git_branch_selection)
         # landscape cloud list
         if args['list']:
             if cluster_selection:
@@ -130,7 +133,9 @@ def main():
 
     # landscape cluster ...
     elif args['cluster']:
-        clouds = CloudCollection()
+        clouds = CloudCollection(git_branch_selection)
+        if not git_branch_selection and not use_all_git_branches:
+            git_branch_selection = git_branch()
         clusters = ClusterCollection(clouds, cloud_selection, git_branch_selection)
         # landscape cluster list
         if args['list']:
@@ -142,7 +147,7 @@ def main():
 
     # landscape charts ...
     elif args['charts']:
-        clouds = CloudCollection()
+        clouds = CloudCollection(git_branch_selection)
         clusters = ClusterCollection(clouds, cloud_selection, git_branch_selection)
         cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
         # TODO: figure out cluster_provisioner inside LandscaperChartsCollection
@@ -176,7 +181,7 @@ def main():
             central_secrets_username = args['--secrets-username']
             central_secrets_password = args['--secrets-password']
             shared_secrets = UniversalSecrets(provider='lastpass', username=central_secrets_username, password=central_secrets_password)
-            shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder, shared_secrets_item=central_secrets_item)
+            shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder, shared_secrets_item=central_secrets_item, use_remote_vault=remote_vault_ok)
 
     # landscape setup install-prerequisites ...
     elif args['setup']:

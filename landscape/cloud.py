@@ -13,15 +13,15 @@ class Cloud(object):
     """
 
     def __init__(self, **kwargs):
-        """Initializes a Cluster.
+        """Initializes a Cloud.
 
-        Reads a cluster's definition from Vault.
+        Reads a cloud's definition from Vault.
 
         Args:
             kwargs**:
               name: the Cloud's unique name
               provisioner: The tool that provisioned the cloud
-
+              git_branch: the git branch the cloud subscribes to
         Returns:
             None
 
@@ -30,7 +30,7 @@ class Cloud(object):
         """
         self.name = kwargs['name']
         self.provisioner = kwargs['provisioner']
-
+        self.git_branch = kwargs['provisioner_branch']
 
     def __getitem__(self, x):
         """Enables the Cloud object to be subscriptable.
@@ -62,7 +62,7 @@ class Cloud(object):
         return self.name
 
 
-    def converge(self):
+    def converge(self, dry_run):
         """Override this method in your subclass.
 
         Args:

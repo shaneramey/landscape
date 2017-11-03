@@ -126,7 +126,7 @@ class TerraformCloud(Cloud):
                                     '1.7.0')
 
 
-    def converge(self,dry_run):
+    def converge(self, dry_run):
         """Converges a Terraform cloud environment.
 
         Checks if a terraform cloud is already running
@@ -178,10 +178,10 @@ class TerraformCloud(Cloud):
 
         tf_init_cmd = tf_init_cmd_tmpl.format(self.gce_project)
 
-        logging.info('  - initializing terraform with command: ' + tf_init_cmd)
         if dry_run:
-            print("Dry run complete")
+            logging.info('DRYRUN: would be Initializing terraform with command: ' + tf_init_cmd)
         else:
+            logging.info('Initializing terraform with command: ' + tf_init_cmd)
             failed_to_init_terraform = subprocess.call(tf_init_cmd,
                                                     cwd=self.terraform_dir,
                                                     env=self.envvars(),

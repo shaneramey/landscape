@@ -264,6 +264,8 @@ class VaultClient(object):
         vault_cacert = os.environ.get('VAULT_CACERT')
         vault_token = os.environ.get('VAULT_TOKEN')
         self.logger = logging.getLogger(__name__)
+        logging.debug(" - VAULT_ADDR is {0}".format(vault_addr))
+        logging.debug(" - VAULT_CACERT is {0}".format(vault_cacert))
 
         # Raise error if VAUT_ environment variables not set
         missing_fmt_string = '{0} missing in environment'
@@ -296,6 +298,7 @@ class VaultClient(object):
         all_values_at_prefix = {}
         logging.debug(" - reading vault subkeys at {0}".format(path_prefix))
         subkeys_at_prefix = self.__vault_client.list(path_prefix)
+        logging.debug(" - subkeys are {0}".format(subkeys_at_prefix))
 
         # use last vault key (delimited by '/') as dict index
         prefix_keyname = path_prefix.split('/')[-1]

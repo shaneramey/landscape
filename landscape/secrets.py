@@ -1,6 +1,6 @@
 import subprocess
 import sys
-
+import os
 
 class UniversalSecrets(object):
     def __init__(self, **kwargs):
@@ -16,7 +16,10 @@ class UniversalSecrets(object):
         retval = self.__secrets[secret_name]
         return retval
 
-    def overwrite_vault(self, shared_secrets_folder, shared_secrets_item):
+    def overwrite_vault(self, shared_secrets_folder, shared_secrets_item, use_remote_vault):
+        vault_addr = os.environ['VAULT_ADDR']
+        if not os.environ['VAULT_ADDR'] == "http://127.0.0.1:8200" and not use_remote_vault:
+            raise EnvironmentError("Error: Pass --dangerous-overwrite-vault to use non-http://127.0.0.1:8200 vault servers. Current VAULT_ADDR: {0}".format(vault_addr))
         if self.__password:
             raise NotImplementedError('passing LastPass password on CLI not supported yet')
         not_logged_in = subprocess.call('lpass status', shell=True)

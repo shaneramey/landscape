@@ -36,19 +36,23 @@ class MinikubeCluster(Cluster):
         # addons to disable
         for disable_addon in disable_addons:
             addon_cmd = "minikube addons disable {0}".format(disable_addon)
-            logging.info(addon_cmd)
             if not dry_run:
+                logging.warn("Disabling addon with command: {0}".format(addon_cmd))
                 check_cmd_failed = subprocess.call(addon_cmd, shell=True)
                 if check_cmd_failed:
                     logging.warn("Failed to disable addon with command: {0}".format(addon_cmd))
             else:
-                print("Dry run complete")
+                logging.info("DRYRUN: would be Disabling addon with command: {0}".format(addon_cmd))
         # addons to enable
         for enable_addon in enable_addons:
             addon_cmd = "minikube addons enable {0}".format(enable_addon)
-            check_cmd_failed = subprocess.call(addon_cmd, shell=True)
-            if check_cmd_failed:
-                logging.warn("Failed to enable addon with command: {0}".format(addon_cmd))
+            if not dry_run:
+                logging.warn("Enabling addon with command: {0}".format(addon_cmd))
+                check_cmd_failed = subprocess.call(addon_cmd, shell=True)
+                if check_cmd_failed:
+                    logging.warn("Failed to enable addon with command: {0}".format(addon_cmd))
+            else:
+                logging.info("DRYRUN: would be Enabling addon with command: {0}".format(addon_cmd))
 
 
     def _configure_kubectl_credentials(self, dry_run):

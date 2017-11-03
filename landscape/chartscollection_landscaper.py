@@ -191,7 +191,7 @@ class LandscaperChartsCollection(ChartsCollection):
                             vault_missing_secrets.append(yaml_secret)
                 if vault_missing_secrets:
                     for missing_secret in vault_missing_secrets:
-                        print(' - missing landscaper secret ' + missing_secret)
+                        logging.info(' - missing landscaper secret ' + missing_secret)
                     sys.exit(1)
                 landscaper_env = self.set_landscaper_envvars(namespace_secrets)
                 ls_apply_cmd = 'landscaper apply -v --namespace=' + chart.namespace + \
@@ -199,7 +199,7 @@ class LandscaperChartsCollection(ChartsCollection):
                                     ' ' + ' '.join(yaml_files)
                 if dry_run:
                     ls_apply_cmd += ' --dry-run'
-                print("    - executing: " + ls_apply_cmd)
+                logging.info('    - executing: ' + ls_apply_cmd)
                 os.environ.update(landscaper_env)
                 create_failed = subprocess.call(ls_apply_cmd, shell=True)
                 if create_failed:
@@ -225,6 +225,7 @@ class LandscaperChartsCollection(ChartsCollection):
 
         return nsdict.keys()
 
+
     def helm_repo_update(self, dry_run):
         """Updates the local Helm repository index of available charts.
 
@@ -239,10 +240,10 @@ class LandscaperChartsCollection(ChartsCollection):
         """
         repo_update_cmd = 'helm repo update'
         if not dry_run:
-            print("    - executing: " + repo_update_cmd)
+            logging.info('executing ' + repo_update_cmd)
             subprocess.call(repo_update_cmd, shell=True)
         else:
-            print("    - DRYRUN would execute: " + repo_update_cmd)
+            logging.info('DRYRUN would execute ' + repo_update_cmd)
 
 
     def vault_secrets_for_chart(self, chart_namespace, chart_name):
@@ -263,7 +264,7 @@ class LandscaperChartsCollection(ChartsCollection):
                                                     chart_namespace,
                                                     chart_name
                                                    )
-        print("Reading path {0}".format(chart_vault_secret))
+        logging.info("Reading path {0}".format(chart_vault_secret))
         vault_secrets = self.__vault.dump_vault_from_prefix(chart_vault_secret, strip_root_key=True)
         return vault_secrets
 
