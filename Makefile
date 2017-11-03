@@ -188,11 +188,12 @@ ifeq (,$(GOOGLE_STORAGE_BUCKET))
 endif
 	# start a local vault container, if it's not already running
 	$(eval DOCKER_VAULT_RUNNING := $(shell docker inspect -f '{{.State.Running}}' dev-vault))
-	if [ "$(DOCKER_VAULT_RUNNING)" == "false" ]; then \
+	if [ "$(DOCKER_VAULT_RUNNING)" != "true" ]; then \
 		docker inspect dev-vault > /dev/null ; \
 		if [ $$? != 0 ]; then \
 			echo "dev-vault container doesnt exist. Creating it" ; \
 			docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault:0.8.3 ; \
+			sleep 3 ; \
 		else \
 			echo "dev-vault container exists but not started. Starting it" ; \
 			docker start dev-vault ; \
@@ -203,7 +204,7 @@ endif
 	fi
 	# start a local chartmuseum container, if it's not already running
 	$(eval DOCKER_CHARTMUSEUM_RUNNING := $(shell docker inspect -f '{{.State.Running}}' dev-chartmuseum))
-	if [ "$(DOCKER_CHARTMUSEUM_RUNNING)" == "false" ]; then \
+	if [ "$(DOCKER_CHARTMUSEUM_RUNNING)" != "true" ]; then \
 		docker inspect dev-chartmuseum > /dev/null ; \
 		if [ $$? != 0 ]; then \
 			echo "dev-chartmuseum container doesnt exist. Creating it" ; \
@@ -211,6 +212,7 @@ endif
 				-e GOOGLE_APPLICATION_CREDENTIALS=/creds/application_default_credentials.json \
 				-v $$HOME/.config/gcloud:/creds chartmuseum/chartmuseum:v0.2.2 --port=8080 --debug \
 				--storage=google --storage-google-bucket=$(GOOGLE_STORAGE_BUCKET) ; \
+			sleep 3 ; \
 		else \
 			echo "dev-chartmuseum container exists but not started. Starting it" ; \
 			docker start dev-chartmuseum ; \
