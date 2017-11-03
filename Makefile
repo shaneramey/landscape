@@ -166,6 +166,8 @@ ifeq (true,$(DEPLOY_LOCAL_REPOS))
 else
 	$(CONVERGE_SECRETS_CMD)
 endif
+else
+	@echo - DANGER_DEPLOY_LASTPASS_SECRETS is unset. Not pulling secrets from Lastpass.
 endif
 
 # cluster boostrapping/maintenance from workstation
