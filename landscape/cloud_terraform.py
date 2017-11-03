@@ -23,7 +23,7 @@ class TerraformCloud(Cloud):
 
     def __init__(self, **kwargs):
         Cloud.__init__(self, **kwargs)
-        self.tf_templates_dir = 'terraform-templates'
+        self.tf_templates_dir = os.getcwd() + '/terraform-templates'
         self.gce_creds = kwargs['google_credentials']
         self.__gcp_auth_jsonfile = os.getcwd() + '/cloud-serviceaccount-' + self.name + '.json'
         self.write_gcloud_keyfile_json()
