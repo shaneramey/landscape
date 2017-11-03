@@ -92,10 +92,8 @@ def git_branch():
     if proc.returncode != 0:
         raise ChildProcessError('Could not detect git branch. Try passing --git-branch')
 
-    logging.debug("git_branch_cmd_output=" + git_branch_cmd_output)
     git_branch_cmd_lines = git_branch_cmd_output.splitlines()
     starred_branchname = next((item for item in git_branch_cmd_lines if item.startswith('*')))
-    logging.debug("starred_branchname=" + starred_branchname)
     current_branch = starred_branchname.strip()[2:]
     logging.info("Auto-detected cwd branch to be: " + current_branch)
 
@@ -103,7 +101,15 @@ def git_branch():
 
 def main():
     args = docopt.docopt(__doc__)
+    # option to skip application of plans
     dry_run = args['--dry-run']
+
+    # parse and apply logging verbosity
+    loglevel = args['--log-level']
+    numeric_level = getattr(logging, loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % loglevel)
+    logging.basicConfig(level=numeric_level)
 
     # parse arguments
     cloud_selection = args['--cloud']
@@ -129,17 +135,11 @@ def main():
     # if set, write to a VAULT_ADDR env variable besides http://127.0.0.1:8200
     remote_vault_ok = args['--dangerous-overwrite-vault']
 
-
-    # parse and apply logging verbosity
-    loglevel = args['--log-level']
-    numeric_level = getattr(logging, loglevel.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError('Invalid log level: %s' % loglevel)
-    logging.basicConfig(level=numeric_level)
-
     # landscape cloud ...
     if args['cloud']:
+        logging.debug("git_branch_selection: {0}".format(git_branch_selection))
         clouds = CloudCollection(git_branch_selection)
+        logging.debug("clouds: {0}".format(clouds))
         # landscape cloud list
         if args['list']:
             if cluster_selection:
@@ -196,11 +196,11 @@ def main():
             central_secrets_folder = args['--shared-secrets-folder']
             central_secrets_item = args['--shared-secrets-item']
             if central_secrets_item == 'GIT_BRANCH_NAME':
-                central_secrets_item = git_branch()
+                central_secrets_item = git_branch_selection
             central_secrets_username = args['--secrets-username']
             central_secrets_password = args['--secrets-password']
             shared_secrets = UniversalSecrets(provider='lastpass', username=central_secrets_username, password=central_secrets_password)
-            shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder, shared_secrets_item=central_secrets_item, use_remote_vault=remote_vault_ok, simulate=dry_run)
+            shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder, shared_secrets_item=git_branch_selection, use_remote_vault=remote_vault_ok, simulate=dry_run)
 
     # landscape setup install-prerequisites ...
     elif args['setup']:
