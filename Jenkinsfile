@@ -47,18 +47,17 @@ def getClusterTargets() {
     println("Running command: " + targets_list_cmd)
     sout = executeOrReportErrors(targets_list_cmd)
     // prepend targets with null value, which is default
-    targetsString = "\n" + sout.toString()
-    if(targetsString.length() == 0) {
+    clusterTargets = sout.toString().split()
+    if(clusterTargets.size() == 0) {
         error("No targets found in Vault (zero results returned from command)")
     }
-    println("command output: " + targetsString)
-    return targetsString
+    return clusterTargets
 }
 
 def getCloudTargets() {
 // gets provisioner targets from Vault 
 // returns a list used for dynamic Jenkinsfile parameters
-    targets_list_cmd = "landscape cloud list --git-branch=${env.BRANCH_NAME}"
+    targets_list_cmd = 'landscape cloud list --git-branch='+env.BRANCH_NAME
     println("Running command: " + targets_list_cmd)
     sout = executeOrReportErrors(targets_list_cmd)
     // prepend targets with null value, which is default
@@ -68,6 +67,20 @@ def getCloudTargets() {
     }
     println("command output: " + targetsString)
     return targetsString
+}
+
+def getCloudForCluster(cluster_name) {
+// returns a string containing a cloud id for a given cluster
+    cloud_id_cmd = 'landscape cloud list --cluster='+cluster_name
+    println("Running command: " + cloud_id_cmd)
+    sout = executeOrReportErrors(cloud_id_cmd)
+    // prepend targets with null value, which is default
+    cloud_id = sout.toString().trim()
+    if(cloud_id.length() == 0) {
+        error("Cloud ID Not found for cluster name: "+cluster_name)
+    }
+    println("command output: " + cloud_id)
+    return cloud_id
 }
 
 def executeOrReportErrors(command_string, working_dir='/') {
@@ -91,44 +104,44 @@ def executeOrReportErrors(command_string, working_dir='/') {
 }
 
 def convergeCloud(cloud_name, dry_run=true) {
-    def mkParams = "CLOUD_NAME=" + cloud_name
-    if(dry_run) {
-        mkParams += " DRYRUN=true"
+    if(cloud_name != "minikube") {
+        def cmd = "landscape cloud converge --cloud=" + cloud_name
+
+        if(dry_run) {
+            cmd += " --dry-run"
+        }
+        println("Running command: " + cmd)
+        sout = executeOrReportErrors(cmd)
+        println(sout)
+    } else {
+        println("Skipping minikube cloud setup inside of Jenkins")
     }
-    def cmd = "make " + mkParams + " cloud"
 }
 
 def convergeCluster(cluster_name, dry_run=true) {
-    def mkParams = "SKIP_CONVERGE_CLOUD=true CLUSTER_NAME=" + cluster_name
+    def cmd = "landscape cluster converge --cluster=" + cluster_name
+
     if(dry_run) {
-        mkParams += " DRYRUN=true"
+        cmd += " --dry-run"
     }
-    def cmd = "make " + mkParams + " cluster"
+    println("Running command: " + cmd)
+    sout = executeOrReportErrors(cmd)
+    println(sout)
 }
 
 def convergeCharts(cluster_name, dry_run=true) {
-    def mkParams = "SKIP_CONVERGE_CLOUD=true SKIP_CONVERGE_CLUSTER=true " + \
-                    "CLUSTER_NAME=" + cluster_name
+    def cmd = "landscape charts converge --cluster=" + cluster_name
+
     if(dry_run) {
-        mkParams += " DRYRUN=true"
+        cmd += " --dry-run"
     }
-    def cmd = "make " + mkParams + " charts"
+    println("Running command: " + cmd)
+    sout = executeOrReportErrors(cmd)
+    println(sout)
 }
 
-def clusters_for_branch(branch_name) {
-    clusters_list_cmd = 'landscape cluster list --git-branch='+branch_name
-    println("Running command: " + clusters_list_cmd)
-    sout = executeOrReportErrors(clusters_list_cmd)
-    // prepend targets with null value, which is default
-    targetsString = "\n" + sout.toString()
-    if(targetsString.length() == 0) {
-        error("No clusters found in Vault (zero results returned from command)")
-    }
-    println("command output: " + targetsString)
-    return targetsString
-}
 
-properties([parameters([choice(choices: getClusterTargets(), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')])])
+properties([parameters([choice(choices: getClusterTargets().join('\n'), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')])])
 
 
 node('landscape') {
@@ -141,37 +154,40 @@ node('landscape') {
             error("CONTEXT not set (normal on first-run)")
         }
     }
-    for (String cluster_name : clusters_for_branch(${env.BRANCH_NAME})) {
-        def cloud_name = getCloudForCluster(cluster_name)
-        stage('Test Cloud ' + cloud_name) {
+    getClusterTargets().each { clusterName ->
+        println("clusterName="+clusterName)
+        def cloudName = getCloudForCluster(clusterName)
+        println("cloudName="+cloudName)
+        stage('Test Cloud ' + cloudName) {
             withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-                convergeCloud(cloud_name, true)
+                convergeCloud(cloudName, true)
             }
         }
-        stage('Test Cluster ' + cluster_name) {
+        stage('Test Cluster ' + clusterName) {
             withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-                convergeCluster(cluster_name, true)
+                convergeCluster(clusterName, true)
             }
         }
-        stage('Test Charts ' + cluster_name) {
+        stage('Test Charts ' + clusterName) {
             withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-                convergeCharts(cluster_name, true)
+                convergeCharts(clusterName, true)
             }
         }
-        stage('Converge Cloud ' + cloud_name) {
+        stage('Converge Cloud ' + cloudName) {
             withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-                convergeCloud(cloud_name, false)
+                convergeCloud(cloudName, false)
             }
         }
-        stage('Converge Cluster ' + cluster_name) {
+        stage('Converge Cluster ' + clusterName) {
             withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-                convergeCluster(cluster_name, false)
+                convergeCluster(clusterName, false)
             }
         }
-        stage('Converge Charts ' + cluster_name) {
+        stage('Converge Charts ' + clusterName) {
             withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-                convergeCharts(cluster_name, false)
+                convergeCharts(clusterName, false)
             }
         }
     }
+
 }

@@ -35,14 +35,6 @@ def helm_add_chart_repo(repo_alias, url):
     subprocess.call(repo_add_cmd, shell=True)
 
 
-def helm_repo_update():
-    """
-    Updates the local Helm repository index of available charts
-    """
-    repo_update_cmd = 'helm repo update'
-    subprocess.call(repo_update_cmd, shell=True)
-
-
 def wait_for_tiller_ready(monitor_command):
     """
     Sleep until Tiller is ready

@@ -9,6 +9,7 @@ def install_prerequisites(os_platform):
 
     Returns: None
     """
+    install_gsed(os_platform)
     install_minikube(os_platform)
     install_lastpass(os_platform)
     install_vault(os_platform)
@@ -17,6 +18,19 @@ def install_prerequisites(os_platform):
     install_landscaper(os_platform)
     install_terraform(os_platform)
     install_helm_plugins()
+
+
+def install_gsed(os_platform):
+    """Install minikube"""
+    install_cmds = {
+        'Darwin': 'brew install gnu-sed'
+    }
+    dst = '/usr/local/bin/gsed'
+    if not os.path.isfile(dst):
+        logging.info("installing gnu-sed")
+        sp.call(install_cmds[os_platform], shell=True)
+    else:
+        logging.info("gnu-sed already installed in {0}".format(dst))
 
 
 def install_minikube(os_platform):

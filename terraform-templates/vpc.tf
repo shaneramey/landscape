@@ -296,3 +296,4 @@ resource "google_compute_instance" "db-replica" {
     }
   }
 }
+

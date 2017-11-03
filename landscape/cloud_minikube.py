@@ -34,13 +34,16 @@ class MinikubeCloud(Cloud):
         cloud_status = proc.stdout.read().rstrip().decode()
         logging.debug('Minikube Cloud status is ' + cloud_status)
         if cloud_status == 'Running':
-            logging.info('Cloud previously provisioned. Re-using')
+            if not dry_run:
+                logging.info('Re-using previously provisioned cloud')
+            else:
+                logging.info('DRYRUN: would be Re-using previously provisioned cloud')
         else:
             logging.info('Initializing Cloud')
             if not dry_run:
                 self.initialize_cloud()
             else:
-                print('Dry run complete')
+                logging.info('DRYRUN: would be Initializing Cloud')
 
 
     def initialize_cloud(self):

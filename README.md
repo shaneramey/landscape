@@ -1,6 +1,16 @@
-# Landscape: Place kubernetes clusters, charts, and secrets into clouds
-(vev) sramey $ export GOOGLE_APPLICATION_CREDENTIALS=/Users/sramey/cloud-serviceaccount-staging-165617.json
-(vev) sramey $ pip install --upgrade . && make SHARED_SECRETS_USERNAME=sramey@safaribooksonline.com GOOGLE_STORAGE_BUCKET=helm-charts-staging-165617
+# Landscape: Place kubernetes clusters, charts, and secrets into clouds.
+  
+  This tool unites components of the Kubernetes ecosystem:
+   - Cloud management (hosting the Kubernetes clusters)
+   - Kubernetes Cluster management
+   - Helm Chart deployment and deletion (via Landscaper)
+   - Kubernetes secrets (flow: [LastPass ->] Vault -> Landscaper -> K8S Secrets)
+
+   Optionally a command exists, pulls centralized shared secrets from LastPass into Vault.
+
+## Supported systems
+ - Cloud: terraform, minikube
+ - Cluster: GKE, minikube, unmanaged (unmanaged bypasses cloud setup)
 
 ## Features
 Deploy k8s clusters + apps (Helm Charts) to:
@@ -33,7 +43,27 @@ landscape cloud converge
 landscape cluster converge --converge-cloud
 ```
 
-## Installation (dev-mode via MiniKube)
+ - Verify cloud, clusters, and charts can be pulled from Vault
+```
+for cloud_name in `landscape cloud list`; do
+        echo saw cloud ${cloud_name}
+        for cluster_name in `landscape cluster list --cloud=${cloud_name}`; do
+	        echo saw cluster ${cluster_name}
+            landscape charts list --cluster=${cluster_name}
+        done
+done
+
+for cluster_name in `landscape cluster list`; do
+	echo saw cluster ${cluster_name}
+	for cloud_name in `landscape cloud list --cluster=${cluster_name}`; do
+		echo saw cloud ${cloud_name}
+	done
+done
+```
+
+## minikube HTTP Proxy
+Applies to minikube clusters
+
 If set, HTTP_PROXY and HTTPS_PROXY will be used for docker image caching
 Run squid on your local machine for fastest results
 ```brew install squid && brew services start squid```
@@ -90,9 +120,23 @@ open minikube-master.ovpn # Import Viscosity profile into MacOS
 
 ### minikube
 
-- Import minikube ca.crt into your MacOS keychain
+ - Import minikube ca.crt into your MacOS keychain
 ```
 sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.minikube/ca.crt
+```
+
+ - deploy cluster (minikube + helm charts)
+
+ Pulls secrets from LastPass and puts them in a local dev-vault container
+ Serves Helm Chart repo in a local dev-chartmuseum container, backed by GCS
+```
+make CLUSTER_NAME=minikube
+     SHARED_SECRETS_USERNAME=lastpass@email.address
+     DEPLOY_LOCAL_REPOS=true
+     GOOGLE_STORAGE_BUCKET=helm-charts-staging-123456
+```
+
+ - terraform
 ```
 
 ### GKE
@@ -103,7 +147,7 @@ landscape cluster list
 
 2. deploy cluster (GCE/GKE terraform template + helm charts)
 ```
-make CLUSTER_NAME=gke_staging-165617_us-west1-a_master
+make CLUSTER_NAME=gke_staging-123456_us-west1-a_master
 ```
 
 or

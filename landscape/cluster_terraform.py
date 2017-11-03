@@ -56,7 +56,7 @@ class TerraformCluster(Cluster):
         self.__gcloud_auth_jsonfile = os.getcwd() + '/cluster-serviceaccount-' + self.name + '.json'
         self.write_gcloud_keyfile_json()
 
-    def cluster_setup(self):
+    def cluster_setup(self, dry_run):
         """Activates authentication for bringing up a Terraform cluster
 
         Args:
@@ -140,7 +140,7 @@ class TerraformCluster(Cluster):
         f.close()
 
 
-    def _configure_kubectl_credentials(self):
+    def _configure_kubectl_credentials(self, dry_run):
         """Obtains GKE cluster credentials and sets local k8s-context to cluster
 
         Gets GKE credentials via already-authenticated client GCP session.  Set

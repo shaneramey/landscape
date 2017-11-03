@@ -9,8 +9,19 @@ class UnmanagedCloud(Cloud):
     Represents a Cloud provisioned outside of this tool
     """
 
-    def converge(self):
+    def converge(self, dry_run):
+        """Override this method in your subclass.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+
+        Raises:
+            NotImplementedError if called directly.
         """
-        For an UnmanagedCloud, don't converge anything
-        """
-        return True
+        if dry_run:
+            logging.info('DRYRUN: UnmanagedClouds do not converge')
+        else:
+            logging.info('UnmanagedClouds do not converge')

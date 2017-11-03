@@ -32,10 +32,7 @@ class Cluster(object):
         """
         self.name = kwargs['context_id']
         self.cloud_id = kwargs['cloud_id']
-
-
-    def __getitem__(self, x):
-        return getattr(self, x)
+        self.landscaper_branch = kwargs['landscaper_branch']
 
 
     def __str__(self):
@@ -72,12 +69,11 @@ class Cluster(object):
                                 '-l app=helm -l name=tiller ' + \
                                 '-o jsonpath=\'{.items[0].status.phase}\''
 
-        logging.info('Checking tiller pod status with command: ' + \
-                        tiller_pod_status_cmd)
-
         if not dry_run:
+            logging.info('Checking tiller pod status with command: ' + \
+                            tiller_pod_status_cmd)
             proc = subprocess.Popen(tiller_pod_status_cmd,stdout=subprocess.PIPE,
-                                    shell=True)
+                                    stderr=None, shell=True)
             tiller_pod_status = proc.stdout.read().rstrip().decode()
 
             # if Tiller isn't initialized, wait for it to come up
@@ -89,8 +85,8 @@ class Cluster(object):
             # make sure Tiller is ready to accept connections
             wait_for_tiller_ready(tiller_pod_status_cmd)
         else:
-            print("Dry run complete")
-
+            logging.info('DRYRUN: would be Checking tiller pod status with command: ' + \
+                            tiller_pod_status_cmd)
 
     def init_tiller(self, dry_run):
         """Creates Tiller RBAC permissions and initializes Tiller.
@@ -109,25 +105,31 @@ class Cluster(object):
             None.
         """
         serviceaccount_create_command = 'kubectl create serviceaccount --namespace=kube-system tiller'
-        logging.info('Setting up Tiller serviceaccount with command: ' + serviceaccount_create_command)
         if not dry_run:
+            logging.info('Creating Tiller serviceaccount: ' + \
+                serviceaccount_create_command)
             subprocess.call(serviceaccount_create_command, shell=True)
         else:
-            print("Dry run complete")
+            logging.info('DRYRUN: would be Creating Tiller serviceaccount: ' + \
+                    serviceaccount_create_command)
 
         clusterrolebinding_create_command = 'kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller'
-        logging.info('Setting up Tiller ClusterRoleBinding: ' + clusterrolebinding_create_command)
         if not dry_run:
+            logging.info('Creating Tiller ClusterRoleBinding: ' + clusterrolebinding_create_command)
             subprocess.call(clusterrolebinding_create_command, shell=True)
         else:
-            print("Dry run complete")
+            logging.info('DRYRUN: would be Creating Tiller ClusterRoleBinding: ' + \
+                clusterrolebinding_create_command)
 
+        # Initialize Helm by installing Tiller
         helm_provision_command = 'helm init --service-account=tiller'
-        logging.info('Initializing Tiller with command: ' + helm_provision_command)
         if not dry_run:
+            logging.info('Initializing Tiller: ' + \
+                            helm_provision_command)
             subprocess.call(helm_provision_command, shell=True)
         else:
-            print("Dry run complete")
+            logging.info('DRYRUN: would be Initializing Tiller: ' + \
+                    helm_provision_command)
 
 
     def cluster_setup(self, dry_run):

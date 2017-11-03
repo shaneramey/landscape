@@ -23,10 +23,11 @@ class TerraformCloud(Cloud):
 
     def __init__(self, **kwargs):
         Cloud.__init__(self, **kwargs)
-        self.tf_templates_dir = 'terraform-templates'
+        self.terraform_dir = os.getcwd() + '/terraform-templates'
         self.gce_creds = kwargs['google_credentials']
         self.__gcp_auth_jsonfile = os.getcwd() + '/cloud-serviceaccount-' + self.name + '.json'
         self.write_gcloud_keyfile_json()
+        logging.debug("Using Terraform Directory: " + self.terraform_dir)
 
 
     @property
@@ -43,16 +44,6 @@ class TerraformCloud(Cloud):
             None.
         """
         return self.name
-
-
-    @property
-    def terraform_dir(self):
-        return self.tf_templates_dir
-
-
-    @terraform_dir.setter
-    def terraform_dir(self, template_dir):
-        self.tf_templates_dir = template_dir
 
 
     def envvars(self):
@@ -105,28 +96,8 @@ class TerraformCloud(Cloud):
         f.write(self.gce_creds)
         f.close()
 
-    def tf_varstr(self):
-        """Generates an arguments list for Terraform commands.
 
-        Args:
-            None.
-
-        Returns:
-            A string to be passed to the terraform command. Passes values to
-            terraform templates.
-
-        Raises:
-            None.
-        """
-        tf_vars_args  = '-var="gce_project_id={0}" ' + \
-                        '-var="gke_cluster1_name={1}" ' + \
-                        '-var="gke_cluster1_version={2}"'
-        return tf_vars_args.format(self.gce_project,
-                                    'master',
-                                    '1.7.0')
-
-
-    def converge(self,dry_run):
+    def converge(self, dry_run):
         """Converges a Terraform cloud environment.
 
         Checks if a terraform cloud is already running
@@ -142,11 +113,20 @@ class TerraformCloud(Cloud):
             None.
         """
         self.init_terraform(dry_run)
-        terraform_cmd_tmpl = 'terraform validate ' + self.tf_varstr() + \
+
+        # Generate terraform command: populate variables
+        tf_vars_args = '-var="gce_project_id={0}" ' + \
+                        '-var="gke_cluster1_name={1}" ' + \
+                        '-var="gke_cluster1_version={2}"'
+        terraform_vars = tf_vars_args.format(self.gce_project,
+                            'master',
+                            '1.8.1-gke.0')
+        # Generate terraform command: dry-run
+        terraform_cmd_tmpl = 'terraform validate ' + terraform_vars + \
             ' && ' + \
-            'terraform plan ' + self.tf_varstr()
+            'terraform plan ' + terraform_vars
         if not dry_run:
-            terraform_cmd_tmpl += ' && terraform apply ' + self.tf_varstr()
+            terraform_cmd_tmpl += ' && terraform apply ' + terraform_vars
         terraform_cmd = terraform_cmd_tmpl.format(self.gce_project,
                                                     'master',
                                                     '1.8.1-gke.0')
@@ -178,10 +158,10 @@ class TerraformCloud(Cloud):
 
         tf_init_cmd = tf_init_cmd_tmpl.format(self.gce_project)
 
-        logging.info('  - initializing terraform with command: ' + tf_init_cmd)
         if dry_run:
-            print("Dry run complete")
+            logging.info('DRYRUN: would be Initializing terraform with command: ' + tf_init_cmd)
         else:
+            logging.info('Initializing terraform with command: ' + tf_init_cmd)
             failed_to_init_terraform = subprocess.call(tf_init_cmd,
                                                     cwd=self.terraform_dir,
                                                     env=self.envvars(),
