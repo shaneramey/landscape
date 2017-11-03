@@ -222,6 +222,8 @@ endif
 
 	# add chartmuseum chart repo
 	helm repo add chartmuseum http://127.0.0.1:8080
+	# add legacy charts repo
+	helm repo add charts.downup.us http://charts.downup.us
 else
 	@echo - DEPLOY_LOCAL_REPOS is unset. Skipping local container setup.
 endif
