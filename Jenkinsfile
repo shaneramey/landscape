@@ -75,7 +75,7 @@ def getCloudForCluster(cluster_name) {
     println("Running command: " + cloud_id_cmd)
     sout = executeOrReportErrors(cloud_id_cmd)
     // prepend targets with null value, which is default
-    cloud_id = sout.toString()
+    cloud_id = sout.toString().trim()
     if(cloud_id.length() == 0) {
         error("Cloud ID Not found for cluster name: "+cluster_name)
     }
@@ -104,14 +104,18 @@ def executeOrReportErrors(command_string, working_dir='/') {
 }
 
 def convergeCloud(cloud_name, dry_run=true) {
-    def cmd = "landscape cloud converge --cloud=" + cloud_name
+    if(cloud_name != "minikube") {
+        def cmd = "landscape cloud converge --cloud=" + cloud_name
 
-    if(dry_run) {
-        cmd += " --dry-run"
+        if(dry_run) {
+            cmd += " --dry-run"
+        }
+        println("Running command: " + cmd)
+        sout = executeOrReportErrors(cmd)
+        println(sout)
+    } else {
+        println("Skipping minikube cloud setup inside of Jenkins")
     }
-    println("Running command: " + cmd)
-    sout = executeOrReportErrors(cmd)
-    println(sout)
 }
 
 def convergeCluster(cluster_name, dry_run=true) {
@@ -154,5 +158,36 @@ node('landscape') {
         println("clusterName="+clusterName)
         def cloudName = getCloudForCluster(clusterName)
         println("cloudName="+cloudName)
+        stage('Test Cloud ' + cloudName) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCloud(cloudName, true)
+            }
+        }
+        stage('Test Cluster ' + clusterName) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCluster(clusterName, true)
+            }
+        }
+        stage('Test Charts ' + clusterName) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCharts(clusterName, true)
+            }
+        }
+        stage('Converge Cloud ' + cloudName) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCloud(cloudName, false)
+            }
+        }
+        stage('Converge Cluster ' + clusterName) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCluster(clusterName, false)
+            }
+        }
+        stage('Converge Charts ' + clusterName) {
+            withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
+                convergeCharts(clusterName, false)
+            }
+        }
     }
+
 }
