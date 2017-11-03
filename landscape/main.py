@@ -181,7 +181,7 @@ def main():
             central_secrets_username = args['--secrets-username']
             central_secrets_password = args['--secrets-password']
             shared_secrets = UniversalSecrets(provider='lastpass', username=central_secrets_username, password=central_secrets_password)
-            shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder, shared_secrets_item=central_secrets_item, use_remote_vault=remote_vault_ok)
+            shared_secrets.overwrite_vault(shared_secrets_folder=central_secrets_folder, shared_secrets_item=central_secrets_item, use_remote_vault=remote_vault_ok, simulate=dry_run)
 
     # landscape setup install-prerequisites ...
     elif args['setup']:

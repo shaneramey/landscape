@@ -47,17 +47,21 @@ CLUSTER_NAME := minikube
 BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 DEPLOY_ONLY_NAMESPACES :=
 
+# Pull in secrets to Vault from LastPass
+DANGER_DEPLOY_LASTPASS_SECRETS := false
+
 # Whether to start local dev-vault and dev-chartmuseum containers and retrieve
 DEPLOY_LOCAL_REPOS := false
+
 # Write LastPass secrets (via VAULT_ADDR) to non-http://127.0.0.1:8200 servers
 ALLOW_REMOTE_VAULT := false
 
 # LastPass team-shared secrets username (REQUIRED when DEPLOY_LOCAL_REPOS=true)
 SHARED_SECRETS_USERNAME := 
 SHARED_SECRETS_ITEM := $(BRANCH_NAME)
+
 # GCS backend for local Helm Chart repo (REQUIRED when DEPLOY_LOCAL_REPOS=true)
 GOOGLE_STORAGE_BUCKET := 
-
 
 # Converge Cloud cluster (e.g., minikube, terraform(GKE), unmanaged)
 CONVERGE_CLOUD_CMD = landscape cloud converge --cloud=$(CLOUD_NAME)
@@ -94,11 +98,11 @@ ifeq ($(DEBUG),true)
 	CONVERGE_SECRETS_CMD += --debug
 endif
 
-.PHONY: repos cloud cluster charts
+.PHONY: repos secrets cloud cluster charts
 
 # Charts deployment
 ifneq (true,$(SKIP_CONVERGE_CHARTS))
-charts: repos cluster cloud
+charts: secrets cluster cloud
 	@echo - Converging Charts for CLUSTER_NAME=$(CLUSTER_NAME) CLOUD_NAME=$(CLOUD_NAME)
 # deploy secrets from local repos
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
@@ -109,12 +113,12 @@ else
 	$(CONVERGE_CHARTS_CMD)
 endif
 else:
-charts: repos cluster cloud
+charts: secrets cluster cloud
 endif
 
 # Cluster deployment
 ifneq (true,$(SKIP_CONVERGE_CLUSTER))
-cluster: repos cloud
+cluster: secrets cloud
 	@echo - Converging cluster for CLUSTER_NAME=$(CLUSTER_NAME)
 	@echo   - Setting CLOUD_NAME=$(CLOUD_NAME)
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
@@ -125,13 +129,12 @@ else
 	$(CONVERGE_CLUSTER_CMD)
 endif
 else:
-cluster: repos
+cluster: secrets
 endif
 
 # Cloud deployment
 ifneq (true,$(SKIP_CONVERGE_CLOUD))
-cloud: repos
-	$(eval CLOUD_NAME := $(shell landscape cloud list --cluster=$(CLUSTER_NAME)))
+cloud: secrets
 	@echo - Converging cloud for CLOUD_NAME=$(CLOUD_NAME)
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
 	VAULT_ADDR=http://127.0.0.1:8200 \
@@ -141,7 +144,7 @@ else
 	$(CONVERGE_CLOUD_CMD)
 endif
 else
-cloud: repos
+cloud: secrets
 endif
 
 # Secrets deployment
@@ -155,7 +158,14 @@ secrets: repos
 ifeq (,$(SHARED_SECRETS_USERNAME))
 	$(error SHARED_SECRETS_USERNAME required to pull secrets from LastPass)
 endif
+ifeq (true,$(DEPLOY_LOCAL_REPOS))
+	# Apply LastPass secrets to local Vault
+	VAULT_ADDR=http://127.0.0.1:8200 \
+	VAULT_TOKEN=$$(docker logs dev-vault 2>&1 | grep 'Root Token' | tail -n 1 | awk '{ print $$3 }') \
 	$(CONVERGE_SECRETS_CMD)
+else
+	$(CONVERGE_SECRETS_CMD)
+endif
 endif
 
 # cluster boostrapping/maintenance from workstation
@@ -167,6 +177,10 @@ ifeq (true,$(DEPLOY_LOCAL_REPOS))
 # use local docker-based vault + chartmuseum
 # as opposed to using pre-existing Vault and Helm repo values
 repos:
+ifeq (,$(SHARED_SECRETS_USERNAME))
+	$(error SHARED_SECRETS_USERNAME required to pull secrets from LastPass)
+endif
+
 ifeq (,$(GOOGLE_STORAGE_BUCKET))
 	$(error GOOGLE_STORAGE_BUCKET required for Helm Charts repo via ChartMuseum)
 endif
@@ -185,8 +199,6 @@ endif
 	else \
 		echo "dev-vault container already running." ; \
 	fi
-	# Apply LastPass secrets to local Vault
-	$(CONVERGE_SECRETS_CMD)
 	# start a local chartmuseum container, if it's not already running
 	$(eval DOCKER_CHARTMUSEUM_RUNNING := $(shell docker inspect -f '{{.State.Running}}' dev-chartmuseum))
 	if [ "$(DOCKER_CHARTMUSEUM_RUNNING)" == "false" ]; then \
@@ -208,5 +220,6 @@ endif
 
 	# add chartmuseum chart repo
 	helm repo add chartmuseum http://127.0.0.1:8080
-
+else
+	@echo - DEPLOY_LOCAL_REPOS is unset. Skipping local container setup.
 endif

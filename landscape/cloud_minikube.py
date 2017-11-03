@@ -37,13 +37,13 @@ class MinikubeCloud(Cloud):
             if not dry_run:
                 logging.info('Re-using previously provisioned cloud')
             else:
-                print('DRYRUN: would be Re-using previously provisioned cloud')
+                logging.info('DRYRUN: would be Re-using previously provisioned cloud')
         else:
             logging.info('Initializing Cloud')
             if not dry_run:
                 self.initialize_cloud()
             else:
-                print('DRYRUN: would be Initializing Cloud')
+                logging.info('DRYRUN: would be Initializing Cloud')
 
 
     def initialize_cloud(self):
