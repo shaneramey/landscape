@@ -336,13 +336,14 @@ class VaultClient(object):
             Vault secret contents (dict)
 
         """
-        vault_error_read_str = 'Vault read error. msg: {0} path: {1}'
+        vault_error_read_str = 'Vault read at path: {0} error: {1}'
+        vault_error_data_str = 'Vault data missing at path: {0}'
         try:
             vault_item_contents = self.__vault_client.read(vault_path)
         except ValueError as e:
-            raise(vault_error_read_str.format(e, vault_path))
+            raise ValueError(vault_error_read_str.format(vault_path, e))
 
         if vault_item_contents and 'data' in vault_item_contents:
             return vault_item_contents['data']
         else:
-            raise ValueError(vault_error_read_str.format('Key not readable', vault_path))
+            raise ValueError(vault_error_data_str.format(vault_path))

@@ -18,6 +18,8 @@ Usage: landscape [options]
          [--shared-secrets-folder=<pass_folder>] 
          [--shared-secrets-item=<pass_folder_item>] 
          [--secrets-password=<lpass_password>]
+       landscape [options]
+        setup install-prerequisites
 
 Options:
     --all-branches               When listing resources, list all git-branches

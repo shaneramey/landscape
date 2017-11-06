@@ -42,6 +42,8 @@ def wait_for_tiller_ready(monitor_command):
     devnull = open(os.devnull, 'w')
     proc = subprocess.Popen(monitor_command, stdout=subprocess.PIPE, stderr=devnull, shell=True)
     tiller_pod_status = proc.stdout.read().rstrip().decode()
+    wait_for_tiller_seconds = 2
+
     if tiller_pod_status == "Running":
         logging.info('tiller pod already running')
     else:
@@ -52,6 +54,7 @@ def wait_for_tiller_ready(monitor_command):
             sys.stdout.write('.')
             sys.stdout.flush()
             time.sleep(1) 
-        warm_up_seconds = 7
-        logging.info("Sleeping {0} seconds to allow tiller to warm-up".format(warm_up_seconds))
-        time.sleep(warm_up_seconds)
+        wait_for_tiller_seconds = 7
+    logging.info("Sleeping {0} seconds to allow tiller to warm-up".format(
+                    wait_for_tiller_seconds))
+    time.sleep(wait_for_tiller_seconds)

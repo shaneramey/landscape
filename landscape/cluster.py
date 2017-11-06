@@ -1,5 +1,6 @@
 import logging
 import subprocess
+import os
 from .kubernetes import kubectl_use_context
 from .helm import wait_for_tiller_ready
 
@@ -72,10 +73,12 @@ class Cluster(object):
         if not dry_run:
             logging.info('Checking tiller pod status with command: ' + \
                             tiller_pod_status_cmd)
-            proc = subprocess.Popen(tiller_pod_status_cmd,stdout=subprocess.PIPE,
-                                    stderr=None, shell=True)
-            tiller_pod_status = proc.stdout.read().rstrip().decode()
+            DEVNULL = open(os.devnull, 'w')
+            proc = subprocess.Popen(tiller_pod_status_cmd,
+                                    stdout=subprocess.PIPE,
+                                    stderr=DEVNULL, shell=True)
 
+            tiller_pod_status = proc.stdout.read().rstrip().decode()
             # if Tiller isn't initialized, wait for it to come up
             if not tiller_pod_status == "Running":
                 logging.info('Did not detect tiller pod')
@@ -104,32 +107,40 @@ class Cluster(object):
         Raises:
             None.
         """
-        serviceaccount_create_command = 'kubectl create serviceaccount --namespace=kube-system tiller'
+        serviceaccount_create_cmd = "kubectl create serviceaccount \
+                                        --context={0} \
+                                        --namespace=kube-system tiller".format(self.name)
         if not dry_run:
             logging.info('Creating Tiller serviceaccount: ' + \
-                serviceaccount_create_command)
-            subprocess.call(serviceaccount_create_command, shell=True)
+                serviceaccount_create_cmd)
+            subprocess.call(serviceaccount_create_cmd, shell=True)
         else:
             logging.info('DRYRUN: would be Creating Tiller serviceaccount: ' + \
-                    serviceaccount_create_command)
+                    serviceaccount_create_cmd)
 
-        clusterrolebinding_create_command = 'kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller'
+        clusterrolebinding_create_cmd = "kubectl create clusterrolebinding \
+                                            --context={0} \
+                                            tiller-cluster-rule \
+                                            --clusterrole=cluster-admin \
+                                            --serviceaccount=kube-system:tiller".format(self.name)
         if not dry_run:
-            logging.info('Creating Tiller ClusterRoleBinding: ' + clusterrolebinding_create_command)
-            subprocess.call(clusterrolebinding_create_command, shell=True)
+            logging.info('Creating Tiller ClusterRoleBinding: ' + \
+                            clusterrolebinding_create_cmd)
+            subprocess.call(clusterrolebinding_create_cmd, shell=True)
         else:
             logging.info('DRYRUN: would be Creating Tiller ClusterRoleBinding: ' + \
-                clusterrolebinding_create_command)
+                clusterrolebinding_create_cmd)
 
         # Initialize Helm by installing Tiller
-        helm_provision_command = 'helm init --service-account=tiller'
+        helm_provision_cmd = "helm init --service-account=tiller \
+                                    --kube-context={0}".format(self.name)
         if not dry_run:
             logging.info('Initializing Tiller: ' + \
-                            helm_provision_command)
-            subprocess.call(helm_provision_command, shell=True)
+                            helm_provision_cmd)
+            subprocess.call(helm_provision_cmd, shell=True)
         else:
             logging.info('DRYRUN: would be Initializing Tiller: ' + \
-                    helm_provision_command)
+                    helm_provision_cmd)
 
 
     def cluster_setup(self, dry_run):

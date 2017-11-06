@@ -72,6 +72,7 @@ class MinikubeCloud(Cloud):
                     '--memory=8192 ' + \
                     '--docker-env HTTPS_PROXY=$http_proxy ' + \
                     '--docker-env HTTP_PROXY=$https_proxy ' + \
+                    '--keep-context ' + \
                     '-v=2'
         start_cmd = start_cmd_tmpl.format('1.8.0',
                                             'xhyve',
