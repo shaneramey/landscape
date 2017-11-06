@@ -116,6 +116,13 @@ open minikube-master.ovpn # Import Viscosity profile into MacOS
  - Add Jenkinsfile to a Jenkins job
  - Open https://http.jenkins.svc.cluster.local in your browser
 
+## Git Branch Subscriptions
+- clouds are tied to git branches for a terraform repo [terraform repo](terraform-templates)
+- clusters are tied to git branches for a landscaper chart repo [landscaper repo](charts)
+
+The landscape tool in this repo is careful not to apply git branches
+to the wrong clusters and clouds, unless forced on the command line with --force
+
 ## Cluster-specific provisioning
 
 ### minikube
@@ -193,10 +200,8 @@ These secrets are then passed into Vault - used for Terraform and Helm secrets
 ```
 # GCE credentials JSON
 /secret/terraform/$(GCE_PROJECT_ID)/auth['credentials']
-
 # Kubeconfig secrets (used by Jenkins)
 /secret/k8s_contexts/$(CONTEXT_NAME)
-
 # Helm secrets, deployed via Landscaper
 /secret/landscape/$(GIT_BRANCH)
 ```
