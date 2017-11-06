@@ -189,7 +189,7 @@ ifeq (,$(GOOGLE_STORAGE_BUCKET))
 endif
 	# start a local vault container, if it's not already running
 	$(eval DOCKER_VAULT_RUNNING := $(shell docker inspect -f '{{.State.Running}}' dev-vault))
-	if [ "$(DOCKER_VAULT_RUNNING)" != "true" ]; then \
+	@if [ "$(DOCKER_VAULT_RUNNING)" != "true" ]; then \
 		docker inspect dev-vault > /dev/null ; \
 		if [ $$? != 0 ]; then \
 			echo "dev-vault container doesnt exist. Creating it" ; \
@@ -205,7 +205,7 @@ endif
 	fi
 	# start a local chartmuseum container, if it's not already running
 	$(eval DOCKER_CHARTMUSEUM_RUNNING := $(shell docker inspect -f '{{.State.Running}}' dev-chartmuseum))
-	if [ "$(DOCKER_CHARTMUSEUM_RUNNING)" != "true" ]; then \
+	@if [ "$(DOCKER_CHARTMUSEUM_RUNNING)" != "true" ]; then \
 		docker inspect dev-chartmuseum > /dev/null ; \
 		if [ $$? != 0 ]; then \
 			echo "dev-chartmuseum container doesnt exist. Creating it" ; \
