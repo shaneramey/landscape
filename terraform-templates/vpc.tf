@@ -289,7 +289,9 @@ resource "google_compute_instance" "db-replica" {
        image = "ubuntu-1604-xenial-v20171026a"
     }
   }
- 
+  attached_disk {
+    source = "db-replica-disk"
+  }  
   network_interface {
     network = "default"
     access_config {
@@ -297,3 +299,9 @@ resource "google_compute_instance" "db-replica" {
   }
 }
 
+resource "google_compute_disk" "default" {
+  name  = "db-replica-disk"
+  type  = "pd-ssd"
+  zone         = "${data.vault_generic_secret.gce_project_secrets.data["region"]}-a"
+  size  = "1000"
+}
