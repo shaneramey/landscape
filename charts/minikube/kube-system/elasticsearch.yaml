@@ -1,7 +1,7 @@
 name: elasticsearch
 namespace: kube-system
 release:
-  chart: charts.downup.us/elasticsearch:0.1.14
+  chart: chartmuseum/elasticsearch:0.1.14
   version: 0.1.14
 configuration:
   clusterDomain: cluster.local

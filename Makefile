@@ -93,10 +93,10 @@ endif
 
 # Debug output
 ifeq ($(DEBUG),true)
-	CONVERGE_CLOUD_CMD += --debug
-	CONVERGE_CLUSTER_CMD += --debug
-	CONVERGE_CHARTS_CMD += --debug
-	CONVERGE_SECRETS_CMD += --debug
+	CONVERGE_CLOUD_CMD += --log-level=debug
+	CONVERGE_CLUSTER_CMD += --log-level=debug
+	CONVERGE_CHARTS_CMD += --log-level=debug
+	CONVERGE_SECRETS_CMD += --log-level=debug
 endif
 
 .PHONY: repos secrets cloud cluster charts
@@ -225,8 +225,6 @@ endif
 
 	# add chartmuseum chart repo
 	helm repo add chartmuseum http://127.0.0.1:8080
-	# add legacy charts repo
-	helm repo add charts.downup.us http://charts.downup.us
 else
 	@echo - DEPLOY_LOCAL_REPOS is unset. Skipping local container setup.
 endif

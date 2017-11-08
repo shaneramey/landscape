@@ -1,0 +1,10 @@
+name: django-plus
+namespace: django-plus
+release:
+  chart: chartmuseum/django-plus:0.1.33
+  version: 0.1.33
+configuration:
+secrets:
+- secret-postgresql-postgres-user
+- secret-postgresql-postgres-password
+
