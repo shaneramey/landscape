@@ -293,7 +293,7 @@ resource "google_compute_instance" "db-replica" {
     source = "db-replica-disk"
   }  
   network_interface {
-    network = "default"
+    subnetwork = "${google_compute_subnetwork.gke_cluster1.name}"
     access_config {
     }
   }
