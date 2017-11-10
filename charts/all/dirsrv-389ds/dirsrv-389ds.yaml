@@ -1,8 +1,8 @@
 name: dirsrv-389ds
 namespace: dirsrv-389ds
 release:
-  chart: chartmuseum/dirsrv-389ds:0.1.36
-  version: 0.1.36
+  chart: chartmuseum/dirsrv-389ds:0.1.38
+  version: 0.1.38
 configuration:
   clusterDomain: cluster.local
   directorySuffix: dc=cluster,dc=local

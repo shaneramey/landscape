@@ -6,9 +6,10 @@ release:
 configuration:
   clusterDomain: cluster.local
 secrets:
- - jenkins-admin-user
- - jenkins-admin-password
- - jenkins-github-access-token
- - jenkins-github-key
- - jenkins-vault-user
- - jenkins-vault-password
+- jenkins-admin-user
+- jenkins-admin-password
+- jenkins-github-access-token
+- jenkins-github-key
+- jenkins-vault-user
+- jenkins-vault-password
+- jenkins-docker-host

@@ -1,7 +1,7 @@
 name: kibana
 namespace: kube-system
 release:
-  chart: chartmuseum/kibana:0.1.9
-  version: 0.1.9
+  chart: chartmuseum/kibana:0.1.15
+  version: 0.1.15
 configuration:
   clusterDomain: cluster.local

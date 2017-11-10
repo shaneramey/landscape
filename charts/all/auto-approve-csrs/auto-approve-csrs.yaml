@@ -1,8 +1,8 @@
 name: auto-approve-csrs
 namespace: auto-approve-csrs
 release:
-  chart: chartmuseum/auto-approve-csrs:0.1.7
-  version: 0.1.7
+  chart: chartmuseum/auto-approve-csrs:0.1.8
+  version: 0.1.8
 configuration:
   clusterDomain: cluster.local
 
