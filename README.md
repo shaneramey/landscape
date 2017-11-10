@@ -8,7 +8,12 @@
 
    Optionally a command exists, pulls centralized shared secrets from LastPass into Vault.
 
-## Supported systems
+## Chart directories
+ - all: applied to all clusters
+ - minikube: applied only to minikube clusters
+ - terraform: applied only to clusters provisioned via terraform (only GKE supported at this time)
+
+## Supported clouds and cluster types
  - Cloud: terraform, minikube
  - Cluster: GKE, minikube, unmanaged (unmanaged bypasses cloud setup)
 
