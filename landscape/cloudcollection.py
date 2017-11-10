@@ -92,6 +92,7 @@ class CloudCollection(object):
 
         return filtered_clouds
 
+
     def __load_clouds_from_vault(self):
         """Retrieves cloud definitions from Vault and loads them into a dict
 
@@ -115,7 +116,6 @@ class CloudCollection(object):
         # Dump Vault
         cloud_defs = VaultClient().dump_vault_from_prefix(
             vault_cloud_prefix, strip_root_key=True)
-        logging.debug("cloud_defs={0}".format(cloud_defs))
         clouds = []
         for cloud_name in cloud_defs:
             # inject cloud name into data

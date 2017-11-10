@@ -48,11 +48,11 @@ class Cluster(object):
         self.cluster_converge(dry_run)
 
 
-    def setup_tiller_clusterrole_and_serviceaccount(dry_run):
+    def setup_tiller_clusterrole_and_serviceaccount(self, dry_run):
         """Provisions necessary Tiller RBAC role
         """
-        self.create_sa('tiller', 'kube-system', 'cluster-admin', dry_run)
-        self.create_crb('tiller', 'kube-system', 'cluster-admin', dry_run)
+        self.create_serviceaccount('tiller', 'kube-system', dry_run)
+        self.create_clusterrolebinding('tiller', 'kube-system', 'cluster-admin', dry_run)
 
 
     def cluster_converge(self, dry_run):
@@ -139,8 +139,8 @@ class Cluster(object):
         self.setup_tiller_clusterrole_and_serviceaccount(dry_run)
 
         # Initialize Helm by installing Tiller
-        helm_provision_cmd = "helm init --service-account=tiller \
-                                    --kube-context={0}".format(self.name)
+        helm_provision_cmd = "helm init --service-account=tiller " + \
+                             "--kube-context={0}".format(self.name)
         if not dry_run:
             logging.info('Initializing Tiller: ' + \
                             helm_provision_cmd)
@@ -150,7 +150,7 @@ class Cluster(object):
                     helm_provision_cmd)
 
         # Minikube:
-        if self.cluster_name == "minikube":
+        if self.name == "minikube":
             #system:serviceaccount:kube-system:default
             pass
 

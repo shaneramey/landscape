@@ -17,20 +17,22 @@ class LandscaperChartsCollection(ChartsCollection):
 
     Attributes:
         kube_context: Kubernetes context for landscaper apply command
-        namespaces: An integer count of the eggs we have laid.
         charts: An integer count of the eggs we have laid.
-        secrets_git_branch: An integer count of the eggs we have laid.
+        cluster_branch:  The branch of the landscaper repo that the cluster subscribes to
     """
-    def __init__(self, context_name, custom_chart_set, namespace_selection):
+    def __init__(self, context_name, cluster_cloud_type, namespace_selection, dry_run):
         """Initializes a set of charts for a cluster.
 
+        Determines which yaml files in the directory structure should be applied
+        based on cloud provisioner type and optionally a namespace selection.
+        For example, minikube gets kube-dns but GKE (via terraform) does not.
+
         When namespaces=[], deploy all namespaces.
-        TODO: move cloud_specific_subset logic to within each cluster
 
         Args:
-            context_name: The Kubernetes context name in which to apply charts
-            custom_chart_set: A directory name containing the cluster type
-            namespaces: A List of namespaces for which to apply charts.
+            context_name: The Kubernetes context name in which to apply charts.
+            cluster_cloud_type: A directory name containing the cluster type.
+            namespace_selection: A List of namespaces for which to apply charts.
 
         Returns:
             None.
@@ -38,17 +40,17 @@ class LandscaperChartsCollection(ChartsCollection):
         Raises:
             None.
         """
-        # cluster_selection, cluster_provisioner, deploy_only_these_namespaces
 
-        self.kube_context = context_name
-        self.__namespace_selection = namespace_selection
-        # all clouds get common charts
-        self.__chart_collections = ['all'] + [custom_chart_set]
-        self.charts = self.__charts_for_namespaces(namespace_selection)
-        self.__vault = VaultClient()
-        self.secrets_git_branch = self.__vault.get_vault_data(
-            '/secret/landscape/clusters/' + \
-            self.kube_context)['landscaper_branch']
+        # Read charts from:
+        #  - cluster's cloud type (minikube, terraform (GKE), unmanaged, etc.)
+        #  - 'all' dir contains charts which can be applied to all clusters.
+        # branch used to read landscaper secrets from Vault (to put in env vars)
+        self.__DRYRUN = dry_run
+        self._vault = VaultClient()
+        self.context_name = context_name
+        self.cluster_branch = self.__get_landscaper_branch_that_cluster_subscribes_to()
+        self.__chart_collections = ['all'] + [cluster_cloud_type]
+        self.charts = self.__load_landscaper_yaml_for_cloud_type_and_namespace_selection(namespace_selection)
 
 
     def __str__(self):
@@ -76,7 +78,18 @@ class LandscaperChartsCollection(ChartsCollection):
         return self.charts
 
 
-    def __charts_for_namespaces(self, select_namespaces):
+    def __get_landscaper_branch_that_cluster_subscribes_to(self):
+        """Read landscaper branch for cluster name from vault
+
+        Returns:
+            landscaper branch for cluster, read from vault (str)
+        """
+        return self._vault.get_vault_data(
+            '/secret/landscape/clusters/' + \
+            self.context_name)['landscaper_branch']
+
+
+    def __load_landscaper_yaml_for_cloud_type_and_namespace_selection(self, select_namespaces):
         """Loads Landscaper YAML files into a List if they are in namespaces
         
         Checks inside YAML file for namespace field and appends LandscaperChart
@@ -135,86 +148,32 @@ class LandscaperChartsCollection(ChartsCollection):
         return landscaper_files
 
 
-    def converge(self, dry_run):
-        """Applies charts to a single kubernetes context/cluster.
+    def converge(self):
+        """Read namespaces from charts and apply them one namespace at a time.
 
-        Args:
-            dry_run: flag for simulating convergence
-
-        Returns:
-            None.
-
-        Raises:
-            None.
+        Performs steps:
+         - for each namespace in self.charts
+         - get secrets from Vault as environment variables
+         - run landscaper apply
         """
-        self.helm_repo_update(dry_run)
-        self.deploy_landscaper_charts(dry_run)
-
-
-    def deploy_charts_for_namespace(self, k8s_namespace, dry_run):
-        """Pulls secrets from Vault and converges charts using Landscaper.
-
-        Helm Tiller must already be installed. Injects environment variables 
-        pulled from Vault into local environment variables, so landscaper can
-        apply the secrets from Vault
-
-        Args:
-            dry_run: flag for simulating convergence
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-        """
-        k8s_context = self.kube_context
-        # list of landscape yaml files to apply
-        # Build up a list of namespaces to apply, and deploy them
-        # Note: Deploying a single chart is not possible when more than 2
-        #       at in a namespace. This is because Landscaper wipes the ns 1st 
-        yaml_files = []
-        for chart in self.charts:
-            # deploy only charts in this namespace
-            if getattr(chart, 'namespace') == k8s_namespace:
-                yaml_file = chart.filepath
-                yaml_files.append(yaml_file)
-                # keep a list of conflicting secrets in namespace
-                namespace_secrets = {}
-                # capture and report on missing Vault secrets
-                vault_missing_secrets = []
-                if chart.secrets:
-                    chart_secret_values = self.vault_secrets_for_chart(
-                                            chart.namespace, chart.name)
-                    namespace_secrets.update(chart_secret_values)
-                    for yaml_secret in chart.secrets:
-                        if yaml_secret not in namespace_secrets.keys():
-                            vault_missing_secrets.append(yaml_secret)
-                if vault_missing_secrets:
-                    for missing_secret in vault_missing_secrets:
-                        logging.info(' - missing landscaper secret ' + missing_secret)
-                    sys.exit(1)
-                landscaper_env = self.set_landscaper_envvars(namespace_secrets)
-                ls_apply_cmd = 'landscaper apply -v --namespace=' + chart.namespace + \
-                                    ' --context=' + k8s_context + \
-                                    ' ' + ' '.join(yaml_files)
-                if dry_run:
-                    ls_apply_cmd += ' --dry-run'
-                logging.info('    - executing: ' + ls_apply_cmd)
-                os.environ.update(landscaper_env)
-                create_failed = subprocess.call(ls_apply_cmd, shell=True)
-                if create_failed:
-                    sys.exit("ERROR: non-zero retval for {}".format(ls_apply_cmd))
-
-
-    def deploy_landscaper_charts(self, dry_run):
         namespaces_to_apply = self.__namespaces()
         for namespace in namespaces_to_apply:
-            self.deploy_charts_for_namespace(namespace, dry_run)
+            logging.debug("Running deploy_landscaper_charts on namespace {0}".format(namespace))
+            envvar_secrets_for_namespace = self.get_landscaper_envvars_for_namespace(namespace)
+            # Get list of yaml files
+            yamlfiles_in_namespace = [item.filepath for item in self.charts if item.namespace == namespace]
+            self.deploy_charts_for_namespace(yamlfiles_in_namespace, namespace, envvar_secrets_for_namespace)
 
-        # Deploy kube-system first
 
     def __namespaces(self):
-        deploy_these_namespaces = []
+        """Returns a list of namespaces defined in all charts for provisioner
+           This means all namespaces in 1 of minikube, terraform, or unmanaged
+        """
+        PRIORTY_NAMESPACES = [
+            'auto-approve-csrs',
+            'kube-system',
+        ]
+        sorted_namespaces = []
         nsdict = {}
         all_provisioner_charts = self.charts
         # Generate namespace list by reading every chart's value
@@ -223,14 +182,64 @@ class LandscaperChartsCollection(ChartsCollection):
             if not candidate_ns in nsdict:
                 nsdict[candidate_ns] = 1
 
-        return nsdict.keys()
+        # install the high-priority namespaces first
+        for priority_namespace in PRIORTY_NAMESPACES:
+            if priority_namespace in nsdict:
+                sorted_namespaces.append(priority_namespace)
+
+        # install other namespaces
+        for normal_namespace in nsdict.keys():
+            if not normal_namespace in PRIORTY_NAMESPACES:
+                sorted_namespaces.append(normal_namespace)
+
+        return sorted_namespaces
 
 
-    def helm_repo_update(self, dry_run):
-        """Updates the local Helm repository index of available charts.
+    def get_landscaper_envvars_for_namespace(self, namespace):
+        # pull secrets from Vault and apply them as env vars
+        secrets_env = {}
+        for chart_release_definition in self.charts:
+            if chart_release_definition.namespace == namespace and chart_release_definition.secrets:
+                chart_secrets_envvars = self.vault_secrets_for_chart(
+                                            chart_release_definition.namespace,
+                                            chart_release_definition.name)
+
+                # Check if this chart's secrets would conflict with existing
+                # environment variables. Update the env vars with them, if not.
+                # Generate error message if key already exists.
+                for envvar_key, envvar_val in chart_secrets_envvars.items():
+                    if envvar_key not in secrets_env:
+                        secrets_env[envvar_key] = envvar_val
+                    else:
+                        raise ValueError("Environment variable {0} already set in environment! Aborting.")
+
+                # check each landscaper yaml secret to make sure it's been pulled
+                # from Vault.
+                # Build a list of missing secrets
+                vault_missing_secrets = []
+                for landscaper_secret in chart_release_definition.secrets:
+                    # Generate error message if secret(s) missing
+                    if landscaper_secret not in secrets_env:
+                        vault_missing_secrets.append(landscaper_secret)
+                # Report on any missing secrets
+                if vault_missing_secrets:
+                    for missing_secret in vault_missing_secrets:
+                        logging.error('Missing landscaper secret ' + missing_secret)
+                    sys.exit(1)
+
+        landscaper_env_vars = self.vault_secrets_to_envvars(secrets_env)
+        return landscaper_env_vars
+
+
+    def deploy_charts_for_namespace(self, landscaper_filepaths, k8s_namespace, envvars):
+        """Pulls secrets from Vault and converges charts using Landscaper.
+
+        Helm Tiller must already be installed. Injects environment variables 
+        pulled from Vault into local environment variables, so landscaper can
+        apply the secrets from Vault.
 
         Args:
-            None.
+            dry_run: flag for simulating convergence
 
         Returns:
             None.
@@ -238,12 +247,22 @@ class LandscaperChartsCollection(ChartsCollection):
         Raises:
             None.
         """
-        repo_update_cmd = 'helm repo update'
-        if not dry_run:
-            logging.info('executing ' + repo_update_cmd)
-            subprocess.call(repo_update_cmd, shell=True)
-        else:
-            logging.info('DRYRUN would execute ' + repo_update_cmd)
+        # list of landscape yaml files to apply
+        # Build up a list of namespaces to apply, and deploy them
+        # Note: Deploying a single chart is not possible when more than 2
+        #       at in a namespace. This is because Landscaper wipes the ns 1st 
+        ls_apply_cmd = 'landscaper apply -v --namespace=' + \
+                            k8s_namespace + \
+                            ' --context=' + self.context_name + \
+                            ' ' + ' '.join(landscaper_filepaths)
+        if self.__DRYRUN:
+            ls_apply_cmd += ' --dry-run'
+        logging.info('Executing: ' + ls_apply_cmd)
+        # update env to preserve VAULT_ env vars
+        os.environ.update(envvars)
+        create_failed = subprocess.call(ls_apply_cmd, shell=True)
+        if create_failed:
+            sys.exit("ERROR: non-zero retval for {}".format(ls_apply_cmd))
 
 
     def vault_secrets_for_chart(self, chart_namespace, chart_name):
@@ -260,16 +279,16 @@ class LandscaperChartsCollection(ChartsCollection):
             None.
         """
         chart_vault_secret = "/secret/landscape/charts/{0}/{1}/{2}".format(
-                                                    self.secrets_git_branch,
+                                                    self.cluster_branch,
                                                     chart_namespace,
                                                     chart_name
                                                    )
         logging.info("Reading path {0}".format(chart_vault_secret))
-        vault_secrets = self.__vault.dump_vault_from_prefix(chart_vault_secret, strip_root_key=True)
+        vault_secrets = self._vault.dump_vault_from_prefix(chart_vault_secret, strip_root_key=True)
         return vault_secrets
 
 
-    def set_landscaper_envvars(self, vault_secrets):
+    def vault_secrets_to_envvars(self, vault_secrets):
         """Converts secrets pulled from Vault to environment variables.
 
         Used by Landscaper to inject environment variables into secrets.

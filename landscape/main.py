@@ -172,8 +172,8 @@ def main():
         clusters = ClusterCollection(clouds, cloud_selection, git_branch_selection)
         cluster_cloud = cloud_for_cluster(clouds, clusters, cluster_selection)
         # TODO: figure out cluster_provisioner inside LandscaperChartsCollection
-        cluster_provisioner = cluster_cloud['provisioner']
-        charts = LandscaperChartsCollection(cluster_selection, cluster_provisioner, deploy_only_these_namespaces)
+        cloud_provisioner = cluster_cloud['provisioner']
+        charts = LandscaperChartsCollection(cluster_selection, cloud_provisioner, deploy_only_these_namespaces, dry_run)
         
         # landscape charts list ...
         if args['list']:
@@ -185,7 +185,7 @@ def main():
                 cluster_cloud.converge()
             if also_converge_cluster:
                 clusters[cluster_selection].converge()
-            charts.converge(dry_run)
+            charts.converge()
             # set up local machine for cluster
             if also_converge_localmachine:
                 localmachine = Localmachine(cluster=clusters[cluster_selection])
