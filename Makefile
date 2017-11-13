@@ -78,7 +78,7 @@ ifneq (,$(DEPLOY_ONLY_NAMESPACES))
 endif
 
 # Converge Vault container with LastPass secrets (optional)
-CONVERGE_SECRETS_CMD = landscape secrets overwrite-vault-with-lastpass --secrets-username=$(SHARED_SECRETS_USERNAME)
+CONVERGE_SECRETS_CMD = landscape secrets overwrite-vault-with-lastpass --secrets-username=$(SHARED_SECRETS_USERNAME) --shared-secrets-item=$(BRANCH_NAME)
 ifneq (,$(DANGER_DEPLOY_LASTPASS_SECRETS))
 	CONVERGE_SECRETS_CMD += --dangerous-overwrite-vault
 endif
