@@ -1,7 +1,7 @@
 name: chartmuseum
 namespace: chartmuseum
 release:
-  chart: chartmuseum/chartmuseum:0.1.15
+  chart: chartmuseum/chartmuseum
   version: 0.1.15
 secrets:
  - secret-google-application-credentials

@@ -1,6 +1,6 @@
 name: cardinal
 namespace: cardinal
 release:
-  chart: chartmuseum/cardinal:0.1.0
+  chart: chartmuseum/cardinal
   version: 0.1.0
 

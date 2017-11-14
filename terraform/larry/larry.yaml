@@ -1,6 +1,6 @@
 name: larry
 namespace: larry
 release:
-  chart: chartmuseum/larry:0.1.0
+  chart: chartmuseum/larry
   version: 0.1.0
 

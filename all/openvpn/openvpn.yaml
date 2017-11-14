@@ -1,7 +1,7 @@
 name: openvpn
 namespace: openvpn
 release:
-  chart: chartmuseum/openvpn:0.1.247
+  chart: chartmuseum/openvpn
   version: 0.1.247
 configuration:
   gitBranch: master

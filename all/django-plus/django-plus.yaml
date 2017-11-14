@@ -1,7 +1,7 @@
 name: django-plus
 namespace: django-plus
 release:
-  chart: chartmuseum/django-plus:0.1.49
+  chart: chartmuseum/django-plus
   version: 0.1.49
 configuration:
 secrets:

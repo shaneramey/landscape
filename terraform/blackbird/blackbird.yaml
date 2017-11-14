@@ -1,6 +1,6 @@
 name: blackbird
 namespace: blackbird
 release:
-  chart: chartmuseum/blackbird:0.1.0
+  chart: chartmuseum/blackbird
   version: 0.1.0
 

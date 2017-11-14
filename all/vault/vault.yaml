@@ -1,7 +1,7 @@
 name: vault
 namespace: vault
 release:
-  chart: chartmuseum/vault:0.1.133
+  chart: chartmuseum/vault
   version: 0.1.133
 configuration:
   clusterDomain: cluster.local

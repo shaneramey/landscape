@@ -1,6 +1,6 @@
 name: groot
 namespace: groot
 release:
-  chart: chartmuseum/groot:0.1.0
+  chart: chartmuseum/groot
   version: 0.1.0
 
