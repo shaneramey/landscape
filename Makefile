@@ -8,24 +8,38 @@
 #
 # Intended pipeline.
 # Running any of the below commands automatically runs all those above it.
-# Alter with DEPLOY_LOCAL_REPOS, SKIP_CONVERGE_CLOUD, SKIP_CONVERGE_CLUSTER
-# make repos
-# make [DEPLOY_LOCAL_REPOS=true] [DRYRUN=true] cloud
-# make [SKIP_CONVERGE_CLOUD=true] [DEPLOY_LOCAL_REPOS=true] [DRYRUN=true] cluster
-# make [SKIP_CONVERGE_CLUSTER=true] [SKIP_CONVERGE_CLOUD=true] [DEPLOY_LOCAL_REPOS=true] [DRYRUN=true] charts
-#
-# A Jenkins pipeline might look like:
-#  repos -> cloud -> cluster -> charts
-#
-# Acts on a single Landscape namespace at a time
-# Smallest unit to CRUD is namespace
-# Helm charts can be deployed independently
-# landscaper will delete manually-installed helm charts in its namespaces
-# Capable of deploying from either inside or outside target cluster
+# TODO: make them mode indepdendent?
 #
 # Examples:
-# - Bootstrapping from local machine
-# make SHARED_SECRETS_USERNAME=username@lastpass.email \
+#
+## Deploy local Vault + Chartmuseum containers
+# make DEPLOY_LOCAL_REPOS=true \
+#      SHARED_SECRETS_USERNAME=lastpass@email.addr
+#      GOOGLE_STORAGE_BUCKET=helm-charts-staging-123456
+#      repos
+#
+## Write secrets into local Vault container from LastPass
+# make DEPLOY_LOCAL_REPOS=true \
+#      DANGER_DEPLOY_LASTPASS_SECRETS=true \
+#      SHARED_SECRETS_USERNAME=lastpass@email.addr \
+#      GOOGLE_STORAGE_BUCKET=helm-charts-staging-123456 secrets
+#
+## Converge local minikube VM
+# make CLOUD_NAME=minikube cloud
+# Initialize Kubernetes cluster
+# make CLUSTER_NAME=minikube cluster
+# Deploy Landscaper charts
+# make CLUSTER_NAME=minikube charts
+#
+## Quick start: Totally converge local minikube
+# make DEPLOY_LOCAL_REPOS=true \
+#      GOOGLE_STORAGE_BUCKET=helm-charts-staging-123456 \
+#      SHARED_SECRETS_USERNAME=lastpass@email.addr \
+#      DANGER_DEPLOY_LASTPASS_SECRETS=true \
+#      DEBUG=true
+#
+## Bootstrapping from local machine
+# make SHARED_SECRETS_USERNAME=lastpass@email.addr \
 #      GOOGLE_STORAGE_BUCKET=helm-charts-staging-123456 \
 #      DEPLOY_ONLY_NAMESPACES=openvpn,389ds \
 #      CLOUD_NAME=minikube \
@@ -33,11 +47,23 @@
 #      DANGER_DEPLOY_LASTPASS_SECRETS=true \
 #      (cloud|cluster|charts)
 #
-# - Running with existing Vault and ChartMuseum repos (set in env vars)
+## Running with existing Vault and ChartMuseum repos (set in env vars)
 #   Deploy two Chart namespaces
 # make DEPLOY_ONLY_NAMESPACES=openvpn,389ds \
 #      CLUSTER_NAME=gke_staging-123456_us-west1-a_master \
 #      (cloud|cluster|charts)
+#
+#
+# A Jenkins pipeline built around this looks like:
+#  docker registry push -> helm chart push -> charts deploy
+#
+# Notes:
+# Acts on single Landscape namespace at a time / Smallest CRUD unit = namespace
+# Pass DEPLOY_ONLY_NAMESPACES= (csv) to avoid converging everything
+# landscaper will delete manually-installed helm charts in its namespaces
+# Capable of deploying from either inside or outside target cluster
+
+
 DEBUG := false
 
 SHELL := /bin/bash
@@ -110,7 +136,6 @@ endif
 
 
 # Charts deployment
-ifneq (true,$(SKIP_CONVERGE_CHARTS))
 charts: secrets cluster cloud
 	@echo - Converging Charts for CLUSTER_NAME=$(CLUSTER_NAME) CLOUD_NAME=$(CLOUD_NAME)
 # deploy secrets from local repos
@@ -121,12 +146,9 @@ ifeq (true,$(DEPLOY_LOCAL_REPOS))
 else
 	$(CONVERGE_CHARTS_CMD)
 endif
-else:
-charts: secrets cluster cloud
-endif
+
 
 # Cluster deployment
-ifneq (true,$(SKIP_CONVERGE_CLUSTER))
 cluster: secrets cloud
 	@echo - Converging cluster for CLUSTER_NAME=$(CLUSTER_NAME)
 	@echo   - Setting CLOUD_NAME=$(CLOUD_NAME)
@@ -137,12 +159,9 @@ ifeq (true,$(DEPLOY_LOCAL_REPOS))
 else
 	$(CONVERGE_CLUSTER_CMD)
 endif
-else:
-cluster: secrets
-endif
+
 
 # Cloud deployment
-ifneq (true,$(SKIP_CONVERGE_CLOUD))
 cloud: secrets
 	@echo - Converging cloud for CLOUD_NAME=$(CLOUD_NAME)
 ifeq (true,$(DEPLOY_LOCAL_REPOS))
@@ -152,16 +171,15 @@ ifeq (true,$(DEPLOY_LOCAL_REPOS))
 else
 	$(CONVERGE_CLOUD_CMD)
 endif
-else
-cloud: secrets
-endif
+
 
 # Secrets deployment
 # Pull secrets from LastPass to local Vault container. WARNING: uses VAULT_ADDR!
 secrets: repos
+# fail-safe against accidentally overwriting secrets in your VAULT_ADDR host
 ifeq (true,$(DANGER_DEPLOY_LASTPASS_SECRETS))
 	@echo - Converging LastPass secrets into Vault
-# use local docker-based vault + chartmuseum
+# Use local docker-based vault + chartmuseum
 # as opposed to using pre-existing Vault and Helm repo values
 secrets: repos
 ifeq (,$(SHARED_SECRETS_USERNAME))
