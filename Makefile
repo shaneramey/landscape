@@ -217,7 +217,7 @@ endif
 		else \
 			echo "dev-chartmuseum container exists but not started. Starting it" ; \
 			docker start dev-chartmuseum ; \
-			sleep 3 ; \
+			sleep 5 ; \
 		fi ; \
 	else \
 		echo "dev-chartmuseum container already running." ; \
