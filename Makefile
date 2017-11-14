@@ -48,42 +48,48 @@ CLUSTER_NAME := minikube
 BRANCH_NAME := $(shell git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3)
 DEPLOY_ONLY_NAMESPACES :=
 
-# Pull in secrets to Vault from LastPass
+
+# Local Deployment flags
+## Pull in secrets to Vault from LastPass
 DANGER_DEPLOY_LASTPASS_SECRETS := false
 
-# Whether to start local dev-vault and dev-chartmuseum containers and retrieve
+## Whether to start local dev-vault and dev-chartmuseum containers and retrieve
 DEPLOY_LOCAL_REPOS := false
 
-# Write LastPass secrets (via VAULT_ADDR) to non-http://127.0.0.1:8200 servers
+## Write LastPass secrets (via VAULT_ADDR) to non-http://127.0.0.1:8200 servers
 ALLOW_REMOTE_VAULT := false
 
-# LastPass team-shared secrets username (REQUIRED when DEPLOY_LOCAL_REPOS=true)
+## LastPass team-shared secrets username (REQUIRED when DEPLOY_LOCAL_REPOS=true)
 SHARED_SECRETS_USERNAME := 
 SHARED_SECRETS_ITEM := $(BRANCH_NAME)
 
-# GCS backend for local Helm Chart repo (REQUIRED when DEPLOY_LOCAL_REPOS=true)
+## GCS backend for local Helm Chart repo (REQUIRED when DEPLOY_LOCAL_REPOS=true)
 GOOGLE_STORAGE_BUCKET := 
 
-# Converge Cloud cluster (e.g., minikube, terraform(GKE), unmanaged)
-CONVERGE_CLOUD_CMD = landscape cloud converge --cloud=$(CLOUD_NAME)
-
-# Converge Kubernetes cluster
-CONVERGE_CLUSTER_CMD = landscape cluster converge --cluster=$(CLUSTER_NAME)
-
-# Converge Helm charts
-# Optionally, deploy a sub-set (instead of the full-set), using CSV namespaces
-CONVERGE_CHARTS_CMD = landscape charts converge --cluster=$(CLUSTER_NAME)
-ifneq (,$(DEPLOY_ONLY_NAMESPACES))
-	CONVERGE_CHARTS_CMD += --namespaces=$(DEPLOY_ONLY_NAMESPACES)
-endif
-
-# Converge Vault container with LastPass secrets (optional)
+## Converge Vault container with LastPass secrets (optional)
 CONVERGE_SECRETS_CMD = landscape secrets overwrite-vault-with-lastpass --secrets-username=$(SHARED_SECRETS_USERNAME) --shared-secrets-item=$(BRANCH_NAME)
 ifneq (,$(DANGER_DEPLOY_LASTPASS_SECRETS))
 	CONVERGE_SECRETS_CMD += --dangerous-overwrite-vault
 endif
 
-# Simulate convergence but not apply
+
+# Converge targets
+## Converge Cloud cluster (e.g., minikube, terraform(GKE), unmanaged)
+CONVERGE_CLOUD_CMD = landscape cloud converge --cloud=$(CLOUD_NAME)
+
+## Converge Kubernetes cluster
+CONVERGE_CLUSTER_CMD = landscape cluster converge --cluster=$(CLUSTER_NAME)
+
+## Converge Helm charts
+## Optionally, deploy a sub-set (instead of the full-set), using CSV namespaces
+CONVERGE_CHARTS_CMD = landscape charts converge --cluster=$(CLUSTER_NAME)
+ifneq (,$(DEPLOY_ONLY_NAMESPACES))
+	CONVERGE_CHARTS_CMD += --namespaces=$(DEPLOY_ONLY_NAMESPACES)
+endif
+
+
+# Global landscape arguments
+## Simulate convergence but not apply
 ifeq ($(DRYRUN),true)
 	CONVERGE_CLOUD_CMD += --dry-run
 	CONVERGE_CLUSTER_CMD += --dry-run
@@ -91,7 +97,7 @@ ifeq ($(DRYRUN),true)
 	CONVERGE_SECRETS_CMD += --dry-run
 endif
 
-# Debug output
+## Debug output
 ifeq ($(DEBUG),true)
 	CONVERGE_CLOUD_CMD += --log-level=debug
 	CONVERGE_CLUSTER_CMD += --log-level=debug
@@ -99,7 +105,9 @@ ifeq ($(DEBUG),true)
 	CONVERGE_SECRETS_CMD += --log-level=debug
 endif
 
+
 .PHONY: repos secrets cloud cluster charts
+
 
 # Charts deployment
 ifneq (true,$(SKIP_CONVERGE_CHARTS))
@@ -208,14 +216,14 @@ endif
 	@if [ "$(DOCKER_CHARTMUSEUM_RUNNING)" != "true" ]; then \
 		docker inspect dev-chartmuseum > /dev/null ; \
 		if [ $$? != 0 ]; then \
-			echo "dev-chartmuseum container doesnt exist. Creating it" ; \
+			echo "dev-chartmuseum container doesnt exist. Creating it and waiting 5s for start" ; \
 			docker run -p 8080:8080 -d --name=dev-chartmuseum \
 				-e GOOGLE_APPLICATION_CREDENTIALS=/creds/application_default_credentials.json \
 				-v $$HOME/.config/gcloud:/creds chartmuseum/chartmuseum:v0.2.2 --port=8080 --debug \
 				--storage=google --storage-google-bucket=$(GOOGLE_STORAGE_BUCKET) ; \
-			sleep 3 ; \
+			sleep 5 ; \
 		else \
-			echo "dev-chartmuseum container exists but not started. Starting it" ; \
+			echo "dev-chartmuseum container exists but not started. Starting it and waiting 5s for start" ; \
 			docker start dev-chartmuseum ; \
 			sleep 5 ; \
 		fi ; \
