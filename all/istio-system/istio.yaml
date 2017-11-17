@@ -2,6 +2,6 @@ name: istio
 namespace: istio-system
 release:
   chart: chartmuseum/istio
-  version: 0.2.9-chart6
-configuration:
-secrets:
+  version: ${HELM_CHART_VERSION}
+configuration: null
+secrets: null
