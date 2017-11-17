@@ -3,5 +3,6 @@ namespace: istio-system
 release:
   chart: chartmuseum/istio
   version: 0.2.9-chart6
-configuration:
-secrets:
+configuration: null
+secrets: null
+version: ${HELM_CHART_VERSION}
