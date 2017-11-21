@@ -136,7 +136,7 @@ endif
 
 
 # Charts deployment
-charts: secrets cluster cloud
+charts: secrets cloud cluster
 	@echo - Converging Charts for CLUSTER_NAME=$(CLUSTER_NAME) CLOUD_NAME=$(CLOUD_NAME)
 # deploy secrets from local repos
 ifeq (true,$(DEPLOY_LOCAL_REPOS))

@@ -2,7 +2,7 @@ name: jenkins
 namespace: jenkins
 release:
   chart: chartmuseum/jenkins
-  version: 0.6.364
+  version: 0.7.15
 configuration:
   clusterDomain: cluster.local
 secrets:
@@ -13,3 +13,4 @@ secrets:
 - jenkins-vault-user
 - jenkins-vault-password
 - jenkins-docker-host
+- gcp-serviceaccount-json
