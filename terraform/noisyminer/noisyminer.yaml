@@ -1,6 +1,0 @@
-name: noisyminer
-namespace: noisyminer
-release:
-  chart: chartmuseum/noisyminer
-  version: 0.1.0
-

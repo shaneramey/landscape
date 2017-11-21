@@ -1,6 +1,0 @@
-name: loon
-namespace: loon
-release:
-  chart: chartmuseum/loon
-  version: 0.1.0
-

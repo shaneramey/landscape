@@ -1,6 +1,0 @@
-name: bowerbird
-namespace: bowerbird
-release:
-  chart: chartmuseum/bowerbird
-  version: 0.1.0
-

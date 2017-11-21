@@ -1,6 +1,0 @@
-name: coot
-namespace: coot
-release:
-  chart: chartmuseum/coot
-  version: 0.1.0
-
