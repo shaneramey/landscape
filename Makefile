@@ -219,7 +219,7 @@ endif
 		docker inspect dev-vault > /dev/null ; \
 		if [ $$? != 0 ]; then \
 			echo "dev-vault container doesnt exist. Creating it" ; \
-			docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault:0.8.3 ; \
+			docker run --cap-add=IPC_LOCK -p 8200:8200 -d --name=dev-vault vault:0.9.0 ; \
 			sleep 3 ; \
 		else \
 			echo "dev-vault container exists but not started. Starting it" ; \
