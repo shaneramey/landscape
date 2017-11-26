@@ -51,7 +51,8 @@ def getClusterTargets() {
     if(clusterTargets.size() == 0) {
         error("No targets found in Vault (zero results returned from command)")
     }
-    return clusterTargets
+    //return clusterTargets
+    return ["minikube"]
 }
 
 def getCloudTargets() {
@@ -124,14 +125,18 @@ def convergeCloud(cloud_name, dry_run=true) {
 }
 
 def convergeCluster(cluster_name, dry_run=true) {
-    def cmd = 'landscape cluster converge --git-branch='+env.BRANCH_NAME+' --cluster=' + cluster_name
+    if(cluster_name != "minikube") {
+        def cmd = 'landscape cluster converge --cluster=' + cluster_name
 
-    if(dry_run) {
-        cmd += " --dry-run"
+        if(dry_run) {
+            cmd += " --dry-run"
+        }
+        println("Running command: " + cmd)
+        sout = executeOrReportErrors(cmd)
+        println(sout)
+    } else {
+        println("Skipping minikube cluster setup inside of Jenkins")
     }
-    println("Running command: " + cmd)
-    sout = executeOrReportErrors(cmd)
-    println(sout)
 }
 
 def convergeCharts(cluster_name, dry_run=true) {
