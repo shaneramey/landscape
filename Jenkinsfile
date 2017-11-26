@@ -77,6 +77,7 @@ def convergeCharts(cluster_name, dry_run=true) {
 }
 
 // properties([parameters([choice(choices: getClusterTargets().join('\n'), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')])])
+properties([pipelineTriggers([cron('H/5 * * * *')])])
 
 
 node('landscape') {
