@@ -83,11 +83,11 @@ def getCloudForCluster(cluster_name) {
     return cloud_id
 }
 
-def executeOrReportErrors(command_string, working_dir) {
+def executeOrReportErrors(command_string, working_dir='__none__') {
 // executes a command, printing stderr if command fails
 // returns command stdout string
-    if(!working_dir) {
-        working_dir = System.getProperty("user.dir");
+    if(working_dir == '__none'__) {
+        working_dir = System.getProperty("user.dir")
     }
     def vaultVars = []
     vaultVars.add('VAULT_ADDR=' +  getVaultAddr())
