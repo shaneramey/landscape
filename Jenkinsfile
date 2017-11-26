@@ -82,13 +82,7 @@ properties([pipelineTriggers([cron('H/5 * * * *')])])
 
 node('landscape') {
     stage('Checkout') {
-        def kubernetes_context = env.CONTEXT
-        if (kubernetes_context != null && !kubernetes_context.isEmpty()) {
-            print("Using Kubernetes context: " + kubernetes_context)
-            checkout scm
-        } else {
-            error("CONTEXT not set (normal on first-run)")
-        }
+        checkout scm
     }
 
     stage('Test Cloud ' + 'minikube') {
