@@ -124,7 +124,7 @@ def convergeCloud(cloud_name, dry_run=true) {
 }
 
 def convergeCluster(cluster_name, dry_run=true) {
-    def cmd = "landscape cluster converge --cluster=" + cluster_name
+    def cmd = 'landscape cluster converge --git-branch='+env.BRANCH_NAME+' --cluster=' + cluster_name
 
     if(dry_run) {
         cmd += " --dry-run"
@@ -135,8 +135,7 @@ def convergeCluster(cluster_name, dry_run=true) {
 }
 
 def convergeCharts(cluster_name, dry_run=true) {
-    def cmd = "landscape charts converge --cluster=" + cluster_name
-
+    def cmd = 'landscape charts converge --git-branch='+env.BRANCH_NAME+' --cluster=' + cluster_name
     if(dry_run) {
         cmd += " --dry-run"
     }
