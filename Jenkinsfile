@@ -86,9 +86,11 @@ def getCloudForCluster(cluster_name) {
 def executeOrReportErrors(command_string, working_dir='__none__') {
 // executes a command, printing stderr if command fails
 // returns command stdout string
-    if(working_dir == '__none'__) {
+    if(working_dir == '__none__') {
         working_dir = System.getProperty("user.dir")
     }
+    println("using working_dir:" + working_dir)
+    println("currentBuild:" + currentBuild)
     def vaultVars = []
     vaultVars.add('VAULT_ADDR=' +  getVaultAddr())
     vaultVars.add('VAULT_CACERT=' + getVaultCacert())
