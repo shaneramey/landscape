@@ -2,7 +2,7 @@ name: jenkins
 namespace: jenkins
 release:
   chart: chartmuseum/jenkins
-  version: 0.7.15
+  version: 0.7.39
 configuration:
   clusterDomain: cluster.local
 secrets:
