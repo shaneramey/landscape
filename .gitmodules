@@ -1,0 +1,3 @@
+[submodule "terraform-templates"]
+	path = terraform-templates
+	url = git@github.com:shaneramey/terraform-templates.git
