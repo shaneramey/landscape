@@ -85,6 +85,10 @@ node('landscape') {
         checkout scm
     }
 
+    stage('Environment') {
+        sh 'helm repo add chartmuseum http://http.chartmuseum.svc.cluster.local:8080'
+    }
+
     stage('Test Cloud ' + 'minikube') {
         println("Test Cloud env ws="+env.WORKSPACE)
         withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
