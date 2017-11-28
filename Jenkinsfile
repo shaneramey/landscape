@@ -89,36 +89,37 @@ node('landscape') {
         sh 'helm repo add chartmuseum http://http.chartmuseum.svc.cluster.local:8080'
     }
 
-    stage('Test Cloud ' + 'staging-165617') {
+    stage('Test Cloud ' + 'minikube') {
         println("Test Cloud env ws="+env.WORKSPACE)
         withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCloud('staging-165617', true)
+            convergeCloud('minikube', true)
         }
     }
-    stage('Test Cluster ' + 'gke_staging-165617_us-west1-a_master') {
+    stage('Test Cluster ' + 'minikube') {
         withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCluster('gke_staging-165617_us-west1-a_master', true)
+            convergeCluster('minikube', true)
         }
     }
-    stage('Test Charts ' + 'gke_staging-165617_us-west1-a_master') {
+    stage('Test Charts ' + 'minikube') {
         withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCharts('gke_staging-165617_us-west1-a_master', true)
+            convergeCharts('minikube', true)
         }
     }
-    stage('Converge Cloud ' + 'staging-165617') {
+    stage('Converge Cloud ' + 'minikube') {
         withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCloud('staging-165617', false)
+            convergeCloud('minikube', false)
         }
     }
-    stage('Converge Cluster ' + 'gke_staging-165617_us-west1-a_master') {
+    stage('Converge Cluster ' + 'minikube') {
         withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCluster('gke_staging-165617_us-west1-a_master', false)
+            convergeCluster('minikube', false)
         }
     }
-    stage('Converge Charts ' + 'gke_staging-165617_us-west1-a_master') {
+    stage('Converge Charts ' + 'minikube') {
         withEnv(['VAULT_ADDR='+getVaultAddr(),'VAULT_CACERT='+getVaultCacert(),'VAULT_TOKEN='+getVaultToken()]) {
-            convergeCharts('gke_staging-165617_us-west1-a_master', false)
+            convergeCharts('minikube', false)
         }
     }
 
 }
+
