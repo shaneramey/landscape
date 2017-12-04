@@ -132,6 +132,10 @@ to the wrong clusters and clouds, unless forced on the command line with --force
 
 ### minikube
 
+ - Use private registry with minikube:
+```
+docker login -u _json_key -p "$(cat cloud-serviceaccount-staging-123456.json)" https://us.gcr.io
+```
  - Import minikube ca.crt into your MacOS keychain
 ```
 sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.minikube/ca.crt
