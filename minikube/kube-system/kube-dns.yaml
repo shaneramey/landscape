@@ -8,4 +8,4 @@ configuration:
   services:
     dns:
       type: ClusterIP
-      clusterIP: 10.96.0.10
+      clusterIP: 10.0.0.10
