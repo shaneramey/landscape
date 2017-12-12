@@ -7,3 +7,6 @@ configuration:
   gitBranch: master
   clusterDomain: cluster.local
   directorySuffix: "dc=cluster,dc=local"
+  openvpn:
+    OVPN_K8S_POD_NETWORK: "10.96.0.0"
+    OVPN_K8S_POD_SUBNET: "255.240.0.0"
