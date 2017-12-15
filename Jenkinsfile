@@ -16,8 +16,17 @@ def convergeCharts(cluster_name, dry_run=true) {
     sh cmd
 }
 
+def setupKubectlCredentials(cluster_name, dry_run=true) {
+    def cmd = 'landscape cluster converge --cluster=' + cluster_name
+    if(dry_run) {
+        cmd += " --dry-run"
+    }
+    println("Running command: " + cmd)
+    sh cmd
+}
+
 // properties([parameters([choice(choices: getClusterTargets().join('\n'), description: 'Kubernetes Context (defined in Vault)', name: 'CONTEXT', defaultValue: '')])])
-// properties([pipelineTriggers([cron('H/5 * * * *')])])
+properties([pipelineTriggers([cron('*/7 * * * *')])])
 
 
 node('landscape') {
@@ -27,6 +36,11 @@ node('landscape') {
 
     stage('Environment') {
         sh 'helm repo add chartmuseum http://http.chartmuseum.svc.cluster.local:8080'
+
+        withEnv(['VAULT_ADDR='+vaultHelpers.getVaultAddr(),'VAULT_CACERT='+vaultHelpers.getVaultCacert(),'VAULT_TOKEN='+vaultHelpers.getVaultToken()]) {
+            setupKubectlCredentials('gke_staging-165617_us-west1-a_master', false)
+        }
+
     }
 
     stage('Test Charts ' + 'gke_staging-165617_us-west1-a_master') {
