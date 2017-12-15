@@ -1,7 +1,6 @@
 name: prom
 namespace: prom
 release:
-  chart: chartmuseum/prometheus
-  version: 3.0.17
+  chart: chartmuseum/prometheus:3.0.20
 configuration:
   clusterDomain: cluster.local

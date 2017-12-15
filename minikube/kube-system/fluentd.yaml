@@ -1,7 +1,6 @@
 name: fluentd
 namespace: kube-system
 release:
-  chart: chartmuseum/fluentd
-  version: 0.1.3
+  chart: chartmuseum/fluentd:0.1.4
 configuration:
   clusterDomain: cluster.local

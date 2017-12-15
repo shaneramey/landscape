@@ -1,7 +1,6 @@
 name: grafana
 namespace: kube-system
 release:
-  chart: chartmuseum/grafana
-  version: 0.3.10
+  chart: chartmuseum/grafana:0.3.11
 configuration:
   clusterDomain: cluster.local

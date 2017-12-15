@@ -1,8 +1,7 @@
 name: kube-dns
 namespace: kube-system
 release:
-  chart: chartmuseum/kube-dns
-  version: 0.1.31
+  chart: chartmuseum/kube-dns:0.1.33
 configuration:
   clusterDomain: cluster.local
   services:

@@ -1,7 +1,6 @@
 name: istio
 namespace: istio-system
 release:
-  chart: chartmuseum/istio
-  version: 0.2.11
+  chart: chartmuseum/istio:0.2.12
 configuration:
 secrets:
