@@ -1,7 +1,7 @@
 name: jenkins
 namespace: jenkins
 release:
-  chart: chartmuseum/jenkins:0.7.47
+  chart: chartmuseum/jenkins:0.7.49
 configuration:
   clusterDomain: cluster.local
 secrets:
