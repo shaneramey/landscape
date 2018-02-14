@@ -237,7 +237,7 @@ endif
 			echo "dev-chartmuseum container doesnt exist. Creating it and waiting 5s for start" ; \
 			docker run -p 8080:8080 -d --name=dev-chartmuseum \
 				-e GOOGLE_APPLICATION_CREDENTIALS=/creds/application_default_credentials.json \
-				-v $$HOME/.config/gcloud:/creds chartmuseum/chartmuseum:v0.2.5 --port=8080 --debug \
+				-v $$HOME/.config/gcloud:/creds chartmuseum/chartmuseum:v0.2.8 --port=8080 --debug \
 				--storage=google --storage-google-bucket=$(GOOGLE_STORAGE_BUCKET) ; \
 			sleep 5 ; \
 		else \
